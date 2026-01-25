@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+  <Project Path="TripTogether.API/TripTogether.API.csproj" />
+  <Project Path="TripTogether.Application/TripTogether.Application.csproj" />
+  <Project Path="TripTogether.Domain/TripTogether.Domain.csproj" />
+  <Project Path="TripTogether.Infrastructure/TripTogether.Infrastructure.csproj" />
+</Solution>

@@ -1,0 +1,438 @@
+using Microsoft.EntityFrameworkCore;
+
+namespace PRN232.TripTogether.Repo;
+
+public class TripTogetherDbContext : DbContext
+{
+    public TripTogetherDbContext()
+    {
+    }
+
+    public TripTogetherDbContext(DbContextOptions<TripTogetherDbContext> options) : base(options)
+    {
+    }
+
+    // DbSets
+    public DbSet<User> Users { get; set; }
+    public DbSet<Friendship> Friendships { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<GroupMember> GroupMembers { get; set; }
+    public DbSet<Trip> Trips { get; set; }
+    public DbSet<TripInvite> TripInvites { get; set; }
+    public DbSet<Poll> Polls { get; set; }
+    public DbSet<PollOption> PollOptions { get; set; }
+    public DbSet<Vote> Votes { get; set; }
+    public DbSet<Activity> Activities { get; set; }
+    public DbSet<PackingItem> PackingItems { get; set; }
+    public DbSet<PackingAssignment> PackingAssignments { get; set; }
+    public DbSet<Expense> Expenses { get; set; }
+    public DbSet<ExpenseSplit> ExpenseSplits { get; set; }
+    public DbSet<Settlement> Settlements { get; set; }
+    public DbSet<Post> Posts { get; set; }
+    public DbSet<Badge> Badges { get; set; }
+    public DbSet<UserBadge> UserBadges { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Username).HasColumnName("username");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.AvatarUrl).HasColumnName("avatar_url");
+            entity.Property(e => e.PaymentQrCodeUrl).HasColumnName("payment_qr_code_url");
+        });
+
+        // Friendship
+        modelBuilder.Entity<Friendship>(entity =>
+        {
+            entity.ToTable("friendships");
+            entity.HasKey(e => new { e.RequesterId, e.AddresseeId });
+            entity.Property(e => e.RequesterId).HasColumnName("requester_id");
+            entity.Property(e => e.AddresseeId).HasColumnName("addressee_id");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            entity.HasOne(e => e.Requester)
+                .WithMany(u => u.FriendshipsRequested)
+                .HasForeignKey(e => e.RequesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Addressee)
+                .WithMany(u => u.FriendshipsReceived)
+                .HasForeignKey(e => e.AddresseeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Group
+        modelBuilder.Entity<Group>(entity =>
+        {
+            entity.ToTable("groups");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.CoverPhotoUrl).HasColumnName("cover_photo_url");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            entity.HasOne(e => e.Creator)
+                .WithMany(u => u.CreatedGroups)
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // GroupMember
+        modelBuilder.Entity<GroupMember>(entity =>
+        {
+            entity.ToTable("group_members");
+            entity.HasKey(e => new { e.GroupId, e.UserId });
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Role).HasColumnName("role");
+            entity.Property(e => e.Status).HasColumnName("status");
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Members)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.GroupMemberships)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Trip
+        modelBuilder.Entity<Trip>(entity =>
+        {
+            entity.ToTable("trips");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
+            entity.Property(e => e.Title).HasColumnName("title");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.PlanningRangeStart).HasColumnName("planning_range_start");
+            entity.Property(e => e.PlanningRangeEnd).HasColumnName("planning_range_end");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.Settings).HasColumnName("settings").HasColumnType("jsonb");
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Trips)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TripInvite
+        modelBuilder.Entity<TripInvite>(entity =>
+        {
+            entity.ToTable("trip_invites");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.Token).HasColumnName("token");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+
+            entity.HasIndex(e => e.Token).IsUnique();
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Invites)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Creator)
+                .WithMany(u => u.TripInvitesCreated)
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Poll
+        modelBuilder.Entity<Poll>(entity =>
+        {
+            entity.ToTable("polls");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Title).HasColumnName("title");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Polls)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Creator)
+                .WithMany(u => u.PollsCreated)
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // PollOption
+        modelBuilder.Entity<PollOption>(entity =>
+        {
+            entity.ToTable("poll_options");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.PollId).HasColumnName("poll_id");
+            entity.Property(e => e.TextValue).HasColumnName("text_value");
+            entity.Property(e => e.MediaUrl).HasColumnName("media_url");
+            entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
+            entity.Property(e => e.DateStart).HasColumnName("date_start");
+            entity.Property(e => e.DateEnd).HasColumnName("date_end");
+            entity.Property(e => e.TimeOfDay).HasColumnName("time_of_day");
+
+            entity.HasOne(e => e.Poll)
+                .WithMany(p => p.Options)
+                .HasForeignKey(e => e.PollId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Vote
+        modelBuilder.Entity<Vote>(entity =>
+        {
+            entity.ToTable("votes");
+            entity.HasKey(e => new { e.PollOptionId, e.UserId });
+            entity.Property(e => e.PollOptionId).HasColumnName("poll_option_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(e => e.PollOption)
+                .WithMany(po => po.Votes)
+                .HasForeignKey(e => e.PollOptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Votes)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Activity
+        modelBuilder.Entity<Activity>(entity =>
+        {
+            entity.ToTable("activities");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.Title).HasColumnName("title");
+            entity.Property(e => e.Category).HasColumnName("category");
+            entity.Property(e => e.StartTime).HasColumnName("start_time");
+            entity.Property(e => e.EndTime).HasColumnName("end_time");
+            entity.Property(e => e.ScheduleDayIndex).HasColumnName("schedule_day_index");
+            entity.Property(e => e.ScheduleSlot).HasColumnName("schedule_slot");
+            entity.Property(e => e.LocationName).HasColumnName("location_name");
+            entity.Property(e => e.GeoCoordinates).HasColumnName("geo_coordinates");
+            entity.Property(e => e.LinkUrl).HasColumnName("link_url");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Activities)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Creator)
+                .WithMany(u => u.ActivitiesCreated)
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // PackingItem
+        modelBuilder.Entity<PackingItem>(entity =>
+        {
+            entity.ToTable("packing_items");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Category).HasColumnName("category");
+            entity.Property(e => e.IsShared).HasColumnName("is_shared");
+            entity.Property(e => e.QuantityNeeded).HasColumnName("quantity_needed").HasDefaultValue(1);
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.PackingItems)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Creator)
+                .WithMany(u => u.PackingItemsCreated)
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // PackingAssignment
+        modelBuilder.Entity<PackingAssignment>(entity =>
+        {
+            entity.ToTable("packing_assignments");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.PackingItemId).HasColumnName("packing_item_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity").HasDefaultValue(1);
+            entity.Property(e => e.IsChecked).HasColumnName("is_checked");
+
+            entity.HasIndex(e => new { e.PackingItemId, e.UserId }).IsUnique();
+
+            entity.HasOne(e => e.PackingItem)
+                .WithMany(pi => pi.Assignments)
+                .HasForeignKey(e => e.PackingItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.PackingAssignments)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Expense
+        modelBuilder.Entity<Expense>(entity =>
+        {
+            entity.ToTable("expenses");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.PaidBy).HasColumnName("paid_by");
+            entity.Property(e => e.Amount).HasColumnName("amount").HasPrecision(10, 2);
+            entity.Property(e => e.CurrencyCode).HasColumnName("currency_code").HasDefaultValue("USD");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Category).HasColumnName("category");
+            entity.Property(e => e.ReceiptImageUrl).HasColumnName("receipt_image_url");
+            entity.Property(e => e.ExpenseDate).HasColumnName("expense_date");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Expenses)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Payer)
+                .WithMany(u => u.ExpensesPaid)
+                .HasForeignKey(e => e.PaidBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ExpenseSplit
+        modelBuilder.Entity<ExpenseSplit>(entity =>
+        {
+            entity.ToTable("expense_splits");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ExpenseId).HasColumnName("expense_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.AmountOwed).HasColumnName("amount_owed").HasPrecision(10, 2);
+            entity.Property(e => e.IsManualSplit).HasColumnName("is_manual_split").HasDefaultValue(false);
+
+            entity.HasOne(e => e.Expense)
+                .WithMany(exp => exp.Splits)
+                .HasForeignKey(e => e.ExpenseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.ExpenseSplits)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Settlement
+        modelBuilder.Entity<Settlement>(entity =>
+        {
+            entity.ToTable("settlements");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.PayerId).HasColumnName("payer_id");
+            entity.Property(e => e.PayeeId).HasColumnName("payee_id");
+            entity.Property(e => e.Amount).HasColumnName("amount").HasPrecision(10, 2);
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.TransactionDate).HasColumnName("transaction_date");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Settlements)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Payer)
+                .WithMany(u => u.SettlementsAsPayer)
+                .HasForeignKey(e => e.PayerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Payee)
+                .WithMany(u => u.SettlementsAsPayee)
+                .HasForeignKey(e => e.PayeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Post
+        modelBuilder.Entity<Post>(entity =>
+        {
+            entity.ToTable("posts");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
+            entity.Property(e => e.Caption).HasColumnName("caption");
+            entity.Property(e => e.LocationTag).HasColumnName("location_tag");
+            entity.Property(e => e.Likes).HasColumnName("likes");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Posts)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Posts)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Badge
+        modelBuilder.Entity<Badge>(entity =>
+        {
+            entity.ToTable("badges");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.IconUrl).HasColumnName("icon_url");
+            entity.Property(e => e.Category).HasColumnName("category");
+            entity.Property(e => e.Criteria).HasColumnName("criteria").HasColumnType("jsonb");
+        });
+
+        // UserBadge
+        modelBuilder.Entity<UserBadge>(entity =>
+        {
+            entity.ToTable("user_badges");
+            entity.HasKey(e => new { e.UserId, e.BadgeId, e.TripId });
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.BadgeId).HasColumnName("badge_id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.EarnedAt).HasColumnName("earned_at");
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.UserBadges)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Badge)
+                .WithMany(b => b.UserBadges)
+                .HasForeignKey(e => e.BadgeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.UserBadges)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+}

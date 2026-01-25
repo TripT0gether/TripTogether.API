@@ -1,0 +1,6 @@
+@TripTogether.API_HostAddress = http://localhost:5122
+
+GET {{TripTogether.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

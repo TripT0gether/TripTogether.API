@@ -1,0 +1,58 @@
+services:
+  triptogether.api:
+    image: ${DOCKER_REGISTRY-}triptogetherapi
+    build:
+      context: .
+      dockerfile: TripTogether.API/Dockerfile
+    depends_on:
+      triptogether.database:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=triptogether.database;Port=5432;Database=triptogether_db;Username=postgres;Password=postgres
+      - ConnectionStrings__Redis=triptogether-redis:6379,abortConnect=false
+      - JWT__SecretKey=TripTogether_SECRETKEY_SIEUCAPBAOMAT_VAYMACHUADU16KYTU
+      - JWT__Issuer=TripTogether
+      - JWT__Audience=TripTogetherUsers
+      - RESEND_APITOKEN=re_d7uvVXic_7nS9QjB6HAYryqrQ2jKsXu7J
+      - RESEND_FROM=noreply@ae-tao-fullstack-api.site
+      - MINIO_ENDPOINT=103.211.201.162:9000
+      - MINIO_HOST=https://minio.fpt-devteam.fun
+      - MINIO_ACCESS_KEY=minioadmin 
+      - MINIO_SECRET_KEY=minioadmin
+    ports:
+      - "5000:5000"
+
+  triptogether.database:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: triptogether_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d triptogether_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:latest
+    container_name: triptogether-redis
+    ports:
+      - "6380:6379"
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redis-data:
