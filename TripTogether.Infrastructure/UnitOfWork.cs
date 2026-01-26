@@ -45,7 +45,7 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Settlement> Settlements => Repository<Settlement>();
     public IGenericRepository<Post> Posts => Repository<Post>();
     public IGenericRepository<Badge> Badges => Repository<Badge>();
-
+    public IGenericRepository<OtpStorage> OtpStorages => Repository<OtpStorage>();
     public void Dispose()
     {
         _repositories.Clear();

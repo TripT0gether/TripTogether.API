@@ -7,6 +7,8 @@ public class User : BaseEntity
     public string Username { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? AvatarUrl { get; set; }
+    public string PasswordHash { get; set; } = null!;
+    public bool Gender { get; set; }
     public string? PaymentQrCodeUrl { get; set; }
     // JWT Token
     [MaxLength(128)] public string? RefreshToken { get; set; }

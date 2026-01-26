@@ -7,7 +7,7 @@ using NpgsqlTypes;
 namespace TripTogether.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDbV1 : Migration
+    public partial class InitDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,6 +66,8 @@ namespace TripTogether.Domain.Migrations
                     username = table.Column<string>(type: "text", nullable: false),
                     email = table.Column<string>(type: "text", nullable: false),
                     avatar_url = table.Column<string>(type: "text", nullable: true),
+                    password_hash = table.Column<string>(type: "text", nullable: false),
+                    gender = table.Column<bool>(type: "boolean", nullable: false),
                     payment_qr_code_url = table.Column<string>(type: "text", nullable: true),
                     refresh_token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
                     refresh_token_expiry_time = table.Column<DateTime>(type: "timestamp with time zone", maxLength: 128, nullable: true),

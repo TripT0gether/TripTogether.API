@@ -6,6 +6,8 @@ using PRN232.TripTogether.Repo;
 using Resend;
 using StackExchange.Redis;
 using System.Text;
+using TripTogether.Application.Interfaces;
+using TripTogether.Application.Services;
 
 
 public static class IocContainer
@@ -106,6 +108,8 @@ public static class IocContainer
 
     public static IServiceCollection SetupBusinessServicesLayer(this IServiceCollection services)
     {
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBlobService, BlobService>();
         return services;
     }
