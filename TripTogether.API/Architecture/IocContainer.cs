@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PRN232.TripTogether.Repo;
+using Resend;
+using StackExchange.Redis;
 using System.Text;
 
 
@@ -18,7 +20,7 @@ public static class IocContainer
         // Add Swagger
         services.SetupSwagger();
 
-        // Add HttpContextAccessor
+        // Add HttpContextAccessor (required for ClaimsService)
         services.AddHttpContextAccessor();
 
         // Add Infrastructure services
@@ -33,6 +35,37 @@ public static class IocContainer
 
         // Add JWT Authentication
         services.SetupJwt(configuration);
+        // 3th party services
+        services.SetupRedis();
+        services.SetupReSendService();
+
+        return services;
+    }
+
+    public static IServiceCollection SetupReSendService(this IServiceCollection services)
+    {
+        services.AddOptions();
+        services.AddHttpClient<ResendClient>();
+        services.Configure<ResendClientOptions>(o =>
+        {
+            o.ApiToken = Environment.GetEnvironmentVariable("RESEND_APITOKEN")!;
+        });
+        services.AddTransient<IResend, ResendClient>();
+
+        return services;
+    }
+
+    public static IServiceCollection SetupRedis(this IServiceCollection services)
+    {
+        var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis");
+
+        if (string.IsNullOrWhiteSpace(redisConnectionString))
+            throw new InvalidOperationException("Redis connection string not found in environment variables.");
+
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+            ConnectionMultiplexer.Connect(redisConnectionString));
+
+        services.AddScoped<IRedisService, RedisService>();
 
         return services;
     }
@@ -73,7 +106,7 @@ public static class IocContainer
 
     public static IServiceCollection SetupBusinessServicesLayer(this IServiceCollection services)
     {
-
+        services.AddScoped<IBlobService, BlobService>();
         return services;
     }
 
@@ -90,7 +123,7 @@ public static class IocContainer
                 Description = @"API for TripTogether - A collaborative trip planning application.
                     
                     **Architecture:**
-                    - 3-Layer Architecture (Presentation → Service → Repository)
+                    - Clean Architecture (API → Application → Infrastructure → Domain)
                     - Repository Pattern with Unit of Work
                     - Entity Framework Core with PostgreSQL
                     

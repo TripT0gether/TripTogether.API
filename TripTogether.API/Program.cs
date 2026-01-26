@@ -1,7 +1,7 @@
+﻿using SwaggerThemes;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using SwaggerThemes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +11,28 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// Add services to the container
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.SetupIocContainer();
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins(
+                "https://triptogether.ae-tao-fullstack-api.site", // Production
+                "http://localhost:3000",                             // Local dev
+                "http://localhost:3001"                             // Local dev
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+        });
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -20,9 +41,11 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
-builder.Services.AddEndpointsApiExplorer();
+// Tắt việc map claim mặc định
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-// Session configuration
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -31,16 +54,37 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Setup IoC Container (includes DbContext, Swagger, JWT, Repositories, Services)
-builder.Services.SetupIocContainer();
-
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
-builder.WebHost.UseUrls("http://0.0.0.0:5000");
-
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Apply database migrations before anything else
+app.Logger.LogInformation("Starting TripTogether API...");
+try
+{
+    app.ApplyMigrations(app.Logger);
+    app.Logger.LogInformation("Database migrations completed successfully");
+}
+catch (Exception e)
+{
+    app.Logger.LogCritical(e, "CRITICAL: Failed to apply database migrations. Application cannot start.");
+    throw; // Stop application if migrations fail
+}
+
+// Check MinIO bucket exists
+app.Logger.LogInformation("Checking MinIO bucket...");
+using (var scope = app.Services.CreateScope())
+{
+    var blob = scope.ServiceProvider.GetRequiredService<IBlobService>();
+    await blob.EnsureBucketExistsAsync();
+    app.Logger.LogInformation("MinIO bucket ready");
+}
+
+app.UseCors("AllowFrontend");
+
+// Configure the HTTP request pipeline - REMEMBER
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
@@ -48,19 +92,15 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "TripTogether API v1");
         c.RoutePrefix = string.Empty;
-        c.DocumentTitle = "TripTogether API";
         c.InjectStylesheet("/swagger-ui/custom-theme.css");
         c.HeadContent = $"<style>{SwaggerTheme.GetSwaggerThemeCss(Theme.Dracula)}</style>";
     });
 }
 
-// Apply migrations (EF Core handles retries via EnableRetryOnFailure)
-app.ApplyMigrations(app.Logger);
-
-// Middleware pipeline - ORDER IS IMPORTANT
-app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.UseSession();
 
+app.Logger.LogInformation("TripTogether API is running on http://0.0.0.0:5000");
 app.Run();

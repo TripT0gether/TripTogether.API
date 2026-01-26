@@ -31,6 +31,7 @@ public class TripTogetherDbContext : DbContext
     public DbSet<Post> Posts { get; set; }
     public DbSet<Badge> Badges { get; set; }
     public DbSet<UserBadge> UserBadges { get; set; }
+    public DbSet<OtpStorage> OtpStorages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,16 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.AvatarUrl).HasColumnName("avatar_url");
             entity.Property(e => e.PaymentQrCodeUrl).HasColumnName("payment_qr_code_url");
+            entity.Property(e => e.RefreshToken).HasColumnName("refresh_token").HasMaxLength(128);
+            entity.Property(e => e.RefreshTokenExpiryTime).HasColumnName("refresh_token_expiry_time");
+            entity.Property(e => e.IsEmailVerified).HasColumnName("is_email_verified").HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         });
 
         // Friendship
@@ -434,5 +445,26 @@ public class TripTogetherDbContext : DbContext
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // OtpStorage
+        modelBuilder.Entity<OtpStorage>(entity =>
+        {
+            entity.ToTable("otp_storages");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Target).HasColumnName("target");
+            entity.Property(e => e.OtpCode).HasColumnName("otp_code");
+            entity.Property(e => e.ExpiredAt).HasColumnName("expired_at");
+            entity.Property(e => e.IsUsed).HasColumnName("is_used");
+            entity.Property(e => e.Purpose).HasColumnName("purpose");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+        });
     }
 }
+

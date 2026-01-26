@@ -1,4 +1,6 @@
+﻿
 
+using System.ComponentModel.DataAnnotations;
 
 public class User : BaseEntity
 {
@@ -6,6 +8,14 @@ public class User : BaseEntity
     public string Email { get; set; } = null!;
     public string? AvatarUrl { get; set; }
     public string? PaymentQrCodeUrl { get; set; }
+    // JWT Token
+    [MaxLength(128)] public string? RefreshToken { get; set; }
+
+    [MaxLength(128)] public DateTime? RefreshTokenExpiryTime { get; set; }
+
+    // Status check email đã được verify hay chưa
+    public bool IsEmailVerified { get; set; }
+
 
     // Navigation properties
     public virtual ICollection<Friendship> FriendshipsRequested { get; set; } = new List<Friendship>();

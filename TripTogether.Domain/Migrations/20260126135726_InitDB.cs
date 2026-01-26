@@ -36,6 +36,29 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "otp_storages",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    target = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    otp_code = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    expired_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    is_used = table.Column<bool>(type: "boolean", nullable: false),
+                    purpose = table.Column<int>(type: "integer", nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_otp_storages", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
                 {
@@ -44,13 +67,16 @@ namespace TripTogether.Domain.Migrations
                     email = table.Column<string>(type: "text", nullable: false),
                     avatar_url = table.Column<string>(type: "text", nullable: true),
                     payment_qr_code_url = table.Column<string>(type: "text", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uuid", nullable: true)
+                    refresh_token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    refresh_token_expiry_time = table.Column<DateTime>(type: "timestamp with time zone", maxLength: 128, nullable: true),
+                    is_email_verified = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -740,6 +766,9 @@ namespace TripTogether.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "group_members");
+
+            migrationBuilder.DropTable(
+                name: "otp_storages");
 
             migrationBuilder.DropTable(
                 name: "packing_assignments");

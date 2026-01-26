@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260125144128_InitDB")]
+    [Migration("20260126135726_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -398,6 +398,70 @@ namespace TripTogether.Domain.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("group_members", (string)null);
+                });
+
+            modelBuilder.Entity("OtpStorage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<DateTime>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expired_at");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_used");
+
+                    b.Property<string>("OtpCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("otp_code");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("integer")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("target");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("otp_storages", (string)null);
                 });
 
             modelBuilder.Entity("PackingAssignment", b =>
@@ -900,16 +964,20 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("avatar_url");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
 
                     b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -917,17 +985,36 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("email");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_email_verified");
 
                     b.Property<string>("PaymentQrCodeUrl")
                         .HasColumnType("text")
                         .HasColumnName("payment_qr_code_url");
 
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("refresh_token");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasMaxLength(128)
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refresh_token_expiry_time");
+
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
 
                     b.Property<string>("Username")
                         .IsRequired()

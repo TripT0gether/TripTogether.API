@@ -5,6 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Minio" Version="6.0.4" />
+		<PackageReference Include="System.Drawing.Common" Version="8.0.17" />
+		<PackageReference Include="Resend" Version="0.1.1" />
+		<PackageReference Include="ZXing.Net" Version="0.16.10" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TripTogether.Infrastructure\TripTogether.Infrastructure.csproj" />
