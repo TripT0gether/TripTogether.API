@@ -1,12 +1,14 @@
 
 
+using TripTogether.Domain.Enums;
+
 public class Settlement : BaseEntity
 {
     public Guid TripId { get; set; }
     public Guid PayerId { get; set; }
     public Guid PayeeId { get; set; }
     public decimal Amount { get; set; }
-    public string Status { get; set; } = null!; // 'pending', 'completed'
+    public SettlementStatus Status { get; set; }
     public DateTime TransactionDate { get; set; }
 
     // Navigation properties

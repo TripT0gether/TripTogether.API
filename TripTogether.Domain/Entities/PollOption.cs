@@ -1,3 +1,5 @@
+using TripTogether.Domain.Enums;
+
 public class PollOption : BaseEntity
 {
     public Guid PollId { get; set; }
@@ -8,7 +10,7 @@ public class PollOption : BaseEntity
     // Date Voting Details
     public DateOnly? DateStart { get; set; }
     public DateOnly? DateEnd { get; set; }
-    public string? TimeOfDay { get; set; } // 'morning', 'afternoon', 'evening'
+    public TimeSlot? TimeOfDay { get; set; }
 
     // Navigation properties
     public virtual Poll Poll { get; set; } = null!;

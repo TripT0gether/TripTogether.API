@@ -1,11 +1,13 @@
 
 
+using TripTogether.Domain.Enums;
+
 public class Poll : BaseEntity
 {
     public Guid TripId { get; set; }
-    public string Type { get; set; } = null!; // 'date', 'destination', 'budget'
+    public PollType Type { get; set; }
     public string Title { get; set; } = null!;
-    public string Status { get; set; } = null!; // 'open', 'closed'
+    public PollStatus Status { get; set; }
 
     // Navigation properties
     public virtual Trip Trip { get; set; } = null!;

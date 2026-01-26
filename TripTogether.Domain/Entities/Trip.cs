@@ -1,10 +1,12 @@
 
 
+using TripTogether.Domain.Enums;
+
 public class Trip : BaseEntity
 {
     public Guid GroupId { get; set; }
     public string Title { get; set; } = null!;
-    public string Status { get; set; } = null!; // 'planning', 'confirmed', 'active'
+    public TripStatus Status { get; set; }
 
     // Step 1 Planning Context
     public DateOnly? PlanningRangeStart { get; set; }

@@ -1,12 +1,12 @@
 using NpgsqlTypes;
-
+using TripTogether.Domain.Enums;
 
 public class Activity : BaseEntity
 {
     public Guid TripId { get; set; }
-    public string Status { get; set; } = null!; // 'idea', 'scheduled'
+    public ActivityStatus Status { get; set; }
     public string Title { get; set; } = null!;
-    public string? Category { get; set; } // 'flight', 'hotel', 'food', 'attraction'
+    public ActivityCategory? Category { get; set; }
 
     // Scheduling details (Null if status is 'idea')
     public DateTime? StartTime { get; set; }
@@ -14,7 +14,7 @@ public class Activity : BaseEntity
 
     // Step 4 Scheduling
     public int? ScheduleDayIndex { get; set; }
-    public string? ScheduleSlot { get; set; } // 'morning', 'afternoon', 'evening'
+    public TimeSlot? ScheduleSlot { get; set; }
 
     public string? LocationName { get; set; }
     public NpgsqlPoint? GeoCoordinates { get; set; }

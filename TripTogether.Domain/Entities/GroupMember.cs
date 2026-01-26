@@ -1,11 +1,13 @@
 
 
+using TripTogether.Domain.Enums;
+
 public class GroupMember
 {
     public Guid GroupId { get; set; }
     public Guid UserId { get; set; }
-    public string Role { get; set; } = null!; // 'leader', 'member'
-    public string Status { get; set; } = null!; // 'pending', 'active'
+    public GroupMemberRole Role { get; set; }
+    public GroupMemberStatus Status { get; set; }
 
     // Navigation properties
     public virtual Group Group { get; set; } = null!;

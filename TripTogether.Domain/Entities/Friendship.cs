@@ -1,10 +1,12 @@
 
 
+using TripTogether.Domain.Enums;
+
 public class Friendship
 {
     public Guid RequesterId { get; set; }
     public Guid AddresseeId { get; set; }
-    public string Status { get; set; } = null!; // 'pending', 'accepted', 'blocked'
+    public FriendshipStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Navigation properties
