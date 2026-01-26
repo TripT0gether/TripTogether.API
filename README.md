@@ -2,33 +2,33 @@
 
 A mobile-first collaborative platform designed to eliminate the friction of group travel planning and management.
 
-## 🌟 Overview
+## Overview
 
 TripTogether unifies travel planning, decision-making, expense tracking, and memory sharing into a single cohesive platform. It replaces scattered chat groups and spreadsheets with a democratic workflow featuring an "Electric Bento" styled interface.
 
-## 🚀 Key Features
+## Key Features
 
-### 📊 Democratized Planning
+### Democratized Planning
 - **Unified Polling System**: Interactive voting cards for group consensus on dates, destinations, and budgets
 - **Collaborative Itinerary**: Drag-and-drop scheduler that transforms ideas into concrete timelines
 - **Flexible Time Slots**: Support for both fixed activities and adaptable scheduling
 
-### 💰 Smart Expense Management
+### Smart Expense Management
 - **Granular Expense Tracking**: Precise "Split Between" logic (e.g., separate alcohol costs from shared meals)
 - **Automated Settlement**: Calculate net balances and facilitate P2P settlement via QR codes
 - **Transparent Ledger**: No one gets stuck with the bill
 
-### 🎒 Intelligent Logistics
+### Intelligent Logistics
 - **Dual-Layer Packing System**:
   - **Shared Gear**: Items claimed by one person for the group (tents, cooking equipment)
   - **Personal Needs**: Individual requirements (passports, medications)
 - **Trip Dashboard**: Centralized metadata storage (Wi-Fi passwords, emergency contacts, accommodations)
 
-### 🎮 Social Gamification
+### Social Gamification
 - **Private Trip Gallery**: Shared photo feed for trip memories
 - **Achievement System**: Data-driven badges rewarding engagement ("Planner Pro", "Early Bird")
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ### Tech Stack
 - **.NET 8** - Modern C# framework
@@ -52,13 +52,13 @@ TripTogether.API/
 └── TripTogether.Infrastructure/ # Data access & external services
 ```
 
-## 📋 Prerequisites
+## Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [PostgreSQL 14+](https://www.postgresql.org/download/)
 - [Docker & Docker Compose](https://docs.docker.com/get-docker/) (optional)
 
-## 🛠️ Getting Started
+## Getting Started
 
 ### 1. Clone the Repository
 ```bash
@@ -98,7 +98,7 @@ dotnet run --project TripTogether.API
 
 The API will be available at `https://localhost:7095` (HTTPS) or `http://localhost:5095` (HTTP).
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Core Entities
 - **User** - Platform users with authentication
@@ -115,7 +115,7 @@ The API will be available at `https://localhost:7095` (HTTPS) or `http://localho
 - **Audit Trails** with created/updated timestamps
 - **Role-Based Access** for group member permissions
 
-## 🔧 Development Commands
+## Development Commands
 
 ### Entity Framework
 ```bash
@@ -147,7 +147,7 @@ dotnet build
 dotnet publish -c Release -o ./publish
 ```
 
-## 📁 Key Components
+## Key Components
 
 ### Repository Pattern
 - **GenericRepository**: Base repository with common CRUD operations
@@ -164,7 +164,7 @@ dotnet publish -c Release -o ./publish
 - **Strong Typing**: Enum conversions and value objects
 - **Business Rules**: Domain logic encapsulation
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -180,22 +180,22 @@ dotnet publish -c Release -o ./publish
 - Write XML documentation for public APIs
 - Ensure all tests pass before submitting
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 Links
+## Links
 
 - [API Documentation](docs/api.md)
 - [Database Schema](docs/database.md)
 - [Deployment Guide](docs/deployment.md)
 - [Contributing Guidelines](.github/CONTRIBUTING.md)
 
-## 📞 Support
+## Support
 
 For support, email support@triptogether.app or join our [Discord community](https://discord.gg/triptogether).
 
 ---
 
-Made with ❤️ by the TripTogether team
+Made with love by the TripTogether team
 
