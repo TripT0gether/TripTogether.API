@@ -30,8 +30,8 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<int?>("Category")
-                        .HasColumnType("integer")
+                    b.Property<string>("Category")
+                        .HasColumnType("text")
                         .HasColumnName("category");
 
                     b.Property<DateTime>("CreatedAt")
@@ -78,16 +78,17 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("schedule_day_index");
 
-                    b.Property<int?>("ScheduleSlot")
-                        .HasColumnType("integer")
+                    b.Property<string>("ScheduleSlot")
+                        .HasColumnType("text")
                         .HasColumnName("schedule_slot");
 
                     b.Property<DateTime?>("StartTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_time");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.Property<string>("Title")
@@ -121,8 +122,8 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<int?>("Category")
-                        .HasColumnType("integer")
+                    b.Property<string>("Category")
+                        .HasColumnType("text")
                         .HasColumnName("category");
 
                     b.Property<DateTime>("CreatedAt")
@@ -180,8 +181,8 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("numeric(10,2)")
                         .HasColumnName("amount");
 
-                    b.Property<int?>("Category")
-                        .HasColumnType("integer")
+                    b.Property<string>("Category")
+                        .HasColumnType("text")
                         .HasColumnName("category");
 
                     b.Property<DateTime>("CreatedAt")
@@ -312,8 +313,9 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.HasKey("RequesterId", "AddresseeId");
@@ -378,12 +380,14 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer")
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("role");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.HasKey("GroupId", "UserId");
@@ -434,8 +438,9 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("otp_code");
 
-                    b.Property<int>("Purpose")
-                        .HasColumnType("integer")
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("purpose");
 
                     b.Property<string>("Target")
@@ -597,8 +602,9 @@ namespace TripTogether.Domain.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.Property<string>("Title")
@@ -610,8 +616,9 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("trip_id");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer")
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("type");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -675,8 +682,8 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("text")
                         .HasColumnName("text_value");
 
-                    b.Property<int?>("TimeOfDay")
-                        .HasColumnType("integer")
+                    b.Property<string>("TimeOfDay")
+                        .HasColumnType("text")
                         .HasColumnName("time_of_day");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -790,8 +797,9 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("payer_id");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.Property<DateTime>("TransactionDate")
@@ -865,8 +873,9 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("date")
                         .HasColumnName("start_date");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.Property<string>("Title")

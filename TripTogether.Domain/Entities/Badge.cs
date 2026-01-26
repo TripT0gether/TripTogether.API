@@ -1,5 +1,7 @@
 
 
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 using TripTogether.Domain.Enums;
 
 public class Badge : BaseEntity
@@ -12,4 +14,18 @@ public class Badge : BaseEntity
 
     // Navigation properties
     public virtual ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
+
+    // Helper
+    [NotMapped]
+    public BadgeCriteria? CriteriaDetails
+    {
+        get => Criteria == null ? null : JsonSerializer.Deserialize<BadgeCriteria>(Criteria);
+        set => Criteria = value == null ? null : JsonSerializer.Serialize(value);
+    }
 }
+public class BadgeCriteria
+{
+    public string Metric { get; set; } // e.g., "photo_count"
+    public int Threshold { get; set; } // e.g., 50
+}
+

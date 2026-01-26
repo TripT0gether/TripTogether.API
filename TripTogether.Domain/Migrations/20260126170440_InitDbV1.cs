@@ -7,7 +7,7 @@ using NpgsqlTypes;
 namespace TripTogether.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDB : Migration
+    public partial class InitDbV1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,7 +20,7 @@ namespace TripTogether.Domain.Migrations
                     name = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
                     icon_url = table.Column<string>(type: "text", nullable: true),
-                    category = table.Column<int>(type: "integer", nullable: true),
+                    category = table.Column<string>(type: "text", nullable: true),
                     criteria = table.Column<string>(type: "jsonb", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -44,7 +44,7 @@ namespace TripTogether.Domain.Migrations
                     otp_code = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     expired_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     is_used = table.Column<bool>(type: "boolean", nullable: false),
-                    purpose = table.Column<int>(type: "integer", nullable: false),
+                    purpose = table.Column<string>(type: "text", nullable: false),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     created_by = table.Column<Guid>(type: "uuid", nullable: false),
@@ -89,7 +89,7 @@ namespace TripTogether.Domain.Migrations
                 {
                     requester_id = table.Column<Guid>(type: "uuid", nullable: false),
                     addressee_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -141,8 +141,8 @@ namespace TripTogether.Domain.Migrations
                 {
                     group_id = table.Column<Guid>(type: "uuid", nullable: false),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    role = table.Column<int>(type: "integer", nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false)
+                    role = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -168,7 +168,7 @@ namespace TripTogether.Domain.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     group_id = table.Column<Guid>(type: "uuid", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     planning_range_start = table.Column<DateOnly>(type: "date", nullable: true),
                     planning_range_end = table.Column<DateOnly>(type: "date", nullable: true),
                     start_date = table.Column<DateOnly>(type: "date", nullable: true),
@@ -199,13 +199,13 @@ namespace TripTogether.Domain.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     trip_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
-                    category = table.Column<int>(type: "integer", nullable: true),
+                    category = table.Column<string>(type: "text", nullable: true),
                     start_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     end_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     schedule_day_index = table.Column<int>(type: "integer", nullable: true),
-                    schedule_slot = table.Column<int>(type: "integer", nullable: true),
+                    schedule_slot = table.Column<string>(type: "text", nullable: true),
                     location_name = table.Column<string>(type: "text", nullable: true),
                     geo_coordinates = table.Column<NpgsqlPoint>(type: "point", nullable: true),
                     link_url = table.Column<string>(type: "text", nullable: true),
@@ -246,7 +246,7 @@ namespace TripTogether.Domain.Migrations
                     amount = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
                     currency_code = table.Column<string>(type: "text", nullable: false, defaultValue: "USD"),
                     description = table.Column<string>(type: "text", nullable: true),
-                    category = table.Column<int>(type: "integer", nullable: true),
+                    category = table.Column<string>(type: "text", nullable: true),
                     receipt_image_url = table.Column<string>(type: "text", nullable: true),
                     expense_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -315,9 +315,9 @@ namespace TripTogether.Domain.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     trip_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    type = table.Column<int>(type: "integer", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     created_by = table.Column<Guid>(type: "uuid", nullable: false),
@@ -388,7 +388,7 @@ namespace TripTogether.Domain.Migrations
                     payer_id = table.Column<Guid>(type: "uuid", nullable: false),
                     payee_id = table.Column<Guid>(type: "uuid", nullable: false),
                     amount = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     transaction_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -565,7 +565,7 @@ namespace TripTogether.Domain.Migrations
                     metadata = table.Column<string>(type: "jsonb", nullable: true),
                     date_start = table.Column<DateOnly>(type: "date", nullable: true),
                     date_end = table.Column<DateOnly>(type: "date", nullable: true),
-                    time_of_day = table.Column<int>(type: "integer", nullable: true),
+                    time_of_day = table.Column<string>(type: "text", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),

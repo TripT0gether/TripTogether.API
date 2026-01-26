@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TripTogether.Domain.Utils;
 
 namespace PRN232.TripTogether.Repo;
 
@@ -465,6 +466,26 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
             entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         });
+
+        // Loai edit ra khoi query (SOFT DELETE)
+        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Group>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Trip>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<TripInvite>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Poll>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PollOption>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Activity>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PackingItem>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PackingAssignment>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Expense>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<ExpenseSplit>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Settlement>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Post>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Badge>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<OtpStorage>().HasQueryFilter(e => !e.IsDeleted);
+
+        // Enum to string conversion
+        modelBuilder.UseStringForEnums();
     }
 }
 

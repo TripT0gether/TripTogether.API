@@ -120,19 +120,7 @@ public static class IocContainer
             {
                 Title = "TripTogether API",
                 Version = "v1",
-                Description = @"API for TripTogether - A collaborative trip planning application.
-                    
-                    **Architecture:**
-                    - Clean Architecture (API → Application → Infrastructure → Domain)
-                    - Repository Pattern with Unit of Work
-                    - Entity Framework Core with PostgreSQL
-                    
-                    **Features:**
-                    - Trip planning and management
-                    - Group collaboration
-                    - Expense tracking and splitting
-                    - Polling system for decisions
-                    - JWT Authentication & Authorization",
+                Description = @"API for TripTogether - A collaborative trip planning application.",
                 Contact = new OpenApiContact
                 {
                     Name = "TripTogether Team",
@@ -229,14 +217,11 @@ public static class IocContainer
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("AdminPolicy", policy =>
-                policy.RequireRole("Admin"));
+            options.AddPolicy("LeaderPolicy", policy =>
+                policy.RequireRole("Leader"));
 
-            options.AddPolicy("StaffPolicy", policy =>
-                policy.RequireRole("Staff", "Admin"));
-
-            options.AddPolicy("LecturerPolicy", policy =>
-                policy.RequireRole("Lecturer", "Admin"));
+            options.AddPolicy("MemberPolicy", policy =>
+                policy.RequireRole("Member"));
         });
 
         return services;

@@ -1,5 +1,7 @@
 
 
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 using TripTogether.Domain.Enums;
 
 public class Trip : BaseEntity
@@ -29,4 +31,18 @@ public class Trip : BaseEntity
     public virtual ICollection<Settlement> Settlements { get; set; } = new List<Settlement>();
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
     public virtual ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
+
+    // Helper
+    [NotMapped]
+    public TripSettings? SettingsDetails
+    {
+        get => Settings == null ? null : JsonSerializer.Deserialize<TripSettings>(Settings);
+        set => Settings = value == null ? null : JsonSerializer.Serialize(value);
+    }
 }
+
+public class TripSettings
+{
+    public List<Contact>? EmergencyContacts { get; set; }
+}
+public class Contact { public string Name { get; set; } public string Number { get; set; } }

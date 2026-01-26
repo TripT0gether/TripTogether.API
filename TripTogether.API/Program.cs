@@ -23,9 +23,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins(
-                "https://triptogether.ae-tao-fullstack-api.site", // Production
-                "http://localhost:3000",                             // Local dev
-                "http://localhost:3001"                             // Local dev
+                "https://triptogether.ae-tao-fullstack-api.site",    // Production
+                "http://localhost:3000"                              // Local fe development
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
