@@ -47,6 +47,8 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.Username).HasColumnName("username");
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.AvatarUrl).HasColumnName("avatar_url");
+            entity.Property(e => e.PasswordHash).HasColumnName("password_hash");
+            entity.Property(e => e.Gender).HasColumnName("gender");
             entity.Property(e => e.PaymentQrCodeUrl).HasColumnName("payment_qr_code_url");
             entity.Property(e => e.RefreshToken).HasColumnName("refresh_token").HasMaxLength(128);
             entity.Property(e => e.RefreshTokenExpiryTime).HasColumnName("refresh_token_expiry_time");

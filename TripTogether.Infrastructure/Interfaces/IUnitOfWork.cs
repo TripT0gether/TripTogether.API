@@ -18,6 +18,7 @@
     IGenericRepository<Settlement> Settlements { get; }
     IGenericRepository<Post> Posts { get; }
     IGenericRepository<Badge> Badges { get; }
+    IGenericRepository<OtpStorage> OtpStorages { get; }
 
     Task<int> SaveChangesAsync();
 }
