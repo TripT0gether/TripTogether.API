@@ -84,6 +84,9 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("AllowFrontend");
 
+// Static files for Swagger UI customization
+app.UseStaticFiles();
+
 // Middlewares
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -96,7 +99,40 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "TripTogether API v1");
         c.RoutePrefix = string.Empty;
         c.InjectStylesheet("/swagger-ui/custom-theme.css");
-        c.HeadContent = $"<style>{SwaggerTheme.GetSwaggerThemeCss(Theme.Dracula)}</style>";
+        c.HeadContent = $@"
+            <style>{SwaggerTheme.GetSwaggerThemeCss(Theme.Dracula)}</style>
+            <style>
+                .api-filter-container {{
+                    margin: 15px 0;
+                    padding: 0;
+                    background: transparent;
+                    border: none;
+                }}
+                .api-filter-input {{
+                    width: 100%;
+                    padding: 10px 15px;
+                    border: 1px solid #6272a4;
+                    border-radius: 6px;
+                    background-color: #282a36;
+                    color: #f8f8f2;
+                    font-size: 14px;
+                    transition: all 0.2s ease;
+                }}
+                .api-filter-input::placeholder {{
+                    color: #6272a4;
+                    opacity: 0.8;
+                }}
+                .api-filter-input:focus {{
+                    outline: none;
+                    border-color: #bd93f9;
+                    box-shadow: 0 0 8px rgba(189, 147, 249, 0.2);
+                    background-color: #383a59;
+                }}
+                .filtered-hidden {{
+                    display: none !important;
+                }}
+            </style>
+            <script src='/swagger-ui/api-filter.js'></script>";
     });
 }
 
