@@ -127,20 +127,24 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("category");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
 
                     b.Property<string>("Criteria")
                         .HasColumnType("jsonb")
                         .HasColumnName("criteria");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
 
                     b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
@@ -151,7 +155,8 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("icon_url");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -159,10 +164,12 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("name");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
 
                     b.HasKey("Id");
 
@@ -313,10 +320,31 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
 
                     b.HasKey("RequesterId", "AddresseeId");
 
@@ -380,6 +408,24 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text")
@@ -389,6 +435,12 @@ namespace TripTogether.Domain.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
 
                     b.HasKey("GroupId", "UserId");
 
@@ -587,20 +639,24 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
 
                     b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -622,10 +678,12 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("type");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
 
                     b.HasKey("Id");
 
@@ -649,12 +707,12 @@ namespace TripTogether.Domain.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly?>("DateEnd")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("DateEnd")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_end");
 
-                    b.Property<DateOnly?>("DateStart")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("DateStart")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_start");
 
                     b.Property<DateTime?>("DeletedAt")
@@ -846,8 +904,8 @@ namespace TripTogether.Domain.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly?>("EndDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("end_date");
 
                     b.Property<Guid>("GroupId")
@@ -869,8 +927,8 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("settings");
 
-                    b.Property<DateOnly?>("StartDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
 
                     b.Property<string>("Status")
@@ -1047,9 +1105,33 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("trip_id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("EarnedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("earned_at");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
 
                     b.HasKey("UserId", "BadgeId", "TripId");
 
@@ -1062,17 +1144,53 @@ namespace TripTogether.Domain.Migrations
 
             modelBuilder.Entity("Vote", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
                     b.Property<Guid>("PollOptionId")
                         .HasColumnType("uuid")
                         .HasColumnName("poll_option_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
-                    b.HasKey("PollOptionId", "UserId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("PollOptionId", "UserId")
+                        .IsUnique();
 
                     b.ToTable("votes", (string)null);
                 });

@@ -22,7 +22,13 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         // Chuyển tất cả các trường DateTime thành UTC
         entity.CreatedAt = _timeService.GetCurrentTime().ToUniversalTime();
         entity.UpdatedAt = _timeService.GetCurrentTime().ToUniversalTime(); // Nếu có trường UpdatedAt
-        entity.CreatedBy = _claimsService.GetCurrentUserId;
+        
+        // Only set CreatedBy if not already set (allows seeding with specific creators)
+        if (entity.CreatedBy == Guid.Empty)
+        {
+            entity.CreatedBy = _claimsService.GetCurrentUserId;
+        }
+        
         var result = await _dbSet.AddAsync(entity);
         return result.Entity;
     }
@@ -33,7 +39,12 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         {
             entity.CreatedAt = _timeService.GetCurrentTime().ToUniversalTime();
             entity.UpdatedAt = _timeService.GetCurrentTime().ToUniversalTime(); // Nếu có trường UpdatedAt
-            entity.CreatedBy = _claimsService.GetCurrentUserId;
+            
+            // Only set CreatedBy if not already set (allows seeding with specific creators)
+            if (entity.CreatedBy == Guid.Empty)
+            {
+                entity.CreatedBy = _claimsService.GetCurrentUserId;
+            }
         }
 
         await _dbSet.AddRangeAsync(entities);

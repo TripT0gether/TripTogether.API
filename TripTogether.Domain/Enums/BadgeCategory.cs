@@ -4,5 +4,8 @@ public enum BadgeCategory
 {
     Social,
     Planning,
-    Budget
+    Budget,
+    Milestone,
+    Financial,
+    Activity
 }

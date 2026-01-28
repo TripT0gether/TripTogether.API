@@ -2,12 +2,11 @@
 
 using TripTogether.Domain.Enums;
 
-public class Friendship
+public class Friendship : BaseEntity
 {
     public Guid RequesterId { get; set; }
     public Guid AddresseeId { get; set; }
     public FriendshipStatus Status { get; set; }
-    public DateTime CreatedAt { get; set; }
 
     // Navigation properties
     public virtual User Requester { get; set; } = null!;

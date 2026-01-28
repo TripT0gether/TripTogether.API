@@ -111,6 +111,7 @@ public static class IocContainer
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBlobService, BlobService>();
+        services.AddScoped<ISeedService, SeedService>();
         return services;
     }
 

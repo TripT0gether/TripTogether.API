@@ -125,7 +125,6 @@ namespace TripTogether.Application.Services
         /// <summary>
         ///     Logout a user by removing their refresh token from the database.
         /// </summary>
-        /// <param name="userId"></param>
         /// <returns></returns>
         public async Task<bool> LogoutAsync()
         {

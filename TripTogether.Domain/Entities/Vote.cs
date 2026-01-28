@@ -1,6 +1,10 @@
 
 
-public class Vote
+
+
+
+
+public class Vote : BaseEntity
 {
     public Guid PollOptionId { get; set; }
     public Guid UserId { get; set; }

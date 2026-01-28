@@ -33,6 +33,7 @@ public class UnitOfWork : IUnitOfWork
     // Typed repositories - shortcuts for common entities
     public IGenericRepository<User> Users => Repository<User>();
     public IGenericRepository<Group> Groups => Repository<Group>();
+    public IGenericRepository<GroupMember> GroupMembers => Repository<GroupMember>();
     public IGenericRepository<Trip> Trips => Repository<Trip>();
     public IGenericRepository<TripInvite> TripInvites => Repository<TripInvite>();
     public IGenericRepository<Poll> Polls => Repository<Poll>();
@@ -45,7 +46,10 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Settlement> Settlements => Repository<Settlement>();
     public IGenericRepository<Post> Posts => Repository<Post>();
     public IGenericRepository<Badge> Badges => Repository<Badge>();
+    public IGenericRepository<UserBadge> UserBadges => Repository<UserBadge>();
+    public IGenericRepository<Vote> Votes => Repository<Vote>();
     public IGenericRepository<OtpStorage> OtpStorages => Repository<OtpStorage>();
+    public IGenericRepository<Friendship> Friendships => Repository<Friendship>();
     public void Dispose()
     {
         _repositories.Clear();

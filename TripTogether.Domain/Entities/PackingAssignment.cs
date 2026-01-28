@@ -1,5 +1,9 @@
 
 
+
+
+
+
 public class PackingAssignment : BaseEntity
 {
     public Guid PackingItemId { get; set; }

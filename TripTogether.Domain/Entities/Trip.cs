@@ -15,8 +15,8 @@ public class Trip : BaseEntity
     public DateOnly? PlanningRangeEnd { get; set; }
 
     // Final confirmed dates (Result of Step 3)
-    public DateOnly? StartDate { get; set; }
-    public DateOnly? EndDate { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     // Stores WiFi, Contacts, Packing settings as JSON
     public string? Settings { get; set; }

@@ -1,6 +1,10 @@
 
 
-public class UserBadge
+
+
+
+
+public class UserBadge : BaseEntity
 {
     public Guid UserId { get; set; }
     public Guid BadgeId { get; set; }

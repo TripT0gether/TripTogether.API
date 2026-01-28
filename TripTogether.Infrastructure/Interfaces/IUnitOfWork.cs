@@ -6,6 +6,7 @@
     // Typed repositories - cho IntelliSense và type safety
     IGenericRepository<User> Users { get; }
     IGenericRepository<Group> Groups { get; }
+    IGenericRepository<GroupMember> GroupMembers { get; }
     IGenericRepository<Trip> Trips { get; }
     IGenericRepository<TripInvite> TripInvites { get; }
     IGenericRepository<Poll> Polls { get; }
@@ -18,7 +19,10 @@
     IGenericRepository<Settlement> Settlements { get; }
     IGenericRepository<Post> Posts { get; }
     IGenericRepository<Badge> Badges { get; }
+    IGenericRepository<UserBadge> UserBadges { get; }
+    IGenericRepository<Vote> Votes { get; }
     IGenericRepository<OtpStorage> OtpStorages { get; }
+    IGenericRepository<Friendship> Friendships { get; }
 
     Task<int> SaveChangesAsync();
 }

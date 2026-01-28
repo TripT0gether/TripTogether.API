@@ -175,7 +175,13 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
 
             entity.HasOne(e => e.Trip)
                 .WithMany(t => t.Polls)
@@ -212,9 +218,19 @@ public class TripTogetherDbContext : DbContext
         modelBuilder.Entity<Vote>(entity =>
         {
             entity.ToTable("votes");
-            entity.HasKey(e => new { e.PollOptionId, e.UserId });
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.PollOptionId).HasColumnName("poll_option_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+
+            entity.HasIndex(e => new { e.PollOptionId, e.UserId }).IsUnique();
 
             entity.HasOne(e => e.PollOption)
                 .WithMany(po => po.Votes)
@@ -421,6 +437,13 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.IconUrl).HasColumnName("icon_url");
             entity.Property(e => e.Category).HasColumnName("category");
             entity.Property(e => e.Criteria).HasColumnName("criteria").HasColumnType("jsonb");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
         });
 
         // UserBadge
@@ -471,11 +494,14 @@ public class TripTogetherDbContext : DbContext
 
         // Loai edit ra khoi query (SOFT DELETE)
         modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Friendship>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Group>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<GroupMember>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Trip>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<TripInvite>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Poll>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PollOption>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Vote>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Activity>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PackingItem>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PackingAssignment>().HasQueryFilter(e => !e.IsDeleted);
@@ -484,6 +510,7 @@ public class TripTogetherDbContext : DbContext
         modelBuilder.Entity<Settlement>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Post>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Badge>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<UserBadge>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<OtpStorage>().HasQueryFilter(e => !e.IsDeleted);
 
         // Enum to string conversion

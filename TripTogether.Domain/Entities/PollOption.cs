@@ -8,8 +8,8 @@ public class PollOption : BaseEntity
     public string? Metadata { get; set; } // JSON for budget ranges or specific dates
 
     // Date Voting Details
-    public DateOnly? DateStart { get; set; }
-    public DateOnly? DateEnd { get; set; }
+    public DateTime? DateStart { get; set; }
+    public DateTime? DateEnd { get; set; }
     public TimeSlot? TimeOfDay { get; set; }
 
     // Navigation properties
