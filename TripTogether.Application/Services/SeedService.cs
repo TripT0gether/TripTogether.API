@@ -238,7 +238,6 @@ public class SeedService : ISeedService
             {
                 groupMembers.Add(new GroupMember
                 {
-                    Id = Guid.NewGuid(),
                     GroupId = groups[i].Id,
                     UserId = groups[i].CreatedBy,
                     Role = GroupMemberRole.Leader,
@@ -254,7 +253,6 @@ public class SeedService : ISeedService
                     {
                         groupMembers.Add(new GroupMember
                         {
-                            Id = Guid.NewGuid(),
                             GroupId = groups[i].Id,
                             UserId = users[j].Id,
                             Role = GroupMemberRole.Member,
@@ -382,6 +380,300 @@ public class SeedService : ISeedService
             await _unitOfWork.Activities.AddRangeAsync(activities);
             await _unitOfWork.SaveChangesAsync();
             _loggerService.LogInformation("Finished seed trips");
+        }
+
+        _loggerService.LogInformation("Starting seed polls");
+        var existingPolls = await _unitOfWork.Polls.GetAllAsync();
+        if (existingPolls.Any())
+        {
+            _loggerService.LogInformation("Polls already exist, skipping poll seeding");
+        }
+        else
+        {
+            var trips = (await _unitOfWork.Trips.GetAllAsync()).Take(3).ToList();
+            if (trips.Count == 0)
+            {
+                throw new Exception("Please seed trips first");
+            }
+
+            var polls = new List<Poll>
+            {
+                new Poll
+                {
+                    TripId = trips[0].Id,
+                    Type = PollType.Date,
+                    Title = "Best dates for beach vacation?",
+                    Status = PollStatus.Open,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new Poll
+                {
+                    TripId = trips[0].Id,
+                    Type = PollType.Destination,
+                    Title = "Which beach destination?",
+                    Status = PollStatus.Open,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new Poll
+                {
+                    TripId = trips[1].Id,
+                    Type = PollType.Budget,
+                    Title = "Budget per person for mountain trek?",
+                    Status = PollStatus.Open,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new Poll
+                {
+                    TripId = trips[2].Id,
+                    Type = PollType.Date,
+                    Title = "Confirm city tour dates?",
+                    Status = PollStatus.Closed,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.Polls.AddRangeAsync(polls);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation("Added polls, now adding poll options");
+
+            // Add poll options
+            var pollOptions = new List<PollOption>
+            {
+                // Date poll options
+                new PollOption
+                {
+                    PollId = polls[0].Id,
+                    TextValue = "Early July",
+                    DateStart = DateTime.UtcNow.AddDays(30),
+                    DateEnd = DateTime.UtcNow.AddDays(37),
+                    TimeOfDay = TimeSlot.Morning,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new PollOption
+                {
+                    PollId = polls[0].Id,
+                    TextValue = "Late July",
+                    DateStart = DateTime.UtcNow.AddDays(45),
+                    DateEnd = DateTime.UtcNow.AddDays(52),
+                    TimeOfDay = TimeSlot.Morning,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                // Destination poll options
+                new PollOption
+                {
+                    PollId = polls[1].Id,
+                    TextValue = "Bali, Indonesia",
+                    MediaUrl = "https://example.com/bali.jpg",
+                    Metadata = "{\"country\":\"Indonesia\",\"avgTemp\":28}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new PollOption
+                {
+                    PollId = polls[1].Id,
+                    TextValue = "Maldives",
+                    MediaUrl = "https://example.com/maldives.jpg",
+                    Metadata = "{\"country\":\"Maldives\",\"avgTemp\":30}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new PollOption
+                {
+                    PollId = polls[1].Id,
+                    TextValue = "Phuket, Thailand",
+                    MediaUrl = "https://example.com/phuket.jpg",
+                    Metadata = "{\"country\":\"Thailand\",\"avgTemp\":29}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                // Budget poll options
+                new PollOption
+                {
+                    PollId = polls[2].Id,
+                    TextValue = "$500-$800 per person",
+                    Metadata = "{\"min\":500,\"max\":800,\"currency\":\"USD\"}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new PollOption
+                {
+                    PollId = polls[2].Id,
+                    TextValue = "$800-$1200 per person",
+                    Metadata = "{\"min\":800,\"max\":1200,\"currency\":\"USD\"}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                // Closed poll options
+                new PollOption
+                {
+                    PollId = polls[3].Id,
+                    TextValue = "This Weekend",
+                    DateStart = DateTime.UtcNow.AddDays(2),
+                    DateEnd = DateTime.UtcNow.AddDays(4),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                },
+                new PollOption
+                {
+                    PollId = polls[3].Id,
+                    TextValue = "Next Weekend",
+                    DateStart = DateTime.UtcNow.AddDays(9),
+                    DateEnd = DateTime.UtcNow.AddDays(11),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.PollOptions.AddRangeAsync(pollOptions);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation("Added poll options, now adding votes");
+
+            // Add some votes
+            var votes = new List<Vote>
+            {
+                // Votes for date poll
+                new Vote
+                {
+                    PollOptionId = pollOptions[0].Id,
+                    UserId = users[1].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new Vote
+                {
+                    PollOptionId = pollOptions[0].Id,
+                    UserId = users[2].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new Vote
+                {
+                    PollOptionId = pollOptions[1].Id,
+                    UserId = users[3].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                // Votes for destination poll
+                new Vote
+                {
+                    PollOptionId = pollOptions[2].Id,
+                    UserId = users[1].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new Vote
+                {
+                    PollOptionId = pollOptions[3].Id,
+                    UserId = users[2].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new Vote
+                {
+                    PollOptionId = pollOptions[2].Id,
+                    UserId = users[4].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[4].Id,
+                    IsDeleted = false
+                },
+                // Votes for budget poll
+                new Vote
+                {
+                    PollOptionId = pollOptions[5].Id,
+                    UserId = users[1].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new Vote
+                {
+                    PollOptionId = pollOptions[6].Id,
+                    UserId = users[3].Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.Votes.AddRangeAsync(votes);
+            await _unitOfWork.SaveChangesAsync();
+            _loggerService.LogInformation("Finished seed polls");
+        }
+
+        _loggerService.LogInformation("Starting seed trip invites");
+        var existingInvites = await _unitOfWork.TripInvites.GetAllAsync();
+        if (existingInvites.Any())
+        {
+            _loggerService.LogInformation("Trip invites already exist, skipping invite seeding");
+        }
+        else
+        {
+            var trips = (await _unitOfWork.Trips.GetAllAsync()).Take(3).ToList();
+            if (trips.Count == 0)
+            {
+                throw new Exception("Please seed trips first");
+            }
+
+            var tripInvites = new List<TripInvite>
+            {
+                new TripInvite
+                {
+                    TripId = trips[0].Id,
+                    Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("+", "-").Replace("/", "_").Replace("=", ""),
+                    ExpiresAt = DateTime.UtcNow.AddDays(7),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new TripInvite
+                {
+                    TripId = trips[1].Id,
+                    Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("+", "-").Replace("/", "_").Replace("=", ""),
+                    ExpiresAt = DateTime.UtcNow.AddDays(14),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new TripInvite
+                {
+                    TripId = trips[2].Id,
+                    Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("+", "-").Replace("/", "_").Replace("=", ""),
+                    ExpiresAt = DateTime.UtcNow.AddDays(3),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.TripInvites.AddRangeAsync(tripInvites);
+            await _unitOfWork.SaveChangesAsync();
+            _loggerService.LogInformation("Finished seed trip invites");
         }
 
         _loggerService.LogInformation("Finished seed all data");

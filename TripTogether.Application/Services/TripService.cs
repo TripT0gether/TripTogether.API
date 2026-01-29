@@ -308,6 +308,7 @@ public sealed class TripService : ITripService
         }
 
         var trips = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Invites)
             .Where(t => t.GroupId == groupId)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
@@ -324,7 +325,7 @@ public sealed class TripService : ITripService
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
             CreatedAt = trip.CreatedAt,
-            InviteToken = trip.Invites.FirstOrDefault().Token
+            InviteToken = trip.Invites.FirstOrDefault()?.Token
         }).ToList();
     }
 
