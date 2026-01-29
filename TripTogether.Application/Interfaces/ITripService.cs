@@ -12,4 +12,5 @@ public interface ITripService
     Task<TripDto> GetTripByTokenAsync(string token);
     Task<List<TripDto>> GetGroupTripsAsync(Guid groupId);
     Task<TripDto> UpdateTripStatusAsync(Guid tripId, TripStatus status);
+    Task<List<TripDto>> GetMyTripsAsync();
 }

@@ -376,4 +376,44 @@ public sealed class TripService : ITripService
             CreatedAt = trip.CreatedAt
         };
     }
+
+    public async Task<List<TripDto>> GetMyTripsAsync()
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} getting their trips");
+
+        var groupIds = await _unitOfWork.GroupMembers.GetQueryable()
+            .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active)
+            .Select(gm => gm.GroupId)
+            .ToListAsync();
+
+        if (groupIds.Count == 0)
+        {
+            _loggerService.LogInformation($"User {currentUserId} is not a member of any active groups");
+            return new List<TripDto>();
+        }
+
+        var trips = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Group)
+            .Include(t => t.Invites)
+            .Where(t => groupIds.Contains(t.GroupId))
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+
+        return trips.Select(trip => new TripDto
+        {
+            Id = trip.Id,
+            GroupId = trip.GroupId,
+            GroupName = trip.Group.Name,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
+            PlanningRangeEnd = trip.PlanningRangeEnd,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            CreatedAt = trip.CreatedAt,
+            InviteToken = trip.Invites.FirstOrDefault()?.Token
+        }).ToList();
+    }
 }

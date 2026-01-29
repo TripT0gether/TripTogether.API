@@ -157,4 +157,20 @@ public class TripController : ControllerBase
         var result = await _tripService.UpdateTripStatusAsync(tripId, status);
         return Ok(ApiResult<TripDto>.Success(result, "200", "Trip status updated successfully."));
     }
+
+    /// <summary>
+    /// Get all trips the current user has access to.
+    /// </summary>
+    /// <returns>List of trips from all groups the user is a member of.</returns>
+    [HttpGet("my-trips")]
+    [SwaggerOperation(
+        Summary = "Get my trips",
+        Description = "Get all trips from groups the current user is an active member of, ordered by creation date."
+    )]
+    [ProducesResponseType(typeof(ApiResult<List<TripDto>>), 200)]
+    public async Task<IActionResult> GetMyTrips()
+    {
+        var result = await _tripService.GetMyTripsAsync();
+        return Ok(ApiResult<List<TripDto>>.Success(result, "200", "My trips retrieved successfully."));
+    }
 }
