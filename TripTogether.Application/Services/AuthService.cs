@@ -19,7 +19,6 @@ namespace TripTogether.Application.Services
             _emailService = emailService;
             _loggerService = loggerService;
             _claimsService = claimsService;
-
         }
 
         /// <summary>
