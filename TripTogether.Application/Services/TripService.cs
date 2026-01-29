@@ -1,0 +1,378 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using TripTogether.Application.DTOs.TripDTO;
+using TripTogether.Application.DTOs.TripInviteDTO;
+using TripTogether.Application.Interfaces;
+using TripTogether.Domain.Enums;
+
+namespace TripTogether.Application.Services;
+
+public sealed class TripService : ITripService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IClaimsService _claimsService;
+    private readonly ILogger _loggerService;
+    private readonly ITripInviteService _tripInviteService;
+
+    public TripService(
+        IUnitOfWork unitOfWork,
+        IClaimsService claimsService,
+        ILogger<TripService> loggerService,
+        ITripInviteService tripInviteService)
+    {
+        _unitOfWork = unitOfWork;
+        _claimsService = claimsService;
+        _loggerService = loggerService;
+        _tripInviteService = tripInviteService;
+    }
+
+    public async Task<TripDto> CreateTripAsync(CreateTripDto dto)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} creating trip: {dto.Title} for group {dto.GroupId}");
+
+        var group = await _unitOfWork.Groups.GetByIdAsync(dto.GroupId);
+        if (group == null)
+        {
+            throw ErrorHelper.NotFound("The group does not exist.");
+        }
+
+        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .FirstOrDefaultAsync(gm => gm.GroupId == dto.GroupId
+                && gm.UserId == currentUserId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (groupMember == null)
+        {
+            throw ErrorHelper.Forbidden("You must be a member of the group to create a trip.");
+        }
+
+        var trip = new Trip
+        {
+            GroupId = dto.GroupId,
+            Title = dto.Title,
+            Status = TripStatus.Planning,
+            PlanningRangeStart = dto.PlanningRangeStart,
+            PlanningRangeEnd = dto.PlanningRangeEnd,
+            CreatedBy = currentUserId
+        };
+
+        await _unitOfWork.Trips.AddAsync(trip);
+        await _unitOfWork.SaveChangesAsync();
+
+
+
+        var token = await _tripInviteService.CreateInviteAsync(new CreateTripInviteDto
+        {
+            TripId = trip.Id,
+            ExpiresInHours = 24
+        });
+
+        _loggerService.LogInformation($"Trip {trip.Id} created successfully by user {currentUserId}");
+
+        return new TripDto
+        {
+            Id = trip.Id,
+            GroupId = trip.GroupId,
+            GroupName = group.Name,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
+            PlanningRangeEnd = trip.PlanningRangeEnd,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            CreatedAt = trip.CreatedAt,
+            InviteToken = token.Token
+        };
+    }
+
+    public async Task<TripDto> UpdateTripAsync(Guid tripId, UpdateTripDto dto)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} updating trip {tripId}");
+
+        var trip = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Group)
+            .FirstOrDefaultAsync(t => t.Id == tripId);
+
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+
+        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
+                && gm.UserId == currentUserId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (groupMember == null)
+        {
+            throw ErrorHelper.Forbidden("You must be a member of the group to update this trip.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Title))
+        {
+            trip.Title = dto.Title;
+        }
+
+        if (dto.PlanningRangeStart.HasValue)
+        {
+            trip.PlanningRangeStart = dto.PlanningRangeStart;
+        }
+
+        if (dto.PlanningRangeEnd.HasValue)
+        {
+            trip.PlanningRangeEnd = dto.PlanningRangeEnd;
+        }
+
+        if (dto.StartDate.HasValue)
+        {
+            trip.StartDate = dto.StartDate;
+        }
+
+        if (dto.EndDate.HasValue)
+        {
+            trip.EndDate = dto.EndDate;
+        }
+
+        if (dto.Settings != null)
+        {
+            trip.SettingsDetails = dto.Settings;
+        }
+
+        await _unitOfWork.Trips.Update(trip);
+        await _unitOfWork.SaveChangesAsync();
+
+        _loggerService.LogInformation($"Trip {tripId} updated successfully");
+
+        return new TripDto
+        {
+            Id = trip.Id,
+            GroupId = trip.GroupId,
+            GroupName = trip.Group.Name,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
+            PlanningRangeEnd = trip.PlanningRangeEnd,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            CreatedAt = trip.CreatedAt
+        };
+    }
+
+    public async Task<bool> DeleteTripAsync(Guid tripId)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} deleting trip {tripId}");
+
+        var trip = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Group)
+            .FirstOrDefaultAsync(t => t.Id == tripId);
+
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+
+        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
+                && gm.UserId == currentUserId
+                && gm.Status == GroupMemberStatus.Active
+                && gm.Role == GroupMemberRole.Leader);
+
+        if (groupMember == null)
+        {
+            throw ErrorHelper.Forbidden("Only group leaders can delete trips.");
+        }
+
+        await _unitOfWork.Trips.SoftRemove(trip);
+        await _unitOfWork.SaveChangesAsync();
+
+        _loggerService.LogInformation($"Trip {tripId} deleted successfully");
+
+        return true;
+    }
+
+    public async Task<TripDetailDto> GetTripDetailAsync(Guid tripId)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} getting trip detail {tripId}");
+
+        var trip = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Group)
+            .Include(t => t.Invites)
+            .Include(t => t.Polls)
+            .Include(t => t.Activities)
+            .Include(t => t.Expenses)
+            .FirstOrDefaultAsync(t => t.Id == tripId);
+
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+
+        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
+                && gm.UserId == currentUserId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (groupMember == null)
+        {
+            throw ErrorHelper.Forbidden("You must be a member of the group to view this trip.");
+        }
+
+        var tripInvites = trip.Invites.FirstOrDefault();
+
+        return new TripDetailDto
+        {
+            Id = trip.Id,
+            GroupId = trip.GroupId,
+            GroupName = trip.Group.Name,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
+            PlanningRangeEnd = trip.PlanningRangeEnd,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            Settings = trip.SettingsDetails,
+            CreatedAt = trip.CreatedAt,
+            InviteToken = tripInvites.Token,
+            PollCount = trip.Polls.Count,
+            ActivityCount = trip.Activities.Count,
+            ExpenseCount = trip.Expenses.Count
+        };
+    }
+
+    public async Task<TripDto> GetTripByTokenAsync(string token)
+    {
+        var invite = await _unitOfWork.TripInvites.GetQueryable()
+            .Include(i => i.Trip)
+            .FirstOrDefaultAsync(i => i.Token == token);
+
+        var trip = invite?.Trip;
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+        var group = await _unitOfWork.Groups.GetByIdAsync(trip.GroupId);
+        if (group == null)
+        {
+            throw ErrorHelper.NotFound("The group does not exist.");
+        }
+
+        if (invite == null)
+        {
+            throw ErrorHelper.NotFound("The invite does not exist.");
+        }
+
+        return new TripDto
+        {
+            Id = trip.Id,
+            GroupId = trip.GroupId,
+            GroupName = group.Name,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
+            PlanningRangeEnd = trip.PlanningRangeEnd,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            CreatedAt = trip.CreatedAt,
+            InviteToken = invite.Token
+        };
+    }
+
+    public async Task<List<TripDto>> GetGroupTripsAsync(Guid groupId)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} getting trips for group {groupId}");
+
+        var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
+        if (group == null)
+        {
+            throw ErrorHelper.NotFound("The group does not exist.");
+        }
+
+        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .FirstOrDefaultAsync(gm => gm.GroupId == groupId
+                && gm.UserId == currentUserId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (groupMember == null)
+        {
+            throw ErrorHelper.Forbidden("You must be a member of the group to view its trips.");
+        }
+
+        var trips = await _unitOfWork.Trips.GetQueryable()
+            .Where(t => t.GroupId == groupId)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+
+        return trips.Select(trip => new TripDto
+        {
+            Id = trip.Id,
+            GroupId = trip.GroupId,
+            GroupName = group.Name,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
+            PlanningRangeEnd = trip.PlanningRangeEnd,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            CreatedAt = trip.CreatedAt,
+            InviteToken = trip.Invites.FirstOrDefault().Token
+        }).ToList();
+    }
+
+    public async Task<TripDto> UpdateTripStatusAsync(Guid tripId, TripStatus status)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} updating trip {tripId} status to {status}");
+
+        var trip = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Group)
+            .FirstOrDefaultAsync(t => t.Id == tripId);
+
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+
+        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
+                && gm.UserId == currentUserId
+                && gm.Status == GroupMemberStatus.Active
+                && gm.Role == GroupMemberRole.Leader);
+
+        if (groupMember == null)
+        {
+            throw ErrorHelper.Forbidden("Only group leaders can update trip status.");
+        }
+
+        trip.Status = status;
+
+        await _unitOfWork.Trips.Update(trip);
+        await _unitOfWork.SaveChangesAsync();
+
+        _loggerService.LogInformation($"Trip {tripId} status updated to {status} successfully");
+
+        return new TripDto
+        {
+            Id = trip.Id,
+            GroupId = trip.GroupId,
+            GroupName = trip.Group.Name,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
+            PlanningRangeEnd = trip.PlanningRangeEnd,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            CreatedAt = trip.CreatedAt
+        };
+    }
+}

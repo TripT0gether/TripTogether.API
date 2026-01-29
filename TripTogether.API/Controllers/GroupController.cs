@@ -28,21 +28,16 @@ public class GroupController : ControllerBase
         Summary = "Create new group",
         Description = "Create a new group. The creator automatically becomes the group leader."
     )]
-    [ProducesResponseType(typeof(ApiResult<GroupDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<GroupDto>), 201)]
     [ProducesResponseType(typeof(ApiResult<GroupDto>), 400)]
     public async Task<IActionResult> CreateGroup([FromBody] CreateGroupDto dto)
     {
-        try
-        {
-            var result = await _groupService.CreateGroupAsync(dto);
-            return Ok(ApiResult<GroupDto>.Success(result, "200", "Group created successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<GroupDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.CreateGroupAsync(dto);
+        return CreatedAtAction(
+            nameof(GetGroupDetail),
+            new { groupId = result.Id },
+            ApiResult<GroupDto>.Success(result, "201", "Group created successfully.")
+        );
     }
 
     /// <summary>
@@ -61,17 +56,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<GroupDto>), 404)]
     public async Task<IActionResult> UpdateGroup([FromRoute] Guid groupId, [FromBody] UpdateGroupDto dto)
     {
-        try
-        {
-            var result = await _groupService.UpdateGroupAsync(groupId, dto);
-            return Ok(ApiResult<GroupDto>.Success(result, "200", "Group updated successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<GroupDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.UpdateGroupAsync(groupId, dto);
+        return Ok(ApiResult<GroupDto>.Success(result, "200", "Group updated successfully."));
     }
 
     /// <summary>
@@ -125,17 +111,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 404)]
     public async Task<IActionResult> DeleteGroup([FromRoute] Guid groupId)
     {
-        try
-        {
-            var result = await _groupService.DeleteGroupAsync(groupId);
-            return Ok(ApiResult<object>.Success(result, "200", "Group deleted successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.DeleteGroupAsync(groupId);
+        return Ok(ApiResult<object>.Success(result, "200", "Group deleted successfully."));
     }
 
     /// <summary>
@@ -153,17 +130,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<GroupDetailDto>), 404)]
     public async Task<IActionResult> GetGroupDetail([FromRoute] Guid groupId)
     {
-        try
-        {
-            var result = await _groupService.GetGroupDetailAsync(groupId);
-            return Ok(ApiResult<GroupDetailDto>.Success(result, "200", "Group details retrieved successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<GroupDetailDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.GetGroupDetailAsync(groupId);
+        return Ok(ApiResult<GroupDetailDto>.Success(result, "200", "Group details retrieved successfully."));
     }
 
     /// <summary>
@@ -178,17 +146,27 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<List<GroupDto>>), 200)]
     public async Task<IActionResult> GetMyGroups()
     {
-        try
-        {
-            var result = await _groupService.GetMyGroupsAsync();
-            return Ok(ApiResult<List<GroupDto>>.Success(result, "200", "Groups retrieved successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<List<GroupDto>>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.GetMyGroupsAsync();
+        return Ok(ApiResult<List<GroupDto>>.Success(result, "200", "Groups retrieved successfully."));
+    }
+
+    /// <summary>
+    /// Join a group using a trip invite token.
+    /// </summary>
+    /// <param name="token">The invite token.</param>
+    /// <returns>Joined group information.</returns>
+    [HttpPost("join")]
+    [SwaggerOperation(
+        Summary = "Join group by token",
+        Description = "Join a group using a trip invite token. The user will be added as a member to the group associated with the trip."
+    )]
+    [ProducesResponseType(typeof(ApiResult<GroupDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<GroupDto>), 404)]
+    [ProducesResponseType(typeof(ApiResult<GroupDto>), 409)]
+    public async Task<IActionResult> JoinGroupByToken([FromQuery] string token)
+    {
+        var result = await _groupService.JoinGroupByToken(token);
+        return Ok(ApiResult<GroupDto>.Success(result, "200", "Joined group successfully."));
     }
 
     /// <summary>
@@ -208,17 +186,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<GroupMemberDto>), 409)]
     public async Task<IActionResult> InviteMember([FromRoute] Guid groupId, [FromBody] InviteMemberDto dto)
     {
-        try
-        {
-            var result = await _groupService.InviteMemberAsync(groupId, dto);
-            return Ok(ApiResult<GroupMemberDto>.Success(result, "200", "Member invited successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<GroupMemberDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.InviteMemberAsync(groupId, dto);
+        return Ok(ApiResult<GroupMemberDto>.Success(result, "200", "Member invited successfully."));
     }
 
     /// <summary>
@@ -235,17 +204,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<GroupMemberDto>), 404)]
     public async Task<IActionResult> AcceptInvitation([FromRoute] Guid groupId)
     {
-        try
-        {
-            var result = await _groupService.AcceptInvitationAsync(groupId);
-            return Ok(ApiResult<GroupMemberDto>.Success(result, "200", "Invitation accepted successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<GroupMemberDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.AcceptInvitationAsync(groupId);
+        return Ok(ApiResult<GroupMemberDto>.Success(result, "200", "Invitation accepted successfully."));
     }
 
     /// <summary>
@@ -262,17 +222,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 404)]
     public async Task<IActionResult> RejectInvitation([FromRoute] Guid groupId)
     {
-        try
-        {
-            var result = await _groupService.RejectInvitationAsync(groupId);
-            return Ok(ApiResult<object>.Success(result, "200", "Invitation rejected successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.RejectInvitationAsync(groupId);
+        return Ok(ApiResult<object>.Success(result, "200", "Invitation rejected successfully."));
     }
 
     /// <summary>
@@ -291,17 +242,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 404)]
     public async Task<IActionResult> RemoveMember([FromRoute] Guid groupId, [FromRoute] Guid userId)
     {
-        try
-        {
-            var result = await _groupService.RemoveMemberAsync(groupId, userId);
-            return Ok(ApiResult<object>.Success(result, "200", "Member removed successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.RemoveMemberAsync(groupId, userId);
+        return Ok(ApiResult<object>.Success(result, "200", "Member removed successfully."));
     }
 
     /// <summary>
@@ -321,17 +263,8 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<GroupMemberDto>), 409)]
     public async Task<IActionResult> PromoteToLeader([FromRoute] Guid groupId, [FromRoute] Guid userId)
     {
-        try
-        {
-            var result = await _groupService.PromoteToLeaderAsync(groupId, userId);
-            return Ok(ApiResult<GroupMemberDto>.Success(result, "200", "Member promoted to leader successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<GroupMemberDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.PromoteToLeaderAsync(groupId, userId);
+        return Ok(ApiResult<GroupMemberDto>.Success(result, "200", "Member promoted to leader successfully."));
     }
 
     /// <summary>
@@ -349,16 +282,7 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 404)]
     public async Task<IActionResult> LeaveGroup([FromRoute] Guid groupId)
     {
-        try
-        {
-            var result = await _groupService.LeaveGroupAsync(groupId);
-            return Ok(ApiResult<object>.Success(result, "200", "Left group successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _groupService.LeaveGroupAsync(groupId);
+        return Ok(ApiResult<object>.Success(result, "200", "Left group successfully."));
     }
 }

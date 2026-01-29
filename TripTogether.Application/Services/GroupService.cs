@@ -236,6 +236,65 @@ public sealed class GroupService : IGroupService
         return groups;
     }
 
+    public async Task<GroupDto> JoinGroupByToken(string token)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} joining group with token");
+
+        var tripInvite = await _unitOfWork.TripInvites.FirstOrDefaultAsync(invite => invite.Token == token);
+        if (tripInvite == null || tripInvite.Trip == null)
+        {
+            throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
+        }
+
+        var group = await _unitOfWork.Groups.GetByIdAsync(tripInvite.Trip.GroupId);
+        if (group == null)
+        {
+            throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
+        }
+
+        var existingMember = await _unitOfWork.GroupMembers.FirstOrDefaultAsync(gm =>
+            gm.GroupId == group.Id && gm.UserId == currentUserId);
+
+        if (existingMember != null)
+        {
+            if (existingMember.Status == GroupMemberStatus.Active)
+            {
+                throw ErrorHelper.Conflict("You are already a member of the group.");
+            }
+            if (existingMember.Status == GroupMemberStatus.Pending)
+            {
+                throw ErrorHelper.Conflict("You have a pending invitation to the group.");
+            }
+        }
+
+        var newMember = new GroupMember
+        {
+            GroupId = group.Id,
+            UserId = currentUserId,
+            Role = GroupMemberRole.Member,
+            Status = GroupMemberStatus.Active
+        };
+
+        await _unitOfWork.GroupMembers.AddAsync(newMember);
+        await _unitOfWork.SaveChangesAsync();
+
+        _loggerService.LogInformation($"User {currentUserId} joined group {group.Id} successfully");
+
+        return new GroupDto
+        {
+            Id = group.Id,
+            Name = group.Name,
+            CoverPhotoUrl = group.CoverPhotoUrl,
+            CreatedBy = group.CreatedBy,
+            CreatedAt = group.CreatedAt,
+            MemberCount = await _unitOfWork.GroupMembers.GetQueryable()
+                .CountAsync(gm => gm.GroupId == group.Id && gm.Status == GroupMemberStatus.Active)
+        };
+
+    }
+
     public async Task<GroupMemberDto> InviteMemberAsync(Guid groupId, InviteMemberDto dto)
     {
         var currentUserId = _claimsService.GetCurrentUserId;

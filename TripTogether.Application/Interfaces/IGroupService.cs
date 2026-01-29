@@ -19,6 +19,8 @@ public interface IGroupService
 
     Task<GroupMemberDto> InviteMemberAsync(Guid groupId, InviteMemberDto dto);
 
+    Task<GroupDto> JoinGroupByToken(string token);
+
     Task<GroupMemberDto> AcceptInvitationAsync(Guid groupId);
 
     Task<bool> RejectInvitationAsync(Guid groupId);

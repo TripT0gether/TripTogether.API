@@ -1,5 +1,7 @@
 
 
+
+
 using TripTogether.Domain.Enums;
 
 public class Poll : BaseEntity
@@ -11,6 +13,5 @@ public class Poll : BaseEntity
 
     // Navigation properties
     public virtual Trip Trip { get; set; } = null!;
-    public virtual User Creator { get; set; } = null!;
     public virtual ICollection<PollOption> Options { get; set; } = new List<PollOption>();
 }

@@ -113,6 +113,10 @@ public static class IocContainer
         services.AddScoped<IBlobService, BlobService>();
         services.AddScoped<IFriendshipService, FriendshipService>();
         services.AddScoped<IGroupService, GroupService>();
+        services.AddScoped<ITripService, TripService>();
+        services.AddScoped<ITripInviteService, TripInviteService>();
+        services.AddScoped<IPollService, PollService>();
+        services.AddScoped<IVoteService, VoteService>();
         services.AddScoped<ISeedService, SeedService>();
         return services;
     }

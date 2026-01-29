@@ -26,5 +26,4 @@ public class Activity : BaseEntity
 
     // Navigation properties
     public virtual Trip Trip { get; set; } = null!;
-    public virtual User Creator { get; set; } = null!;
 }

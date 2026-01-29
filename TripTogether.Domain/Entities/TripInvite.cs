@@ -8,5 +8,4 @@ public class TripInvite : BaseEntity
 
     // Navigation properties
     public virtual Trip Trip { get; set; } = null!;
-    public virtual User Creator { get; set; } = null!;
 }

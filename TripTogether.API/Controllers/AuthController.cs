@@ -30,21 +30,12 @@ namespace TripTogether.API.Controllers
             Summary = "Register a new user",
             Description = "Creates a new user account with the provided registration information."
         )]
-        [ProducesResponseType(typeof(ApiResult<UserDto>), 200)]
+        [ProducesResponseType(typeof(ApiResult<UserDto>), 201)]
         [ProducesResponseType(typeof(ApiResult<UserDto>), 400)]
         public async Task<IActionResult> Register([FromBody] UserRegistrationDto userDto)
         {
-            try
-            {
-                var result = await _authService.RegisterUserAsync(userDto);
-                return Ok(ApiResult<UserDto>.Success(result!, "200", "Registered successfully."));
-            }
-            catch (Exception ex)
-            {
-                var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-                var errorResponse = ExceptionUtils.CreateErrorResponse<UserDto>(ex);
-                return StatusCode(statusCode, errorResponse);
-            }
+            var result = await _authService.RegisterUserAsync(userDto);
+            return StatusCode(201, ApiResult<UserDto>.Success(result!, "201", "Registered successfully."));
         }
 
         /// <summary>
@@ -61,17 +52,8 @@ namespace TripTogether.API.Controllers
         [ProducesResponseType(typeof(ApiResult<LoginResponseDto>), 400)]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
         {
-            try
-            {
-                var result = await _authService.LoginAsync(dto, _configuration);
-                return Ok(ApiResult<LoginResponseDto>.Success(result!, "200", "Login successful."));
-            }
-            catch (Exception ex)
-            {
-                var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-                var errorResponse = ExceptionUtils.CreateErrorResponse<LoginResponseDto>(ex);
-                return StatusCode(statusCode, errorResponse);
-            }
+            var result = await _authService.LoginAsync(dto, _configuration);
+            return Ok(ApiResult<LoginResponseDto>.Success(result!, "200", "Login successful."));
         }
 
         /// <summary>
@@ -89,17 +71,8 @@ namespace TripTogether.API.Controllers
         [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<IActionResult> Logout()
         {
-            try
-            {
-                var result = await _authService.LogoutAsync();
-                return Ok(ApiResult<object>.Success(result!, "200", "Logged out successfully."));
-            }
-            catch (Exception ex)
-            {
-                var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-                var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-                return StatusCode(statusCode, errorResponse);
-            }
+            var result = await _authService.LogoutAsync();
+            return Ok(ApiResult<object>.Success(result!, "200", "Logged out successfully."));
         }
 
         /// <summary>
@@ -116,18 +89,9 @@ namespace TripTogether.API.Controllers
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
         {
-            try
-            {
-                var reset = await _authService.ResetPasswordAsync(dto.Email, dto.Otp, dto.NewPassword);
-                if (!reset) return BadRequest(ApiResult.Failure("400", "OTP is invalid, expired or data is invalid."));
-                return Ok(ApiResult.Success("200", "Password was reset successfully."));
-            }
-            catch (Exception ex)
-            {
-                var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-                var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-                return StatusCode(statusCode, errorResponse);
-            }
+            var reset = await _authService.ResetPasswordAsync(dto.Email, dto.Otp, dto.NewPassword);
+            if (!reset) return BadRequest(ApiResult.Failure("400", "OTP is invalid, expired or data is invalid."));
+            return Ok(ApiResult.Success("200", "Password was reset successfully."));
         }
 
         /// <summary>
@@ -146,17 +110,8 @@ namespace TripTogether.API.Controllers
         [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRefreshRequestDto requestToken)
         {
-            try
-            {
-                var result = await _authService.RefreshTokenAsync(requestToken, _configuration);
-                return Ok(ApiResult<object>.Success(result!, "200", "Refresh Token successfully"));
-            }
-            catch (Exception ex)
-            {
-                var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-                var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-                return StatusCode(statusCode, errorResponse);
-            }
+            var result = await _authService.RefreshTokenAsync(requestToken, _configuration);
+            return Ok(ApiResult<object>.Success(result!, "200", "Refresh Token successfully"));
         }
 
         /// <summary>
@@ -174,22 +129,13 @@ namespace TripTogether.API.Controllers
         [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<IActionResult> ResendOtp([FromBody] ResendOtpRequestDto dto)
         {
-            try
+            var success = await _authService.ResendOtpAsync(dto.Email, dto.Purpose);
+            if (!success)
             {
-                var success = await _authService.ResendOtpAsync(dto.Email, dto.Purpose);
-                if (!success)
-                {
-                    return BadRequest(ApiResult.Failure("400", "Failed to resend OTP. Possibly invalid state or email."));
-                }
+                return BadRequest(ApiResult.Failure("400", "Failed to resend OTP. Possibly invalid state or email."));
+            }
 
-                return Ok(ApiResult.Success("200", "OTP resent successfully."));
-            }
-            catch (Exception ex)
-            {
-                var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-                var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-                return StatusCode(statusCode, errorResponse);
-            }
+            return Ok(ApiResult.Success("200", "OTP resent successfully."));
         }
 
         /// <summary>
@@ -206,19 +152,10 @@ namespace TripTogether.API.Controllers
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
         {
-            try
-            {
-                var verified = await _authService.VerifyEmailOtpAsync(dto.Email, dto.Otp);
-                if (!verified)
-                    return BadRequest(ApiResult.Failure("400", "OTP is invalid or expired."));
-                return Ok(ApiResult.Success("200", "Verification successful. Account activated."));
-            }
-            catch (Exception ex)
-            {
-                var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-                var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-                return StatusCode(statusCode, errorResponse);
-            }
+            var verified = await _authService.VerifyEmailOtpAsync(dto.Email, dto.Otp);
+            if (!verified)
+                return BadRequest(ApiResult.Failure("400", "OTP is invalid or expired."));
+            return Ok(ApiResult.Success("200", "Verification successful. Account activated."));
         }
     }
 }

@@ -31,24 +31,15 @@ public class SeedController : ControllerBase
     [ProducesResponseType(typeof(ApiResult), 403)]
     public async Task<IActionResult> SeedAllData()
     {
-        try
+        // Check if in development mode
+        var environment = _configuration["ASPNETCORE_ENVIRONMENT"];
+        if (environment != "Development")
         {
-            // Check if in development mode
-            var environment = _configuration["ASPNETCORE_ENVIRONMENT"];
-            if (environment != "Development")
-            {
-                return StatusCode(403, ApiResult.Failure("403", "Seeding is only allowed in Development environment."));
-            }
+            return StatusCode(403, ApiResult.Failure("403", "Seeding is only allowed in Development environment."));
+        }
 
-            await _seedService.SeedAllDataAsync();
-            return Ok(ApiResult.Success("200", "All data seeded successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        await _seedService.SeedAllDataAsync();
+        return Ok(ApiResult.Success("200", "All data seeded successfully."));
     }
 
     /// <summary>
@@ -65,22 +56,13 @@ public class SeedController : ControllerBase
     [ProducesResponseType(typeof(ApiResult), 403)]
     public async Task<IActionResult> ClearAllData()
     {
-        try
+        var environment = _configuration["ASPNETCORE_ENVIRONMENT"];
+        if (environment != "Development")
         {
-            var environment = _configuration["ASPNETCORE_ENVIRONMENT"];
-            if (environment != "Development")
-            {
-                return StatusCode(403, ApiResult.Failure("403", "Clearing data is only allowed in Development environment."));
-            }
+            return StatusCode(403, ApiResult.Failure("403", "Clearing data is only allowed in Development environment."));
+        }
 
-            await _seedService.ClearAllDataAsync();
-            return Ok(ApiResult.Success("200", "All data cleared successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        await _seedService.ClearAllDataAsync();
+        return Ok(ApiResult.Success("200", "All data cleared successfully."));
     }
 }

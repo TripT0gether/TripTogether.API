@@ -92,11 +92,6 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.CoverPhotoUrl).HasColumnName("cover_photo_url");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-
-            entity.HasOne(e => e.Creator)
-                .WithMany(u => u.CreatedGroups)
-                .HasForeignKey(e => e.CreatedBy)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // GroupMember
@@ -158,11 +153,6 @@ public class TripTogetherDbContext : DbContext
                 .WithMany(t => t.Invites)
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Creator)
-                .WithMany(u => u.TripInvitesCreated)
-                .HasForeignKey(e => e.CreatedBy)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Poll
@@ -187,11 +177,6 @@ public class TripTogetherDbContext : DbContext
                 .WithMany(t => t.Polls)
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Creator)
-                .WithMany(u => u.PollsCreated)
-                .HasForeignKey(e => e.CreatedBy)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // PollOption
@@ -268,11 +253,6 @@ public class TripTogetherDbContext : DbContext
                 .WithMany(t => t.Activities)
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Creator)
-                .WithMany(u => u.ActivitiesCreated)
-                .HasForeignKey(e => e.CreatedBy)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // PackingItem
@@ -292,11 +272,6 @@ public class TripTogetherDbContext : DbContext
                 .WithMany(t => t.PackingItems)
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Creator)
-                .WithMany(u => u.PackingItemsCreated)
-                .HasForeignKey(e => e.CreatedBy)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // PackingAssignment

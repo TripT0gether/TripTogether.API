@@ -28,23 +28,14 @@ public class FriendshipController : ControllerBase
         Summary = "Send friend request",
         Description = "Send a friend request to another user by their user ID."
     )]
-    [ProducesResponseType(typeof(ApiResult<FriendshipDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<FriendshipDto>), 201)]
     [ProducesResponseType(typeof(ApiResult<FriendshipDto>), 400)]
     [ProducesResponseType(typeof(ApiResult<FriendshipDto>), 404)]
     [ProducesResponseType(typeof(ApiResult<FriendshipDto>), 409)]
     public async Task<IActionResult> SendFriendRequest([FromBody] SendFriendRequestDto dto)
     {
-        try
-        {
-            var result = await _friendshipService.SendFriendRequestAsync(dto);
-            return Ok(ApiResult<FriendshipDto>.Success(result, "200", "Friend request sent successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<FriendshipDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _friendshipService.SendFriendRequestAsync(dto);
+        return StatusCode(201, ApiResult<FriendshipDto>.Success(result, "201", "Friend request sent successfully."));
     }
 
     /// <summary>
@@ -61,17 +52,8 @@ public class FriendshipController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<FriendshipDto>), 404)]
     public async Task<IActionResult> AcceptFriendRequest([FromRoute] Guid requesterId)
     {
-        try
-        {
-            var result = await _friendshipService.AcceptFriendRequestAsync(requesterId);
-            return Ok(ApiResult<FriendshipDto>.Success(result, "200", "Friend request accepted successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<FriendshipDto>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _friendshipService.AcceptFriendRequestAsync(requesterId);
+        return Ok(ApiResult<FriendshipDto>.Success(result, "200", "Friend request accepted successfully."));
     }
 
     /// <summary>
@@ -88,17 +70,8 @@ public class FriendshipController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 404)]
     public async Task<IActionResult> RejectFriendRequest([FromRoute] Guid requesterId)
     {
-        try
-        {
-            var result = await _friendshipService.RejectFriendRequestAsync(requesterId);
-            return Ok(ApiResult<object>.Success(result, "200", "Friend request rejected successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _friendshipService.RejectFriendRequestAsync(requesterId);
+        return Ok(ApiResult<object>.Success(result, "200", "Friend request rejected successfully."));
     }
 
     /// <summary>
@@ -115,17 +88,8 @@ public class FriendshipController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 404)]
     public async Task<IActionResult> Unfriend([FromRoute] Guid friendId)
     {
-        try
-        {
-            var result = await _friendshipService.UnfriendAsync(friendId);
-            return Ok(ApiResult<object>.Success(result, "200", "Unfriended successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<object>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _friendshipService.UnfriendAsync(friendId);
+        return Ok(ApiResult<object>.Success(result, "200", "Unfriended successfully."));
     }
 
     /// <summary>
@@ -140,17 +104,8 @@ public class FriendshipController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<List<FriendListDto>>), 200)]
     public async Task<IActionResult> GetMyFriends()
     {
-        try
-        {
-            var result = await _friendshipService.GetFriendsListAsync();
-            return Ok(ApiResult<List<FriendListDto>>.Success(result, "200", "Friends list retrieved successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<List<FriendListDto>>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _friendshipService.GetFriendsListAsync();
+        return Ok(ApiResult<List<FriendListDto>>.Success(result, "200", "Friends list retrieved successfully."));
     }
 
     /// <summary>
@@ -165,17 +120,8 @@ public class FriendshipController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<List<FriendshipDto>>), 200)]
     public async Task<IActionResult> GetPendingRequests()
     {
-        try
-        {
-            var result = await _friendshipService.GetPendingRequestsAsync();
-            return Ok(ApiResult<List<FriendshipDto>>.Success(result, "200", "Pending requests retrieved successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<List<FriendshipDto>>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _friendshipService.GetPendingRequestsAsync();
+        return Ok(ApiResult<List<FriendshipDto>>.Success(result, "200", "Pending requests retrieved successfully."));
     }
 
     /// <summary>
@@ -190,16 +136,7 @@ public class FriendshipController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<List<FriendshipDto>>), 200)]
     public async Task<IActionResult> GetSentRequests()
     {
-        try
-        {
-            var result = await _friendshipService.GetSentRequestsAsync();
-            return Ok(ApiResult<List<FriendshipDto>>.Success(result, "200", "Sent requests retrieved successfully."));
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-            var errorResponse = ExceptionUtils.CreateErrorResponse<List<FriendshipDto>>(ex);
-            return StatusCode(statusCode, errorResponse);
-        }
+        var result = await _friendshipService.GetSentRequestsAsync();
+        return Ok(ApiResult<List<FriendshipDto>>.Success(result, "200", "Sent requests retrieved successfully."));
     }
 }

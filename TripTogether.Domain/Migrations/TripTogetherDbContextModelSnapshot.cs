@@ -108,8 +108,6 @@ namespace TripTogether.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("TripId");
 
                     b.ToTable("activities", (string)null);
@@ -393,8 +391,6 @@ namespace TripTogether.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
                     b.ToTable("groups", (string)null);
                 });
 
@@ -624,8 +620,6 @@ namespace TripTogether.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("TripId");
 
                     b.ToTable("packing_items", (string)null);
@@ -686,8 +680,6 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
 
                     b.HasIndex("TripId");
 
@@ -998,8 +990,6 @@ namespace TripTogether.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("Token")
                         .IsUnique();
 
@@ -1197,19 +1187,11 @@ namespace TripTogether.Domain.Migrations
 
             modelBuilder.Entity("Activity", b =>
                 {
-                    b.HasOne("User", "Creator")
-                        .WithMany("ActivitiesCreated")
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Trip", "Trip")
                         .WithMany("Activities")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Creator");
 
                     b.Navigation("Trip");
                 });
@@ -1271,17 +1253,6 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("Requester");
                 });
 
-            modelBuilder.Entity("Group", b =>
-                {
-                    b.HasOne("User", "Creator")
-                        .WithMany("CreatedGroups")
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Creator");
-                });
-
             modelBuilder.Entity("GroupMember", b =>
                 {
                     b.HasOne("Group", "Group")
@@ -1322,38 +1293,22 @@ namespace TripTogether.Domain.Migrations
 
             modelBuilder.Entity("PackingItem", b =>
                 {
-                    b.HasOne("User", "Creator")
-                        .WithMany("PackingItemsCreated")
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Trip", "Trip")
                         .WithMany("PackingItems")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Creator");
-
                     b.Navigation("Trip");
                 });
 
             modelBuilder.Entity("Poll", b =>
                 {
-                    b.HasOne("User", "Creator")
-                        .WithMany("PollsCreated")
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Trip", "Trip")
                         .WithMany("Polls")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Creator");
 
                     b.Navigation("Trip");
                 });
@@ -1428,19 +1383,11 @@ namespace TripTogether.Domain.Migrations
 
             modelBuilder.Entity("TripInvite", b =>
                 {
-                    b.HasOne("User", "Creator")
-                        .WithMany("TripInvitesCreated")
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Trip", "Trip")
                         .WithMany("Invites")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Creator");
 
                     b.Navigation("Trip");
                 });
@@ -1544,10 +1491,6 @@ namespace TripTogether.Domain.Migrations
 
             modelBuilder.Entity("User", b =>
                 {
-                    b.Navigation("ActivitiesCreated");
-
-                    b.Navigation("CreatedGroups");
-
                     b.Navigation("ExpenseSplits");
 
                     b.Navigation("ExpensesPaid");
@@ -1560,17 +1503,11 @@ namespace TripTogether.Domain.Migrations
 
                     b.Navigation("PackingAssignments");
 
-                    b.Navigation("PackingItemsCreated");
-
-                    b.Navigation("PollsCreated");
-
                     b.Navigation("Posts");
 
                     b.Navigation("SettlementsAsPayee");
 
                     b.Navigation("SettlementsAsPayer");
-
-                    b.Navigation("TripInvitesCreated");
 
                     b.Navigation("UserBadges");
 
