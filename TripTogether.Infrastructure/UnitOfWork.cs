@@ -1,4 +1,5 @@
-﻿using PRN232.TripTogether.Repo;
+﻿using Npgsql.EntityFrameworkCore.PostgreSQL.Query.Expressions.Internal;
+using PRN232.TripTogether.Repo;
 using System.Collections.Concurrent;
 
 public class UnitOfWork : IUnitOfWork
@@ -46,6 +47,8 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Post> Posts => Repository<Post>();
     public IGenericRepository<Badge> Badges => Repository<Badge>();
     public IGenericRepository<OtpStorage> OtpStorages => Repository<OtpStorage>();
+    public IGenericRepository<Friendship> Friendships => Repository<Friendship>();
+    public IGenericRepository<GroupMember> GroupMembers => Repository<GroupMember>();
     public void Dispose()
     {
         _repositories.Clear();

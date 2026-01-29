@@ -1,5 +1,4 @@
-﻿
-public interface IBlobService
+﻿public interface IBlobService
 {
     Task EnsureBucketExistsAsync(CancellationToken cancellationToken = default);
 

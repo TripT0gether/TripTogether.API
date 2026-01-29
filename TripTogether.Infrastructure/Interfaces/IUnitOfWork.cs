@@ -19,6 +19,7 @@
     IGenericRepository<Post> Posts { get; }
     IGenericRepository<Badge> Badges { get; }
     IGenericRepository<OtpStorage> OtpStorages { get; }
-
+    IGenericRepository<Friendship> Friendships { get; }
+    IGenericRepository<GroupMember> GroupMembers { get; }
     Task<int> SaveChangesAsync();
 }

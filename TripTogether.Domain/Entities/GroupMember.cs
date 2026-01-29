@@ -2,7 +2,7 @@
 
 using TripTogether.Domain.Enums;
 
-public class GroupMember
+public class GroupMember : BaseEntity
 {
     public Guid GroupId { get; set; }
     public Guid UserId { get; set; }
