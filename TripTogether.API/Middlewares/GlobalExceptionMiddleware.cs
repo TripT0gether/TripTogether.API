@@ -18,11 +18,12 @@ namespace TripTogether.API.Middlewares
         {
             try
             {
-                await _next(context); // Try to run the Controller
+                // Try to run the Controller
+                await _next(context);
             }
             catch (Exception ex)
             {
-                // If ANY error happens in Service or Controller, we catch it here ONCE
+                // If ANY error happens in Service or Controller -> catch here
                 _logger.LogError(ex, "An unhandled exception occurred.");
                 await HandleExceptionAsync(context, ex);
             }
