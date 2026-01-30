@@ -10,6 +10,7 @@ public class PollOption : BaseEntity
     // Date Voting Details
     public DateTime? DateStart { get; set; }
     public DateTime? DateEnd { get; set; }
+    // Time of Day for Date Voting
     public TimeSlot? TimeOfDay { get; set; }
 
     // Navigation properties

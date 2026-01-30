@@ -138,7 +138,7 @@ public sealed class TripService : ITripService
 
         if (dto.PlanningRangeEnd.HasValue)
         {
-            if (dto.PlanningRangeEnd <= dto.PlanningRangeStart)
+            if (dto.PlanningRangeEnd <= trip.PlanningRangeStart)
             {
                 throw ErrorHelper.BadRequest("Planning range end date must be after start date.");
             }
@@ -147,7 +147,7 @@ public sealed class TripService : ITripService
 
         if (dto.StartDate.HasValue)
         {
-            if (dto.PlanningRangeStart.HasValue && DateOnly.FromDateTime(dto.StartDate.Value) <= dto.PlanningRangeStart)
+            if (dto.PlanningRangeStart.HasValue && DateOnly.FromDateTime(dto.StartDate.Value) <= trip.PlanningRangeStart)
             {
                 throw ErrorHelper.BadRequest("Trip start date must be in the future.");
             }
@@ -156,11 +156,12 @@ public sealed class TripService : ITripService
 
         if (dto.EndDate.HasValue)
         {
-            if (dto.StartDate.HasValue && dto.EndDate <= dto.StartDate)
+
+            if (trip.StartDate.HasValue && dto.EndDate <= trip.StartDate)
             {
                 throw ErrorHelper.BadRequest("Trip end date must be after start date.");
             }
-            if (dto.PlanningRangeEnd.HasValue && DateOnly.FromDateTime(dto.EndDate.Value) >= dto.PlanningRangeEnd)
+            if (dto.PlanningRangeEnd.HasValue && DateOnly.FromDateTime(dto.EndDate.Value) >= trip.PlanningRangeEnd)
             {
                 throw ErrorHelper.BadRequest("Trip end date must be before planning range end date.");
             }

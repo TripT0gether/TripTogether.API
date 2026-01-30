@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using TripTogether.Application.DTOs.PollDTO;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
@@ -20,6 +21,24 @@ public sealed class PollService : IPollService
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
+    }
+
+    private static bool IsValidJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return true;
+        }
+
+        try
+        {
+            JsonDocument.Parse(json);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     public async Task<PollDto> CreatePollAsync(CreatePollDto dto)
@@ -58,6 +77,46 @@ public sealed class PollService : IPollService
 
         foreach (var optionDto in dto.Options)
         {
+            if (string.IsNullOrWhiteSpace(optionDto.TextValue) &&
+                string.IsNullOrWhiteSpace(optionDto.MediaUrl) &&
+                string.IsNullOrWhiteSpace(optionDto.Metadata) &&
+                optionDto.DateStart == null &&
+                optionDto.DateEnd == null &&
+                optionDto.TimeOfDay == null)
+            {
+                throw ErrorHelper.BadRequest("Poll option must have at least one valid value.");
+            }
+
+            if (!IsValidJson(optionDto.Metadata))
+            {
+                throw ErrorHelper.BadRequest("Poll option metadata must be valid JSON.");
+            }
+
+            if (optionDto.DateEnd != null && optionDto.DateStart == null)
+            {
+                throw ErrorHelper.BadRequest("Poll option need both start and end");
+            }
+            else if (optionDto.DateEnd == null && optionDto.DateStart != null)
+            {
+                throw ErrorHelper.BadRequest("Poll option need both start and end");
+            }
+
+
+            if (
+                (optionDto.DateStart.HasValue && trip.PlanningRangeStart.HasValue && optionDto.DateStart.Value.Date < trip.PlanningRangeStart.Value.ToDateTime(TimeOnly.MinValue)) ||
+                (optionDto.DateEnd.HasValue && trip.PlanningRangeEnd.HasValue && optionDto.DateEnd.Value.Date > trip.PlanningRangeEnd.Value.ToDateTime(TimeOnly.MaxValue))
+            )
+            {
+                throw ErrorHelper.BadRequest("Poll option dates must be within the trip's planning range.");
+            }
+
+
+            if (optionDto.DateStart != null && (optionDto.DateStart < DateTime.UtcNow || optionDto.DateStart > optionDto.DateEnd))
+            {
+                throw ErrorHelper.BadRequest("Poll option start date cannot be later than end date.");
+            }
+
+
             var option = new PollOption
             {
                 PollId = poll.Id,
@@ -381,6 +440,11 @@ public sealed class PollService : IPollService
         if (poll.Status == PollStatus.Closed)
         {
             throw ErrorHelper.BadRequest("Cannot add options to a closed poll.");
+        }
+
+        if (!IsValidJson(dto.Metadata))
+        {
+            throw ErrorHelper.BadRequest("Poll option metadata must be valid JSON.");
         }
 
         var option = new PollOption

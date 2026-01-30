@@ -44,6 +44,17 @@ public sealed class TripInviteService : ITripInviteService
             throw ErrorHelper.Forbidden("You must be a member of the group to create an invite.");
         }
 
+        if (await _unitOfWork.TripInvites.GetQueryable()
+            .AnyAsync(i => i.TripId == dto.TripId && i.ExpiresAt > DateTime.UtcNow))
+        {
+            throw ErrorHelper.Conflict("An active invite already exists for this trip.");
+        }
+
+        if (dto.ExpiresInHours <= 0 || dto.ExpiresInHours > 168)
+        {
+            throw ErrorHelper.BadRequest("Expiration time must be between 1 and 168 hours.");
+        }
+
         var token = GenerateSecureToken();
         var expiresAt = DateTime.UtcNow.AddHours(dto.ExpiresInHours);
 
@@ -73,6 +84,45 @@ public sealed class TripInviteService : ITripInviteService
         };
     }
 
+    public async Task<TripInviteDto> RefreshInviteAsync(Guid inviteId)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation($"User {currentUserId} refreshing invite {inviteId}");
+
+        var invite = await _unitOfWork.TripInvites.GetQueryable()
+            .Include(i => i.Trip)
+            .ThenInclude(t => t.Group)
+            .ThenInclude(g => g.Members)
+            .FirstOrDefaultAsync(i => i.Id == inviteId);
+
+        if (invite == null)
+        {
+            throw ErrorHelper.NotFound("The invite does not exist.");
+        }
+
+        var isGroupMember = invite.Trip.Group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
+        if (!isGroupMember)
+        {
+            throw ErrorHelper.Forbidden("You must be a member of the group to refresh this invite.");
+        }
+
+        invite.ExpiresAt = DateTime.UtcNow.AddHours(24);
+        await _unitOfWork.SaveChangesAsync();
+
+        _loggerService.LogInformation($"Invite {inviteId} refreshed successfully to expire at {invite.ExpiresAt}");
+
+        return new TripInviteDto
+        {
+            Id = invite.Id,
+            TripId = invite.TripId,
+            TripTitle = invite.Trip.Title,
+            Token = invite.Token,
+            ExpiresAt = invite.ExpiresAt,
+            IsExpired = invite.ExpiresAt <= DateTime.UtcNow,
+            CreatedAt = invite.CreatedAt
+        };
+    }
 
     public async Task<bool> ValidateInviteTokenAsync(string token)
     {

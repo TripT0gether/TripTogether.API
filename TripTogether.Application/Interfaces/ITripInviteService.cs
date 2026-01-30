@@ -5,6 +5,7 @@ namespace TripTogether.Application.Interfaces;
 public interface ITripInviteService
 {
     Task<TripInviteDto> CreateInviteAsync(CreateTripInviteDto dto);
+    Task<TripInviteDto> RefreshInviteAsync(Guid inviteId);
     Task<bool> ValidateInviteTokenAsync(string token);
     Task<bool> RevokeInviteAsync(Guid inviteId);
     Task<List<TripInviteDto>> GetTripInvitesAsync(Guid tripId);

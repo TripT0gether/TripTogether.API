@@ -55,6 +55,25 @@ public class TripInviteController : ControllerBase
     }
 
     /// <summary>
+    /// Refresh a trip invite expiration.
+    /// </summary>
+    /// <param name="inviteId">Invite ID to refresh.</param>
+    /// <returns>Updated trip invite.</returns>
+    [HttpPatch("{inviteId:guid}/refresh")]
+    [SwaggerOperation(
+        Summary = "Refresh trip invite",
+        Description = "Refresh an existing invite by extending its expiration time by 24 hours. Only active group members can refresh invites."
+    )]
+    [ProducesResponseType(typeof(ApiResult<TripInviteDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<TripInviteDto>), 403)]
+    [ProducesResponseType(typeof(ApiResult<TripInviteDto>), 404)]
+    public async Task<IActionResult> RefreshInvite([FromRoute] Guid inviteId)
+    {
+        var result = await _tripInviteService.RefreshInviteAsync(inviteId);
+        return Ok(ApiResult<TripInviteDto>.Success(result, "200", "Trip invite refreshed successfully."));
+    }
+
+    /// <summary>
     /// Revoke a trip invite.
     /// </summary>
     /// <param name="inviteId">Invite ID to revoke.</param>
