@@ -91,6 +91,8 @@ public static class IocContainer
             throw new InvalidOperationException("Connection string 'DefaultConnection' not found in appsettings.json");
         }
 
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", false);
+
         services.AddDbContext<TripTogetherDbContext>(options =>
             options.UseNpgsql(connectionString, npgsql =>
             {

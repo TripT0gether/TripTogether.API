@@ -243,12 +243,18 @@ public sealed class GroupService : IGroupService
         _loggerService.LogInformation($"User {currentUserId} joining group with token");
 
         var tripInvite = await _unitOfWork.TripInvites.FirstOrDefaultAsync(invite => invite.Token == token);
-        if (tripInvite == null || tripInvite.Trip == null)
+        if (tripInvite == null)
         {
             throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
         }
 
-        var group = await _unitOfWork.Groups.GetByIdAsync(tripInvite.Trip.GroupId);
+        var trip = await _unitOfWork.Trips.GetByIdAsync(tripInvite.TripId);
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip associated with the invite does not exist.");
+        }
+
+        var group = await _unitOfWork.Groups.GetByIdAsync(trip.GroupId);
         if (group == null)
         {
             throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");

@@ -87,8 +87,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         foreach (var entity in entities)
         {
             entity.IsDeleted = true;
-            entity.DeletedAt = _timeService.GetCurrentTime();
+            entity.DeletedAt = _timeService.GetCurrentTime().ToUniversalTime();
             entity.DeletedBy = _claimsService.GetCurrentUserId;
+            entity.UpdatedAt = _timeService.GetCurrentTime().ToUniversalTime();
         }
 
         _dbSet.UpdateRange(entities);
@@ -103,8 +104,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         foreach (var entity in entities)
         {
             entity.IsDeleted = true;
-            entity.DeletedAt = _timeService.GetCurrentTime();
+            entity.DeletedAt = _timeService.GetCurrentTime().ToUniversalTime();
             entity.DeletedBy = _claimsService.GetCurrentUserId;
+            entity.UpdatedAt = _timeService.GetCurrentTime().ToUniversalTime();
         }
 
         _dbContext.UpdateRange(entities);
@@ -113,7 +115,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 
     public async Task<bool> Update(TEntity entity)
     {
-        entity.UpdatedAt = _timeService.GetCurrentTime();
+        entity.UpdatedAt = _timeService.GetCurrentTime().ToUniversalTime();
         entity.UpdatedBy = _claimsService.GetCurrentUserId;
         _dbSet.Update(entity);
         //   await _dbContext.SaveChangesAsync();
@@ -124,7 +126,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     {
         foreach (var entity in entities)
         {
-            entity.UpdatedAt = _timeService.GetCurrentTime();
+            entity.UpdatedAt = _timeService.GetCurrentTime().ToUniversalTime();
             entity.UpdatedBy = _claimsService.GetCurrentUserId;
         }
 

@@ -48,6 +48,16 @@ public sealed class TripService : ITripService
             throw ErrorHelper.Forbidden("You must be a member of the group to create a trip.");
         }
 
+        if (dto.PlanningRangeStart.HasValue && dto.PlanningRangeStart <= DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            throw ErrorHelper.BadRequest("Planning range start date must be in the future.");
+        }
+
+        if (dto.PlanningRangeEnd.HasValue && dto.PlanningRangeEnd <= dto.PlanningRangeStart)
+        {
+            throw ErrorHelper.BadRequest("Planning range end date must be after start date.");
+        }
+
         var trip = new Trip
         {
             GroupId = dto.GroupId,
@@ -119,21 +129,41 @@ public sealed class TripService : ITripService
 
         if (dto.PlanningRangeStart.HasValue)
         {
+            if (dto.PlanningRangeStart <= DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                throw ErrorHelper.BadRequest("Planning range start date must be in the future.");
+            }
             trip.PlanningRangeStart = dto.PlanningRangeStart;
         }
 
         if (dto.PlanningRangeEnd.HasValue)
         {
+            if (dto.PlanningRangeEnd <= dto.PlanningRangeStart)
+            {
+                throw ErrorHelper.BadRequest("Planning range end date must be after start date.");
+            }
             trip.PlanningRangeEnd = dto.PlanningRangeEnd;
         }
 
         if (dto.StartDate.HasValue)
         {
+            if (dto.PlanningRangeStart.HasValue && DateOnly.FromDateTime(dto.StartDate.Value) <= dto.PlanningRangeStart)
+            {
+                throw ErrorHelper.BadRequest("Trip start date must be in the future.");
+            }
             trip.StartDate = dto.StartDate;
         }
 
         if (dto.EndDate.HasValue)
         {
+            if (dto.StartDate.HasValue && dto.EndDate <= dto.StartDate)
+            {
+                throw ErrorHelper.BadRequest("Trip end date must be after start date.");
+            }
+            if (dto.PlanningRangeEnd.HasValue && DateOnly.FromDateTime(dto.EndDate.Value) >= dto.PlanningRangeEnd)
+            {
+                throw ErrorHelper.BadRequest("Trip end date must be before planning range end date.");
+            }
             trip.EndDate = dto.EndDate;
         }
 
