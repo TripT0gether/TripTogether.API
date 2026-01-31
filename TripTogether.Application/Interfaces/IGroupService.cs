@@ -16,7 +16,12 @@ public interface IGroupService
 
     Task<GroupDetailDto> GetGroupDetailAsync(Guid groupId);
 
-    Task<Pagination<GroupDto>> GetMyGroupsAsync(int pageNumber = 1, int pageSize = 10);
+    Task<Pagination<GroupDto>> GetMyGroupsAsync(
+        int pageNumber = 1, 
+        int pageSize = 10, 
+        string? searchTerm = null, 
+        string? sortBy = null, 
+        bool ascending = true);
 
     Task<GroupMemberDto> InviteMemberAsync(Guid groupId, InviteMemberDto dto);
 

@@ -317,7 +317,7 @@ public sealed class TripService : ITripService
         };
     }
 
-    public async Task<Pagination<TripDto>> GetGroupTripsAsync(Guid groupId, int pageNumber = 1, int pageSize = 10)
+    public async Task<Pagination<TripDto>> GetGroupTripsAsync(Guid groupId, TripQueryDto query)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
@@ -343,12 +343,37 @@ public sealed class TripService : ITripService
             .Include(t => t.Invites)
             .Where(t => t.GroupId == groupId);
 
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+        {
+            var searchTerm = query.SearchTerm.ToLower();
+            tripsQuery = tripsQuery.Where(t => 
+                t.Title.ToLower().Contains(searchTerm) || 
+                group.Name.ToLower().Contains(searchTerm));
+        }
+
+        if (query.Status.HasValue)
+        {
+            tripsQuery = tripsQuery.Where(t => t.Status == query.Status.Value);
+        }
+
+        tripsQuery = query.SortBy switch
+        {
+            TripSortBy.StartDate => query.SortDescending 
+                ? tripsQuery.OrderByDescending(t => t.StartDate) 
+                : tripsQuery.OrderBy(t => t.StartDate),
+            TripSortBy.PlanningRangeStart => query.SortDescending 
+                ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart) 
+                : tripsQuery.OrderBy(t => t.PlanningRangeStart),
+            _ => query.SortDescending 
+                ? tripsQuery.OrderByDescending(t => t.CreatedAt) 
+                : tripsQuery.OrderBy(t => t.CreatedAt)
+        };
+
         var totalCount = await tripsQuery.CountAsync();
 
         var trips = await tripsQuery
-            .OrderByDescending(t => t.CreatedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync();
 
         var tripDtos = trips.Select(trip => new TripDto
@@ -366,7 +391,7 @@ public sealed class TripService : ITripService
             InviteToken = trip.Invites.FirstOrDefault()?.Token
         }).ToList();
 
-        return new Pagination<TripDto>(tripDtos, totalCount, pageNumber, pageSize);
+        return new Pagination<TripDto>(tripDtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<TripDto> UpdateTripStatusAsync(Guid tripId, TripStatus status)
@@ -417,7 +442,7 @@ public sealed class TripService : ITripService
         };
     }
 
-    public async Task<Pagination<TripDto>> GetMyTripsAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<Pagination<TripDto>> GetMyTripsAsync(TripQueryDto query)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
@@ -431,7 +456,7 @@ public sealed class TripService : ITripService
         if (groupIds.Count == 0)
         {
             _loggerService.LogInformation($"User {currentUserId} is not a member of any active groups");
-            return new Pagination<TripDto>(new List<TripDto>(), 0, pageNumber, pageSize);
+            return new Pagination<TripDto>(new List<TripDto>(), 0, query.PageNumber, query.PageSize);
         }
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
@@ -439,12 +464,37 @@ public sealed class TripService : ITripService
             .Include(t => t.Invites)
             .Where(t => groupIds.Contains(t.GroupId));
 
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+        {
+            var searchTerm = query.SearchTerm.ToLower();
+            tripsQuery = tripsQuery.Where(t => 
+                t.Title.ToLower().Contains(searchTerm) || 
+                t.Group.Name.ToLower().Contains(searchTerm));
+        }
+
+        if (query.Status.HasValue)
+        {
+            tripsQuery = tripsQuery.Where(t => t.Status == query.Status.Value);
+        }
+
+        tripsQuery = query.SortBy switch
+        {
+            TripSortBy.StartDate => query.SortDescending 
+                ? tripsQuery.OrderByDescending(t => t.StartDate) 
+                : tripsQuery.OrderBy(t => t.StartDate),
+            TripSortBy.PlanningRangeStart => query.SortDescending 
+                ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart) 
+                : tripsQuery.OrderBy(t => t.PlanningRangeStart),
+            _ => query.SortDescending 
+                ? tripsQuery.OrderByDescending(t => t.CreatedAt) 
+                : tripsQuery.OrderBy(t => t.CreatedAt)
+        };
+
         var totalCount = await tripsQuery.CountAsync();
 
         var trips = await tripsQuery
-            .OrderByDescending(t => t.CreatedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync();
 
         var tripDtos = trips.Select(trip => new TripDto
@@ -462,6 +512,6 @@ public sealed class TripService : ITripService
             InviteToken = trip.Invites.FirstOrDefault()?.Token
         }).ToList();
 
-        return new Pagination<TripDto>(tripDtos, totalCount, pageNumber, pageSize);
+        return new Pagination<TripDto>(tripDtos, totalCount, query.PageNumber, query.PageSize);
     }
 }

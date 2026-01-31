@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.FriendshipDTO;
 using TripTogether.Application.Interfaces;
-using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -27,7 +26,7 @@ public sealed class FriendshipService : IFriendshipService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} sending friend request to {dto.AddresseeId}");
+        _loggerService.LogInformation("User {CurrentUserId} sending friend request to {AddresseeId}", currentUserId, dto.AddresseeId);
 
         if (currentUserId == dto.AddresseeId)
         {
@@ -65,28 +64,24 @@ public sealed class FriendshipService : IFriendshipService
             RequesterId = currentUserId,
             AddresseeId = dto.AddresseeId,
             Status = FriendshipStatus.Pending,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Requester = await _unitOfWork.Users.GetByIdAsync(currentUserId),
+            Addressee = addressee
         };
 
         await _unitOfWork.Friendships.AddAsync(friendship);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Friend request sent successfully from {currentUserId} to {dto.AddresseeId}");
+        _loggerService.LogInformation("Friend request sent successfully from {CurrentUserId} to {AddresseeId}", currentUserId, dto.AddresseeId);
 
-        var result = await _unitOfWork.Friendships.FirstOrDefaultAsync(
-            f => f.RequesterId == currentUserId && f.AddresseeId == dto.AddresseeId,
-            f => f.Requester,
-            f => f.Addressee
-        );
-
-        return MapToDto(result!);
+        return MapToDto(friendship);
     }
 
     public async Task<FriendshipDto> AcceptFriendRequestAsync(Guid requesterId)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} accepting friend request from {requesterId}");
+        _loggerService.LogInformation("User {CurrentUserId} accepting friend request from {RequesterId}", currentUserId, requesterId);
 
         var friendship = await _unitOfWork.Friendships.FirstOrDefaultAsync(
             f => f.RequesterId == requesterId && f.AddresseeId == currentUserId && f.Status == FriendshipStatus.Pending,
@@ -103,7 +98,7 @@ public sealed class FriendshipService : IFriendshipService
         await _unitOfWork.Friendships.Update(friendship);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Friend request accepted: {requesterId} and {currentUserId} are now friends");
+        _loggerService.LogInformation("Friend request accepted: {RequesterId} and {CurrentUserId} are now friends", requesterId, currentUserId);
 
         return MapToDto(friendship);
     }
@@ -112,7 +107,7 @@ public sealed class FriendshipService : IFriendshipService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} rejecting friend request from {requesterId}");
+        _loggerService.LogInformation("User {CurrentUserId} rejecting friend request from {RequesterId}", currentUserId, requesterId);
 
         var deleted = await _unitOfWork.Friendships.HardRemove(f =>
             f.RequesterId == requesterId && f.AddresseeId == currentUserId && f.Status == FriendshipStatus.Pending);
@@ -124,7 +119,7 @@ public sealed class FriendshipService : IFriendshipService
 
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Friend request rejected from {requesterId} to {currentUserId}");
+        _loggerService.LogInformation("Friend request rejected from {RequesterId} to {CurrentUserId}", requesterId, currentUserId);
 
         return true;
     }
@@ -133,7 +128,7 @@ public sealed class FriendshipService : IFriendshipService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} unfriending {friendId}");
+        _loggerService.LogInformation("User {CurrentUserId} unfriending {FriendId}", currentUserId, friendId);
 
         var deleted = await _unitOfWork.Friendships.HardRemove(f =>
             ((f.RequesterId == currentUserId && f.AddresseeId == friendId) ||
@@ -147,32 +142,52 @@ public sealed class FriendshipService : IFriendshipService
 
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Unfriended successfully: {currentUserId} and {friendId}");
+        _loggerService.LogInformation("Unfriended successfully: {CurrentUserId} and {FriendId}", currentUserId, friendId);
 
         return true;
     }
 
-    public async Task<Pagination<FriendListDto>> GetFriendsListAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<Pagination<FriendListDto>> GetFriendsListAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? searchTerm = null,
+        string? sortBy = null,
+        bool ascending = true)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"Getting friends list for user {currentUserId}");
+        _loggerService.LogInformation("Getting friends list for user {CurrentUserId}", currentUserId);
 
-        var friendshipsQuery = _unitOfWork.Friendships.GetQueryable()
+        IQueryable<Friendship> friendshipsQuery = _unitOfWork.Friendships.GetQueryable()
             .Where(f => ((f.RequesterId == currentUserId || f.AddresseeId == currentUserId) &&
                   f.Status == FriendshipStatus.Accepted))
             .Include(f => f.Requester)
             .Include(f => f.Addressee);
 
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lowerSearchTerm = searchTerm.ToLower();
+            friendshipsQuery = friendshipsQuery.Where(f =>
+                (f.RequesterId == currentUserId &&
+                 (f.Addressee.Username.ToLower().Contains(lowerSearchTerm) ||
+                  f.Addressee.Email.ToLower().Contains(lowerSearchTerm))) ||
+                (f.AddresseeId == currentUserId &&
+                 (f.Requester.Username.ToLower().Contains(lowerSearchTerm) ||
+                  f.Requester.Email.ToLower().Contains(lowerSearchTerm))));
+        }
+
         var totalCount = await friendshipsQuery.CountAsync();
 
+        friendshipsQuery = ascending
+            ? friendshipsQuery.OrderBy(f => f.CreatedAt)
+            : friendshipsQuery.OrderByDescending(f => f.CreatedAt);
+
         var friendships = await friendshipsQuery
-            .OrderBy(f => f.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        var friends = friendships.Select(f =>
+        var friendsList = friendships.Select(f =>
         {
             var friend = f.RequesterId == currentUserId ? f.Addressee : f.Requester;
             return new FriendListDto
@@ -185,26 +200,42 @@ public sealed class FriendshipService : IFriendshipService
             };
         }).ToList();
 
-        _loggerService.LogInformation($"Found {friends.Count} friends for user {currentUserId} on page {pageNumber}");
+        _loggerService.LogInformation("Found {FriendsCount} friends for user {CurrentUserId} on page {PageNumber}", friendsList.Count, currentUserId, pageNumber);
 
-        return new Pagination<FriendListDto>(friends, totalCount, pageNumber, pageSize);
+        return new Pagination<FriendListDto>(friendsList, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<Pagination<FriendshipDto>> GetPendingRequestsAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<Pagination<FriendshipDto>> GetPendingRequestsAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? searchTerm = null,
+        string? sortBy = null,
+        bool ascending = true)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"Getting pending friend requests for user {currentUserId}");
+        _loggerService.LogInformation("Getting pending friend requests for user {CurrentUserId}", currentUserId);
 
-        var requestsQuery = _unitOfWork.Friendships.GetQueryable()
+        IQueryable<Friendship> requestsQuery = _unitOfWork.Friendships.GetQueryable()
             .Where(f => f.AddresseeId == currentUserId && f.Status == FriendshipStatus.Pending)
             .Include(f => f.Requester)
             .Include(f => f.Addressee);
 
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lowerSearchTerm = searchTerm.ToLower();
+            requestsQuery = requestsQuery.Where(f =>
+                f.Requester.Username.ToLower().Contains(lowerSearchTerm) ||
+                f.Requester.Email.ToLower().Contains(lowerSearchTerm));
+        }
+
         var totalCount = await requestsQuery.CountAsync();
 
+        requestsQuery = ascending
+            ? requestsQuery.OrderBy(f => f.CreatedAt).ThenBy(f => f.RequesterId)
+            : requestsQuery.OrderByDescending(f => f.CreatedAt).ThenBy(f => f.RequesterId);
+
         var requests = await requestsQuery
-            .OrderByDescending(f => f.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -214,21 +245,37 @@ public sealed class FriendshipService : IFriendshipService
         return new Pagination<FriendshipDto>(requestDtos, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<Pagination<FriendshipDto>> GetSentRequestsAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<Pagination<FriendshipDto>> GetSentRequestsAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? searchTerm = null,
+        string? sortBy = null,
+        bool ascending = true)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"Getting sent friend requests for user {currentUserId}");
+        _loggerService.LogInformation("Getting sent friend requests for user {CurrentUserId}", currentUserId);
 
-        var requestsQuery = _unitOfWork.Friendships.GetQueryable()
+        IQueryable<Friendship> requestsQuery = _unitOfWork.Friendships.GetQueryable()
             .Where(f => f.RequesterId == currentUserId && f.Status == FriendshipStatus.Pending)
             .Include(f => f.Requester)
             .Include(f => f.Addressee);
 
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lowerSearchTerm = searchTerm.ToLower();
+            requestsQuery = requestsQuery.Where(f =>
+                f.Addressee.Username.ToLower().Contains(lowerSearchTerm) ||
+                f.Addressee.Email.ToLower().Contains(lowerSearchTerm));
+        }
+
         var totalCount = await requestsQuery.CountAsync();
 
+        requestsQuery = ascending
+            ? requestsQuery.OrderBy(f => f.CreatedAt).ThenBy(f => f.AddresseeId)
+            : requestsQuery.OrderByDescending(f => f.CreatedAt).ThenBy(f => f.AddresseeId);
+
         var requests = await requestsQuery
-            .OrderByDescending(f => f.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

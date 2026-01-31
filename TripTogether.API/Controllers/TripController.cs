@@ -124,20 +124,40 @@ public class TripController : ControllerBase
     /// Get all trips for a specific group.
     /// </summary>
     /// <param name="groupId">Group ID.</param>
+    /// <param name="searchTerm">Search term to filter by title or group name.</param>
+    /// <param name="status">Filter by trip status.</param>
+    /// <param name="sortBy">Sort by field (CreatedAt, StartDate, PlanningRangeStart).</param>
+    /// <param name="sortDescending">Sort in descending order (default: true).</param>
     /// <param name="pageNumber">Page number (default: 1).</param>
     /// <param name="pageSize">Page size (default: 10).</param>
     /// <returns>Paginated list of trips in the group.</returns>
     [HttpGet("group/{groupId:guid}")]
     [SwaggerOperation(
         Summary = "Get group trips",
-        Description = "Get all trips for a specific group. Only active group members can view the trips."
+        Description = "Get all trips for a specific group with optional search, filter, and sort capabilities. Only active group members can view the trips."
     )]
     [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 403)]
     [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 404)]
-    public async Task<IActionResult> GetGroupTrips([FromRoute] Guid groupId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetGroupTrips(
+        [FromRoute] Guid groupId, 
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] TripStatus? status = null,
+        [FromQuery] TripSortBy sortBy = TripSortBy.CreatedAt,
+        [FromQuery] bool sortDescending = true,
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10)
     {
-        var result = await _tripService.GetGroupTripsAsync(groupId, pageNumber, pageSize);
+        var query = new TripQueryDto
+        {
+            SearchTerm = searchTerm,
+            Status = status,
+            SortBy = sortBy,
+            SortDescending = sortDescending,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var result = await _tripService.GetGroupTripsAsync(groupId, query);
         return Ok(ApiResult<Pagination<TripDto>>.Success(result, "200", "Trips retrieved successfully."));
     }
 
@@ -164,18 +184,37 @@ public class TripController : ControllerBase
     /// <summary>
     /// Get all trips the current user has access to.
     /// </summary>
+    /// <param name="searchTerm">Search term to filter by title or group name.</param>
+    /// <param name="status">Filter by trip status.</param>
+    /// <param name="sortBy">Sort by field (CreatedAt, StartDate, PlanningRangeStart).</param>
+    /// <param name="sortDescending">Sort in descending order (default: true).</param>
     /// <param name="pageNumber">Page number (default: 1).</param>
     /// <param name="pageSize">Page size (default: 10).</param>
     /// <returns>Paginated list of trips from all groups the user is a member of.</returns>
     [HttpGet("my-trips")]
     [SwaggerOperation(
         Summary = "Get my trips",
-        Description = "Get all trips from groups the current user is an active member of, ordered by creation date."
+        Description = "Get all trips from groups the current user is an active member of with optional search, filter, and sort capabilities."
     )]
     [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 200)]
-    public async Task<IActionResult> GetMyTrips([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetMyTrips(
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] TripStatus? status = null,
+        [FromQuery] TripSortBy sortBy = TripSortBy.CreatedAt,
+        [FromQuery] bool sortDescending = true,
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10)
     {
-        var result = await _tripService.GetMyTripsAsync(pageNumber, pageSize);
+        var query = new TripQueryDto
+        {
+            SearchTerm = searchTerm,
+            Status = status,
+            SortBy = sortBy,
+            SortDescending = sortDescending,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var result = await _tripService.GetMyTripsAsync(query);
         return Ok(ApiResult<Pagination<TripDto>>.Success(result, "200", "My trips retrieved successfully."));
     }
 }

@@ -98,16 +98,24 @@ public class FriendshipController : ControllerBase
     /// </summary>
     /// <param name="pageNumber">Page number (default: 1).</param>
     /// <param name="pageSize">Page size (default: 10).</param>
+    /// <param name="searchTerm">Search by username or email.</param>
+    /// <param name="sortBy">Not used - sorting is always by createdAt.</param>
+    /// <param name="ascending">Sort order by createdAt (true for ascending, false for descending).</param>
     /// <returns>Paginated list of friends.</returns>
     [HttpGet("my-friends")]
     [SwaggerOperation(
         Summary = "Get my friends list",
-        Description = "Retrieve the list of all accepted friends for the current user."
+        Description = "Retrieve the list of all accepted friends for the current user with search and sort options. Sorting is always by creation date (friendsSince)."
     )]
     [ProducesResponseType(typeof(ApiResult<Pagination<FriendListDto>>), 200)]
-    public async Task<IActionResult> GetMyFriends([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetMyFriends(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool ascending = true)
     {
-        var result = await _friendshipService.GetFriendsListAsync(pageNumber, pageSize);
+        var result = await _friendshipService.GetFriendsListAsync(pageNumber, pageSize, searchTerm, sortBy, ascending);
         return Ok(ApiResult<Pagination<FriendListDto>>.Success(result, "200", "Friends list retrieved successfully."));
     }
 
@@ -116,16 +124,24 @@ public class FriendshipController : ControllerBase
     /// </summary>
     /// <param name="pageNumber">Page number (default: 1).</param>
     /// <param name="pageSize">Page size (default: 10).</param>
+    /// <param name="searchTerm">Search by username or email.</param>
+    /// <param name="sortBy">Not used - sorting is always by createdAt.</param>
+    /// <param name="ascending">Sort order by createdAt (true for ascending, false for descending, default is descending).</param>
     /// <returns>Paginated list of pending friend requests.</returns>
     [HttpGet("pending-requests")]
     [SwaggerOperation(
         Summary = "Get pending friend requests",
-        Description = "Retrieve all pending friend requests that you have received."
+        Description = "Retrieve all pending friend requests that you have received with search and sort options. Sorting is always by request date."
     )]
     [ProducesResponseType(typeof(ApiResult<Pagination<FriendshipDto>>), 200)]
-    public async Task<IActionResult> GetPendingRequests([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetPendingRequests(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool ascending = true)
     {
-        var result = await _friendshipService.GetPendingRequestsAsync(pageNumber, pageSize);
+        var result = await _friendshipService.GetPendingRequestsAsync(pageNumber, pageSize, searchTerm, sortBy, ascending);
         return Ok(ApiResult<Pagination<FriendshipDto>>.Success(result, "200", "Pending requests retrieved successfully."));
     }
 
@@ -134,16 +150,24 @@ public class FriendshipController : ControllerBase
     /// </summary>
     /// <param name="pageNumber">Page number (default: 1).</param>
     /// <param name="pageSize">Page size (default: 10).</param>
+    /// <param name="searchTerm">Search by username or email.</param>
+    /// <param name="sortBy">Not used - sorting is always by createdAt.</param>
+    /// <param name="ascending">Sort order by createdAt (true for ascending, false for descending, default is descending).</param>
     /// <returns>Paginated list of sent friend requests.</returns>
     [HttpGet("sent-requests")]
     [SwaggerOperation(
         Summary = "Get sent friend requests",
-        Description = "Retrieve all friend requests that you have sent and are still pending."
+        Description = "Retrieve all friend requests that you have sent and are still pending with search and sort options. Sorting is always by request date."
     )]
     [ProducesResponseType(typeof(ApiResult<Pagination<FriendshipDto>>), 200)]
-    public async Task<IActionResult> GetSentRequests([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetSentRequests(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool ascending = true)
     {
-        var result = await _friendshipService.GetSentRequestsAsync(pageNumber, pageSize);
+        var result = await _friendshipService.GetSentRequestsAsync(pageNumber, pageSize, searchTerm, sortBy, ascending);
         return Ok(ApiResult<Pagination<FriendshipDto>>.Success(result, "200", "Sent requests retrieved successfully."));
     }
 }

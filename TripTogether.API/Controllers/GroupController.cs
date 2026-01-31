@@ -140,16 +140,24 @@ public class GroupController : ControllerBase
     /// </summary>
     /// <param name="pageNumber">Page number (default: 1).</param>
     /// <param name="pageSize">Page size (default: 10).</param>
+    /// <param name="searchTerm">Search by group name.</param>
+    /// <param name="sortBy">Sort by field (createdat, date, membercount, members). Not used - always sorted by createdat or membercount.</param>
+    /// <param name="ascending">Sort order (true for ascending, false for descending).</param>
     /// <returns>Paginated list of groups.</returns>
     [HttpGet("my-groups")]
     [SwaggerOperation(
         Summary = "Get my groups",
-        Description = "Get all groups that the current user is a member of."
+        Description = "Get all groups that the current user is a member of with search and sort options. Supports sorting by creation date (default) or member count."
     )]
     [ProducesResponseType(typeof(ApiResult<Pagination<GroupDto>>), 200)]
-    public async Task<IActionResult> GetMyGroups([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetMyGroups(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool ascending = true)
     {
-        var result = await _groupService.GetMyGroupsAsync(pageNumber, pageSize);
+        var result = await _groupService.GetMyGroupsAsync(pageNumber, pageSize, searchTerm, sortBy, ascending);
         return Ok(ApiResult<Pagination<GroupDto>>.Success(result, "200", "Groups retrieved successfully."));
     }
 

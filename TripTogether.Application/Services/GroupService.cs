@@ -31,7 +31,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} creating group: {dto.Name}");
+        _loggerService.LogInformation("User {CurrentUserId} creating group: {GroupName}", currentUserId, dto.Name);
 
         var group = new Group
         {
@@ -52,7 +52,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.GroupMembers.AddAsync(creatorMember);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Group {group.Id} created successfully by user {currentUserId}");
+        _loggerService.LogInformation("Group {GroupId} created successfully by user {CurrentUserId}", group.Id, currentUserId);
 
         return new GroupDto
         {
@@ -69,7 +69,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} updating group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} updating group {GroupId}", currentUserId, groupId);
 
         if (!await IsGroupLeaderAsync(currentUserId, groupId))
         {
@@ -90,7 +90,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.Groups.Update(group);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Group {groupId} updated successfully");
+        _loggerService.LogInformation("Group {GroupId} updated successfully", groupId);
 
         var memberCount = await _unitOfWork.GroupMembers.GetQueryable()
             .CountAsync(gm => gm.GroupId == groupId && gm.Status == GroupMemberStatus.Active);
@@ -110,7 +110,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} uploading cover photo for group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} uploading cover photo for group {GroupId}", currentUserId, groupId);
 
         if (!await IsGroupLeaderAsync(currentUserId, groupId))
         {
@@ -134,7 +134,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.Groups.Update(group);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Cover photo uploaded successfully for group {groupId}");
+        _loggerService.LogInformation("Cover photo uploaded successfully for group {GroupId}", groupId);
 
         return coverPhotoUrl;
     }
@@ -143,7 +143,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} deleting group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} deleting group {GroupId}", currentUserId, groupId);
 
         if (!await IsGroupLeaderAsync(currentUserId, groupId))
         {
@@ -159,7 +159,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.Groups.SoftRemove(group);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Group {groupId} deleted successfully");
+        _loggerService.LogInformation("Group {GroupId} deleted successfully", groupId);
 
         return true;
     }
@@ -168,7 +168,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting details for group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} getting details for group {GroupId}", currentUserId, groupId);
 
         var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
         if (group == null)
@@ -205,50 +205,120 @@ public sealed class GroupService : IGroupService
         };
     }
 
-    public async Task<Pagination<GroupDto>> GetMyGroupsAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<Pagination<GroupDto>> GetMyGroupsAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? searchTerm = null,
+        string? sortBy = null,
+        bool ascending = true)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"Getting groups for user {currentUserId}");
+        _loggerService.LogInformation("Getting groups for user {CurrentUserId}", currentUserId);
 
-        var groupMembersQuery = _unitOfWork.GroupMembers.GetQueryable()
-            .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active)
-            .Include(gm => gm.Group);
+        IQueryable<GroupMember> groupMembersQuery = _unitOfWork.GroupMembers.GetQueryable()
+            .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lowerSearchTerm = searchTerm.ToLower();
+            groupMembersQuery = groupMembersQuery
+                .Include(gm => gm.Group)
+                .Where(gm => gm.Group.Name.ToLower().Contains(lowerSearchTerm));
+        }
+        else
+        {
+            groupMembersQuery = groupMembersQuery.Include(gm => gm.Group);
+        }
 
         var totalCount = await groupMembersQuery.CountAsync();
 
-        var groupMembers = await groupMembersQuery
-            .OrderByDescending(gm => gm.Group.CreatedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var sortByLower = sortBy?.ToLower();
+        var sortByMemberCount = sortByLower is "membercount" or "members";
 
-        var groups = new List<GroupDto>();
+        List<Guid> userGroupIds;
+        Dictionary<Guid, int> memberCounts;
 
-        foreach (var gm in groupMembers)
+        if (!sortByMemberCount)
         {
-            var memberCount = await _unitOfWork.GroupMembers.GetQueryable()
-                .CountAsync(m => m.GroupId == gm.GroupId && m.Status == GroupMemberStatus.Active);
+            var orderedQuery = ascending
+                ? groupMembersQuery.OrderBy(gm => gm.Group.CreatedAt).ThenBy(gm => gm.GroupId)
+                : groupMembersQuery.OrderByDescending(gm => gm.Group.CreatedAt).ThenBy(gm => gm.GroupId);
 
-            groups.Add(new GroupDto
+            userGroupIds = await orderedQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(gm => gm.GroupId)
+                .ToListAsync();
+
+            memberCounts = await _unitOfWork.GroupMembers.GetQueryable()
+                .Where(gm => userGroupIds.Contains(gm.GroupId) && gm.Status == GroupMemberStatus.Active)
+                .GroupBy(gm => gm.GroupId)
+                .Select(g => new { GroupId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.GroupId, x => x.Count);
+
+            var groups = await _unitOfWork.Groups.GetQueryable()
+                .Where(g => userGroupIds.Contains(g.Id))
+                .ToListAsync();
+
+            var groupDtos = groups.Select(g => new GroupDto
             {
-                Id = gm.Group.Id,
-                Name = gm.Group.Name,
-                CoverPhotoUrl = gm.Group.CoverPhotoUrl,
-                CreatedBy = gm.Group.CreatedBy,
-                CreatedAt = gm.Group.CreatedAt,
-                MemberCount = memberCount
-            });
-        }
+                Id = g.Id,
+                Name = g.Name,
+                CoverPhotoUrl = g.CoverPhotoUrl,
+                CreatedBy = g.CreatedBy,
+                CreatedAt = g.CreatedAt,
+                MemberCount = memberCounts.GetValueOrDefault(g.Id, 0)
+            })
+            .OrderBy(g => userGroupIds.IndexOf(g.Id))
+            .ToList();
 
-        return new Pagination<GroupDto>(groups, totalCount, pageNumber, pageSize);
+            return new Pagination<GroupDto>(groupDtos, totalCount, pageNumber, pageSize);
+        }
+        else
+        {
+            userGroupIds = await groupMembersQuery
+                .Select(gm => gm.GroupId)
+                .ToListAsync();
+
+            memberCounts = await _unitOfWork.GroupMembers.GetQueryable()
+                .Where(gm => userGroupIds.Contains(gm.GroupId) && gm.Status == GroupMemberStatus.Active)
+                .GroupBy(gm => gm.GroupId)
+                .Select(g => new { GroupId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.GroupId, x => x.Count);
+
+            var allGroups = await _unitOfWork.Groups.GetQueryable()
+                .Where(g => userGroupIds.Contains(g.Id))
+                .ToListAsync();
+
+            var groupDtos = allGroups.Select(g => new GroupDto
+            {
+                Id = g.Id,
+                Name = g.Name,
+                CoverPhotoUrl = g.CoverPhotoUrl,
+                CreatedBy = g.CreatedBy,
+                CreatedAt = g.CreatedAt,
+                MemberCount = memberCounts.GetValueOrDefault(g.Id, 0)
+            });
+
+            var sortedGroups = ascending
+                ? groupDtos.OrderBy(g => g.MemberCount).ThenBy(g => g.CreatedAt)
+                : groupDtos.OrderByDescending(g => g.MemberCount).ThenBy(g => g.CreatedAt);
+
+            var pagedGroups = sortedGroups
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new Pagination<GroupDto>(pagedGroups, totalCount, pageNumber, pageSize);
+        }
     }
 
     public async Task<GroupDto> JoinGroupByToken(string token)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} joining group with token");
+        _loggerService.LogInformation("User {CurrentUserId} joining group with token", currentUserId);
 
         var tripInvite = await _unitOfWork.TripInvites.FirstOrDefaultAsync(invite => invite.Token == token);
         if (tripInvite == null)
@@ -294,7 +364,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.GroupMembers.AddAsync(newMember);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"User {currentUserId} joined group {group.Id} successfully");
+        _loggerService.LogInformation("User {CurrentUserId} joined group {GroupId} successfully", currentUserId, group.Id);
 
         return new GroupDto
         {
@@ -313,7 +383,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} inviting {dto.UserId} to group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} inviting {TargetUserId} to group {GroupId}", currentUserId, dto.UserId, groupId);
 
         if (!await IsGroupLeaderAsync(currentUserId, groupId))
         {
@@ -351,7 +421,6 @@ public sealed class GroupService : IGroupService
             throw ErrorHelper.Forbidden("You can only invite friends to the group.");
         }
 
-        // Tạo lời mời
         var invitation = new GroupMember
         {
             GroupId = groupId,
@@ -363,7 +432,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.GroupMembers.AddAsync(invitation);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Invitation sent to {dto.UserId} for group {groupId}");
+        _loggerService.LogInformation("Invitation sent to {TargetUserId} for group {GroupId}", dto.UserId, groupId);
 
         return new GroupMemberDto
         {
@@ -380,7 +449,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} accepting invitation to group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} accepting invitation to group {GroupId}", currentUserId, groupId);
 
         var invitation = await _unitOfWork.GroupMembers.FirstOrDefaultAsync(
             gm => gm.GroupId == groupId && gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Pending,
@@ -396,7 +465,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.GroupMembers.Update(invitation);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"User {currentUserId} joined group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} joined group {GroupId}", currentUserId, groupId);
 
         return new GroupMemberDto
         {
@@ -413,7 +482,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} rejecting invitation to group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} rejecting invitation to group {GroupId}", currentUserId, groupId);
 
         var deleted = await _unitOfWork.GroupMembers.HardRemove(gm =>
             gm.GroupId == groupId && gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Pending);
@@ -425,7 +494,7 @@ public sealed class GroupService : IGroupService
 
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Invitation rejected for group {groupId}");
+        _loggerService.LogInformation("Invitation rejected for group {GroupId}", groupId);
 
         return true;
     }
@@ -434,7 +503,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} removing {userId} from group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} removing {TargetUserId} from group {GroupId}", currentUserId, userId, groupId);
 
         if (!await IsGroupLeaderAsync(currentUserId, groupId))
         {
@@ -456,7 +525,7 @@ public sealed class GroupService : IGroupService
 
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"User {userId} removed from group {groupId}");
+        _loggerService.LogInformation("User {TargetUserId} removed from group {GroupId}", userId, groupId);
 
         return true;
     }
@@ -465,7 +534,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} promoting {userId} to leader in group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} promoting {TargetUserId} to leader in group {GroupId}", currentUserId, userId, groupId);
 
         if (!await IsGroupLeaderAsync(currentUserId, groupId))
         {
@@ -501,7 +570,7 @@ public sealed class GroupService : IGroupService
 
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"User {userId} promoted to leader in group {groupId}");
+        _loggerService.LogInformation("User {TargetUserId} promoted to leader in group {GroupId}", userId, groupId);
 
         return new GroupMemberDto
         {
@@ -518,7 +587,7 @@ public sealed class GroupService : IGroupService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} leaving group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} leaving group {GroupId}", currentUserId, groupId);
 
         var member = await _unitOfWork.GroupMembers.FirstOrDefaultAsync(gm =>
             gm.GroupId == groupId && gm.UserId == currentUserId);
@@ -542,7 +611,7 @@ public sealed class GroupService : IGroupService
         await _unitOfWork.GroupMembers.HardRemove(gm => gm.GroupId == groupId && gm.UserId == currentUserId);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"User {currentUserId} left group {groupId}");
+        _loggerService.LogInformation("User {CurrentUserId} left group {GroupId}", currentUserId, groupId);
 
         return true;
     }
