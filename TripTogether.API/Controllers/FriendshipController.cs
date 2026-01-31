@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.FriendshipDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 
 namespace TripTogether.API.Controllers;
 
@@ -95,48 +96,54 @@ public class FriendshipController : ControllerBase
     /// <summary>
     /// Get the list of friends for the current user.
     /// </summary>
-    /// <returns>List of friends.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <returns>Paginated list of friends.</returns>
     [HttpGet("my-friends")]
     [SwaggerOperation(
         Summary = "Get my friends list",
         Description = "Retrieve the list of all accepted friends for the current user."
     )]
-    [ProducesResponseType(typeof(ApiResult<List<FriendListDto>>), 200)]
-    public async Task<IActionResult> GetMyFriends()
+    [ProducesResponseType(typeof(ApiResult<Pagination<FriendListDto>>), 200)]
+    public async Task<IActionResult> GetMyFriends([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _friendshipService.GetFriendsListAsync();
-        return Ok(ApiResult<List<FriendListDto>>.Success(result, "200", "Friends list retrieved successfully."));
+        var result = await _friendshipService.GetFriendsListAsync(pageNumber, pageSize);
+        return Ok(ApiResult<Pagination<FriendListDto>>.Success(result, "200", "Friends list retrieved successfully."));
     }
 
     /// <summary>
     /// Get pending friend requests received by the current user.
     /// </summary>
-    /// <returns>List of pending friend requests.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <returns>Paginated list of pending friend requests.</returns>
     [HttpGet("pending-requests")]
     [SwaggerOperation(
         Summary = "Get pending friend requests",
         Description = "Retrieve all pending friend requests that you have received."
     )]
-    [ProducesResponseType(typeof(ApiResult<List<FriendshipDto>>), 200)]
-    public async Task<IActionResult> GetPendingRequests()
+    [ProducesResponseType(typeof(ApiResult<Pagination<FriendshipDto>>), 200)]
+    public async Task<IActionResult> GetPendingRequests([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _friendshipService.GetPendingRequestsAsync();
-        return Ok(ApiResult<List<FriendshipDto>>.Success(result, "200", "Pending requests retrieved successfully."));
+        var result = await _friendshipService.GetPendingRequestsAsync(pageNumber, pageSize);
+        return Ok(ApiResult<Pagination<FriendshipDto>>.Success(result, "200", "Pending requests retrieved successfully."));
     }
 
     /// <summary>
     /// Get friend requests sent by the current user.
     /// </summary>
-    /// <returns>List of sent friend requests.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <returns>Paginated list of sent friend requests.</returns>
     [HttpGet("sent-requests")]
     [SwaggerOperation(
         Summary = "Get sent friend requests",
         Description = "Retrieve all friend requests that you have sent and are still pending."
     )]
-    [ProducesResponseType(typeof(ApiResult<List<FriendshipDto>>), 200)]
-    public async Task<IActionResult> GetSentRequests()
+    [ProducesResponseType(typeof(ApiResult<Pagination<FriendshipDto>>), 200)]
+    public async Task<IActionResult> GetSentRequests([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _friendshipService.GetSentRequestsAsync();
-        return Ok(ApiResult<List<FriendshipDto>>.Success(result, "200", "Sent requests retrieved successfully."));
+        var result = await _friendshipService.GetSentRequestsAsync(pageNumber, pageSize);
+        return Ok(ApiResult<Pagination<FriendshipDto>>.Success(result, "200", "Sent requests retrieved successfully."));
     }
 }

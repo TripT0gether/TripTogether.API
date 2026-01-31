@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.GroupDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -204,16 +205,23 @@ public sealed class GroupService : IGroupService
         };
     }
 
-    public async Task<List<GroupDto>> GetMyGroupsAsync()
+    public async Task<Pagination<GroupDto>> GetMyGroupsAsync(int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
         _loggerService.LogInformation($"Getting groups for user {currentUserId}");
 
-        var groupMembers = await _unitOfWork.GroupMembers.GetAllAsync(
-            gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active,
-            gm => gm.Group
-        );
+        var groupMembersQuery = _unitOfWork.GroupMembers.GetQueryable()
+            .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active)
+            .Include(gm => gm.Group);
+
+        var totalCount = await groupMembersQuery.CountAsync();
+
+        var groupMembers = await groupMembersQuery
+            .OrderByDescending(gm => gm.Group.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
         var groups = new List<GroupDto>();
 
@@ -233,7 +241,7 @@ public sealed class GroupService : IGroupService
             });
         }
 
-        return groups;
+        return new Pagination<GroupDto>(groups, totalCount, pageNumber, pageSize);
     }
 
     public async Task<GroupDto> JoinGroupByToken(string token)

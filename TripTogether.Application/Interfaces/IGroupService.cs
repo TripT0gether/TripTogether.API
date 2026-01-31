@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using TripTogether.Application.DTOs.GroupDTO;
+using TripTogether.Application.Utils;
 
 namespace TripTogether.Application.Interfaces;
 
@@ -15,7 +16,7 @@ public interface IGroupService
 
     Task<GroupDetailDto> GetGroupDetailAsync(Guid groupId);
 
-    Task<List<GroupDto>> GetMyGroupsAsync();
+    Task<Pagination<GroupDto>> GetMyGroupsAsync(int pageNumber = 1, int pageSize = 10);
 
     Task<GroupMemberDto> InviteMemberAsync(Guid groupId, InviteMemberDto dto);
 

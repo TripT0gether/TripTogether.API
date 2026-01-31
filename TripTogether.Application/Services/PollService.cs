@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using TripTogether.Application.DTOs.PollDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -306,7 +307,7 @@ public sealed class PollService : IPollService
         };
     }
 
-    public async Task<List<PollDto>> GetTripPollsAsync(Guid tripId)
+    public async Task<Pagination<PollDto>> GetTripPollsAsync(Guid tripId, int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
@@ -328,12 +329,18 @@ public sealed class PollService : IPollService
             throw ErrorHelper.Forbidden("You must be a member of the group to view polls.");
         }
 
-        var polls = await _unitOfWork.Polls.GetQueryable()
+        var pollsQuery = _unitOfWork.Polls.GetQueryable()
             .Include(p => p.Trip)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-            .Where(p => p.TripId == tripId)
+            .Where(p => p.TripId == tripId);
+
+        var totalCount = await pollsQuery.CountAsync();
+
+        var polls = await pollsQuery
             .OrderByDescending(p => p.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         var creatorIds = polls.Select(p => p.CreatedBy).Distinct().ToList();
@@ -341,7 +348,7 @@ public sealed class PollService : IPollService
             .Where(u => creatorIds.Contains(u.Id))
             .ToDictionaryAsync(u => u.Id, u => u.Username);
 
-        return polls.Select(poll => new PollDto
+        var pollDtos = polls.Select(poll => new PollDto
         {
             Id = poll.Id,
             TripId = poll.TripId,
@@ -355,6 +362,8 @@ public sealed class PollService : IPollService
             OptionCount = poll.Options.Count,
             TotalVotes = poll.Options.Sum(o => o.Votes.Count)
         }).ToList();
+
+        return new Pagination<PollDto>(pollDtos, totalCount, pageNumber, pageSize);
     }
 
     public async Task<PollDto> ClosePollAsync(Guid pollId)

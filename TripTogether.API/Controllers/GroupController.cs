@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.GroupDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 
 namespace TripTogether.API.Controllers;
 
@@ -137,17 +138,19 @@ public class GroupController : ControllerBase
     /// <summary>
     /// Get all groups the current user belongs to.
     /// </summary>
-    /// <returns>List of groups.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <returns>Paginated list of groups.</returns>
     [HttpGet("my-groups")]
     [SwaggerOperation(
         Summary = "Get my groups",
         Description = "Get all groups that the current user is a member of."
     )]
-    [ProducesResponseType(typeof(ApiResult<List<GroupDto>>), 200)]
-    public async Task<IActionResult> GetMyGroups()
+    [ProducesResponseType(typeof(ApiResult<Pagination<GroupDto>>), 200)]
+    public async Task<IActionResult> GetMyGroups([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _groupService.GetMyGroupsAsync();
-        return Ok(ApiResult<List<GroupDto>>.Success(result, "200", "Groups retrieved successfully."));
+        var result = await _groupService.GetMyGroupsAsync(pageNumber, pageSize);
+        return Ok(ApiResult<Pagination<GroupDto>>.Success(result, "200", "Groups retrieved successfully."));
     }
 
     /// <summary>

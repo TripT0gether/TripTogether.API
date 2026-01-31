@@ -1,4 +1,5 @@
 using TripTogether.Application.DTOs.PollDTO;
+using TripTogether.Application.Utils;
 
 namespace TripTogether.Application.Interfaces;
 
@@ -8,7 +9,7 @@ public interface IPollService
     Task<PollDto> UpdatePollAsync(Guid pollId, UpdatePollDto dto);
     Task<bool> DeletePollAsync(Guid pollId);
     Task<PollDetailDto> GetPollDetailAsync(Guid pollId);
-    Task<List<PollDto>> GetTripPollsAsync(Guid tripId);
+    Task<Pagination<PollDto>> GetTripPollsAsync(Guid tripId, int pageNumber = 1, int pageSize = 10);
     Task<PollDto> ClosePollAsync(Guid pollId);
     Task<PollOptionDto> AddPollOptionAsync(Guid pollId, CreatePollOptionDto dto);
     Task<bool> RemovePollOptionAsync(Guid optionId);

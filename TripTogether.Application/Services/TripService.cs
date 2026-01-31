@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.TripDTO;
 using TripTogether.Application.DTOs.TripInviteDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -316,7 +317,7 @@ public sealed class TripService : ITripService
         };
     }
 
-    public async Task<List<TripDto>> GetGroupTripsAsync(Guid groupId)
+    public async Task<Pagination<TripDto>> GetGroupTripsAsync(Guid groupId, int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
@@ -338,13 +339,19 @@ public sealed class TripService : ITripService
             throw ErrorHelper.Forbidden("You must be a member of the group to view its trips.");
         }
 
-        var trips = await _unitOfWork.Trips.GetQueryable()
+        var tripsQuery = _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Invites)
-            .Where(t => t.GroupId == groupId)
+            .Where(t => t.GroupId == groupId);
+
+        var totalCount = await tripsQuery.CountAsync();
+
+        var trips = await tripsQuery
             .OrderByDescending(t => t.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return trips.Select(trip => new TripDto
+        var tripDtos = trips.Select(trip => new TripDto
         {
             Id = trip.Id,
             GroupId = trip.GroupId,
@@ -358,6 +365,8 @@ public sealed class TripService : ITripService
             CreatedAt = trip.CreatedAt,
             InviteToken = trip.Invites.FirstOrDefault()?.Token
         }).ToList();
+
+        return new Pagination<TripDto>(tripDtos, totalCount, pageNumber, pageSize);
     }
 
     public async Task<TripDto> UpdateTripStatusAsync(Guid tripId, TripStatus status)
@@ -408,7 +417,7 @@ public sealed class TripService : ITripService
         };
     }
 
-    public async Task<List<TripDto>> GetMyTripsAsync()
+    public async Task<Pagination<TripDto>> GetMyTripsAsync(int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
@@ -422,17 +431,23 @@ public sealed class TripService : ITripService
         if (groupIds.Count == 0)
         {
             _loggerService.LogInformation($"User {currentUserId} is not a member of any active groups");
-            return new List<TripDto>();
+            return new Pagination<TripDto>(new List<TripDto>(), 0, pageNumber, pageSize);
         }
 
-        var trips = await _unitOfWork.Trips.GetQueryable()
+        var tripsQuery = _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
             .Include(t => t.Invites)
-            .Where(t => groupIds.Contains(t.GroupId))
+            .Where(t => groupIds.Contains(t.GroupId));
+
+        var totalCount = await tripsQuery.CountAsync();
+
+        var trips = await tripsQuery
             .OrderByDescending(t => t.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return trips.Select(trip => new TripDto
+        var tripDtos = trips.Select(trip => new TripDto
         {
             Id = trip.Id,
             GroupId = trip.GroupId,
@@ -446,5 +461,7 @@ public sealed class TripService : ITripService
             CreatedAt = trip.CreatedAt,
             InviteToken = trip.Invites.FirstOrDefault()?.Token
         }).ToList();
+
+        return new Pagination<TripDto>(tripDtos, totalCount, pageNumber, pageSize);
     }
 }

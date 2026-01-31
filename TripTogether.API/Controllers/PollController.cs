@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.PollDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 
 namespace TripTogether.API.Controllers;
 
@@ -104,19 +105,21 @@ public class PollController : ControllerBase
     /// Get all polls for a specific trip.
     /// </summary>
     /// <param name="tripId">Trip ID.</param>
-    /// <returns>List of polls in the trip.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <returns>Paginated list of polls in the trip.</returns>
     [HttpGet("trip/{tripId:guid}")]
     [SwaggerOperation(
         Summary = "Get trip polls",
         Description = "Get all polls for a specific trip. Only active group members can view the polls."
     )]
-    [ProducesResponseType(typeof(ApiResult<List<PollDto>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<List<PollDto>>), 403)]
-    [ProducesResponseType(typeof(ApiResult<List<PollDto>>), 404)]
-    public async Task<IActionResult> GetTripPolls([FromRoute] Guid tripId)
+    [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 403)]
+    [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 404)]
+    public async Task<IActionResult> GetTripPolls([FromRoute] Guid tripId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _pollService.GetTripPollsAsync(tripId);
-        return Ok(ApiResult<List<PollDto>>.Success(result, "200", "Trip polls retrieved successfully."));
+        var result = await _pollService.GetTripPollsAsync(tripId, pageNumber, pageSize);
+        return Ok(ApiResult<Pagination<PollDto>>.Success(result, "200", "Trip polls retrieved successfully."));
     }
 
     /// <summary>

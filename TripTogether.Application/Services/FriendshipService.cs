@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.FriendshipDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -150,18 +152,25 @@ public sealed class FriendshipService : IFriendshipService
         return true;
     }
 
-    public async Task<List<FriendListDto>> GetFriendsListAsync()
+    public async Task<Pagination<FriendListDto>> GetFriendsListAsync(int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
         _loggerService.LogInformation($"Getting friends list for user {currentUserId}");
 
-        var friendships = await _unitOfWork.Friendships.GetAllAsync(
-            f => ((f.RequesterId == currentUserId || f.AddresseeId == currentUserId) &&
-                  f.Status == FriendshipStatus.Accepted),
-            f => f.Requester,
-            f => f.Addressee
-        );
+        var friendshipsQuery = _unitOfWork.Friendships.GetQueryable()
+            .Where(f => ((f.RequesterId == currentUserId || f.AddresseeId == currentUserId) &&
+                  f.Status == FriendshipStatus.Accepted))
+            .Include(f => f.Requester)
+            .Include(f => f.Addressee);
+
+        var totalCount = await friendshipsQuery.CountAsync();
+
+        var friendships = await friendshipsQuery
+            .OrderBy(f => f.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
         var friends = friendships.Select(f =>
         {
@@ -176,39 +185,57 @@ public sealed class FriendshipService : IFriendshipService
             };
         }).ToList();
 
-        _loggerService.LogInformation($"Found {friends.Count} friends for user {currentUserId}");
+        _loggerService.LogInformation($"Found {friends.Count} friends for user {currentUserId} on page {pageNumber}");
 
-        return friends;
+        return new Pagination<FriendListDto>(friends, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<List<FriendshipDto>> GetPendingRequestsAsync()
+    public async Task<Pagination<FriendshipDto>> GetPendingRequestsAsync(int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
         _loggerService.LogInformation($"Getting pending friend requests for user {currentUserId}");
 
-        var requests = await _unitOfWork.Friendships.GetAllAsync(
-            f => f.AddresseeId == currentUserId && f.Status == FriendshipStatus.Pending,
-            f => f.Requester,
-            f => f.Addressee
-        );
+        var requestsQuery = _unitOfWork.Friendships.GetQueryable()
+            .Where(f => f.AddresseeId == currentUserId && f.Status == FriendshipStatus.Pending)
+            .Include(f => f.Requester)
+            .Include(f => f.Addressee);
 
-        return requests.Select(MapToDto).ToList();
+        var totalCount = await requestsQuery.CountAsync();
+
+        var requests = await requestsQuery
+            .OrderByDescending(f => f.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var requestDtos = requests.Select(MapToDto).ToList();
+
+        return new Pagination<FriendshipDto>(requestDtos, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<List<FriendshipDto>> GetSentRequestsAsync()
+    public async Task<Pagination<FriendshipDto>> GetSentRequestsAsync(int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
         _loggerService.LogInformation($"Getting sent friend requests for user {currentUserId}");
 
-        var requests = await _unitOfWork.Friendships.GetAllAsync(
-            f => f.RequesterId == currentUserId && f.Status == FriendshipStatus.Pending,
-            f => f.Requester,
-            f => f.Addressee
-        );
+        var requestsQuery = _unitOfWork.Friendships.GetQueryable()
+            .Where(f => f.RequesterId == currentUserId && f.Status == FriendshipStatus.Pending)
+            .Include(f => f.Requester)
+            .Include(f => f.Addressee);
 
-        return requests.Select(MapToDto).ToList();
+        var totalCount = await requestsQuery.CountAsync();
+
+        var requests = await requestsQuery
+            .OrderByDescending(f => f.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var requestDtos = requests.Select(MapToDto).ToList();
+
+        return new Pagination<FriendshipDto>(requestDtos, totalCount, pageNumber, pageSize);
     }
 
     private static FriendshipDto MapToDto(Friendship friendship)

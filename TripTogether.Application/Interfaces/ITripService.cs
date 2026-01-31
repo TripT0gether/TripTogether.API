@@ -1,4 +1,5 @@
 using TripTogether.Application.DTOs.TripDTO;
+using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Interfaces;
@@ -10,7 +11,7 @@ public interface ITripService
     Task<bool> DeleteTripAsync(Guid tripId);
     Task<TripDetailDto> GetTripDetailAsync(Guid tripId);
     Task<TripDto> GetTripByTokenAsync(string token);
-    Task<List<TripDto>> GetGroupTripsAsync(Guid groupId);
+    Task<Pagination<TripDto>> GetGroupTripsAsync(Guid groupId, int pageNumber = 1, int pageSize = 10);
     Task<TripDto> UpdateTripStatusAsync(Guid tripId, TripStatus status);
-    Task<List<TripDto>> GetMyTripsAsync();
+    Task<Pagination<TripDto>> GetMyTripsAsync(int pageNumber = 1, int pageSize = 10);
 }

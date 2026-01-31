@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.TripDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.API.Controllers;
@@ -123,19 +124,21 @@ public class TripController : ControllerBase
     /// Get all trips for a specific group.
     /// </summary>
     /// <param name="groupId">Group ID.</param>
-    /// <returns>List of trips in the group.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <returns>Paginated list of trips in the group.</returns>
     [HttpGet("group/{groupId:guid}")]
     [SwaggerOperation(
         Summary = "Get group trips",
         Description = "Get all trips for a specific group. Only active group members can view the trips."
     )]
-    [ProducesResponseType(typeof(ApiResult<List<TripDto>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<List<TripDto>>), 403)]
-    [ProducesResponseType(typeof(ApiResult<List<TripDto>>), 404)]
-    public async Task<IActionResult> GetGroupTrips([FromRoute] Guid groupId)
+    [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 403)]
+    [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 404)]
+    public async Task<IActionResult> GetGroupTrips([FromRoute] Guid groupId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _tripService.GetGroupTripsAsync(groupId);
-        return Ok(ApiResult<List<TripDto>>.Success(result, "200", "Trips retrieved successfully."));
+        var result = await _tripService.GetGroupTripsAsync(groupId, pageNumber, pageSize);
+        return Ok(ApiResult<Pagination<TripDto>>.Success(result, "200", "Trips retrieved successfully."));
     }
 
     /// <summary>
@@ -161,16 +164,18 @@ public class TripController : ControllerBase
     /// <summary>
     /// Get all trips the current user has access to.
     /// </summary>
-    /// <returns>List of trips from all groups the user is a member of.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <returns>Paginated list of trips from all groups the user is a member of.</returns>
     [HttpGet("my-trips")]
     [SwaggerOperation(
         Summary = "Get my trips",
         Description = "Get all trips from groups the current user is an active member of, ordered by creation date."
     )]
-    [ProducesResponseType(typeof(ApiResult<List<TripDto>>), 200)]
-    public async Task<IActionResult> GetMyTrips()
+    [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 200)]
+    public async Task<IActionResult> GetMyTrips([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _tripService.GetMyTripsAsync();
-        return Ok(ApiResult<List<TripDto>>.Success(result, "200", "My trips retrieved successfully."));
+        var result = await _tripService.GetMyTripsAsync(pageNumber, pageSize);
+        return Ok(ApiResult<Pagination<TripDto>>.Success(result, "200", "My trips retrieved successfully."));
     }
 }
