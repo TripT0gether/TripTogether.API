@@ -191,4 +191,52 @@ public class BlobService : IBlobService
             _ => "application/octet-stream"     // Fallback nếu định dạng ko xác định
         };
     }
+
+    /// <summary>
+    ///     Delete a file from MinIO storage.
+    /// </summary>
+    /// <param name="fileUrl">The full URL or object path of the file to delete.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public async Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(fileUrl))
+        {
+            _loggerService.LogWarning("DeleteFileAsync called with null or empty fileUrl.");
+            return;
+        }
+
+        try
+        {
+            // Extract object name from URL
+            // URL format: https://minio.fpt-devteam.fun/triptogether-bucket/avatars/user123/file.jpg?...
+            var uri = new Uri(fileUrl);
+            var path = uri.AbsolutePath;
+            
+            // Remove leading /bucket-name/ if present
+            var objectName = path.StartsWith($"/{_bucketName}/") 
+                ? path.Substring($"/{_bucketName}/".Length)
+                : path.TrimStart('/');
+
+            _loggerService.LogInformation("Deleting file from MinIO: {ObjectName}", objectName);
+
+            var args = new RemoveObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(objectName);
+
+            await _minioClient.RemoveObjectAsync(args, cancellationToken);
+
+            _loggerService.LogInformation("File deleted successfully: {ObjectName}", objectName);
+        }
+        catch (OperationCanceledException)
+        {
+            _loggerService.LogWarning("File deletion cancelled: {FileUrl}", fileUrl);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _loggerService.LogError(ex, "Error deleting file from MinIO: {FileUrl}", fileUrl);
+            // Don't throw - old file deletion failure shouldn't block new upload
+        }
+    }
 }

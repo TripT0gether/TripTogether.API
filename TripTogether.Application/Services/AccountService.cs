@@ -24,7 +24,7 @@ public class AccountService : IAccountService
     public async Task<UserDto?> GetCurrentUserAsync()
     {
         var userId = _claimsService.GetCurrentUserId;
-        _loggerService.LogInformation($"Getting profile for user ID: {userId}");
+        _loggerService.LogInformation("Getting profile for user ID: {UserId}", userId);
 
         var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
@@ -54,13 +54,13 @@ public class AccountService : IAccountService
     /// <returns></returns>
     public async Task<UserDto?> GetUserByIdAsync(Guid userId)
     {
-        _loggerService.LogInformation($"Getting profile for user ID: {userId}");
+        _loggerService.LogInformation("Getting profile for user ID: {UserId}", userId);
 
         var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         if (user == null)
         {
-            _loggerService.LogWarning($"User with ID {userId} not found");
+            _loggerService.LogWarning("User with ID {UserId} not found", userId);
             throw ErrorHelper.NotFound("Account does not exist.");
         }
 
@@ -85,7 +85,7 @@ public class AccountService : IAccountService
     public async Task<UserDto?> UpdateUserProfileAsync(UpdateUserDto updateUserDto)
     {
         var userId = _claimsService.GetCurrentUserId;
-        _loggerService.LogInformation($"Updating profile for user ID: {userId}");
+        _loggerService.LogInformation("Updating profile for user ID: {UserId}", userId);
 
         var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
@@ -107,7 +107,7 @@ public class AccountService : IAccountService
 
             if (existingUser != null)
             {
-                _loggerService.LogWarning($"Username {updateUserDto.Username} is already taken");
+                _loggerService.LogWarning("Username {Username} is already taken", updateUserDto.Username);
                 throw ErrorHelper.Conflict("Username is already taken.");
             }
 
@@ -122,7 +122,7 @@ public class AccountService : IAccountService
 
             if (existingUser != null)
             {
-                _loggerService.LogWarning($"Email {updateUserDto.Email} is already taken");
+                _loggerService.LogWarning("Email {Email} is already taken", updateUserDto.Email);
                 throw ErrorHelper.Conflict("Email is already taken.");
             }
 
@@ -132,16 +132,13 @@ public class AccountService : IAccountService
         if (updateUserDto.Gender.HasValue)
             user.Gender = updateUserDto.Gender.Value;
 
-        if (updateUserDto.AvatarUrl != null)
-            user.AvatarUrl = updateUserDto.AvatarUrl;
-
         if (updateUserDto.PaymentQrCodeUrl != null)
             user.PaymentQrCodeUrl = updateUserDto.PaymentQrCodeUrl;
 
         await _unitOfWork.Users.Update(user);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Profile updated successfully for user ID: {userId}");
+        _loggerService.LogInformation("Profile updated successfully for user ID: {UserId}", userId);
 
         return new UserDto
         {
@@ -163,7 +160,7 @@ public class AccountService : IAccountService
     public async Task<bool> DeleteAccountAsync()
     {
         var userId = _claimsService.GetCurrentUserId;
-        _loggerService.LogInformation($"Account deletion requested for user ID: {userId}");
+        _loggerService.LogInformation("Account deletion requested for user ID: {UserId}", userId);
 
         var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
@@ -180,7 +177,7 @@ public class AccountService : IAccountService
         await _unitOfWork.Users.SoftRemove(user);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Account deleted successfully for user ID: {userId}");
+        _loggerService.LogInformation("Account deleted successfully for user ID: {UserId}", userId);
         return true;
     }
 }

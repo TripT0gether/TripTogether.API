@@ -12,18 +12,18 @@ public sealed class GroupService : IGroupService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
-    private readonly IBlobService _blobService;
+    private readonly IFileService _fileService;
     private readonly ILogger _loggerService;
 
     public GroupService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
-        IBlobService blobService,
+        IFileService fileService,
         ILogger<GroupService> loggerService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
-        _blobService = blobService;
+        _fileService = fileService;
         _loggerService = loggerService;
     }
 
@@ -108,35 +108,7 @@ public sealed class GroupService : IGroupService
 
     public async Task<string> UploadCoverPhotoAsync(Guid groupId, IFormFile file)
     {
-        var currentUserId = _claimsService.GetCurrentUserId;
-
-        _loggerService.LogInformation("User {CurrentUserId} uploading cover photo for group {GroupId}", currentUserId, groupId);
-
-        if (!await IsGroupLeaderAsync(currentUserId, groupId))
-        {
-            throw ErrorHelper.Forbidden("Only the team leader has the right to change the cover photo.");
-        }
-
-        var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-        var fileName = $"{groupId}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-
-        using var stream = file.OpenReadStream();
-        await _blobService.UploadFileAsync(fileName, stream, "group-covers");
-
-        var coverPhotoUrl = await _blobService.GetFileUrlAsync($"group-covers/{fileName}");
-
-        group.CoverPhotoUrl = coverPhotoUrl;
-
-        await _unitOfWork.Groups.Update(group);
-        await _unitOfWork.SaveChangesAsync();
-
-        _loggerService.LogInformation("Cover photo uploaded successfully for group {GroupId}", groupId);
-
-        return coverPhotoUrl;
+        return await _fileService.UploadGroupCoverPhotoAsync(groupId, file);
     }
 
     public async Task<bool> DeleteGroupAsync(Guid groupId)

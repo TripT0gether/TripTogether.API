@@ -11,4 +11,6 @@
     Task<string> GetPreviewUrlAsync(string fileName);
 
     Task<string> GetFileUrlAsync(string fileName, CancellationToken cancellationToken = default);
+
+    Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default);
 }

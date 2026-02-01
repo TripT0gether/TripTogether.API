@@ -67,35 +67,21 @@ public class GroupController : ControllerBase
     /// <param name="groupId">Group ID.</param>
     /// <param name="file">Image file to upload.</param>
     /// <returns>URL of the uploaded cover photo.</returns>
-    //[HttpPost("{groupId:guid}/cover-photo")]
-    //[Consumes("multipart/form-data")]
-    //[SwaggerOperation(
-    //    Summary = "Upload group cover photo",
-    //    Description = "Upload a cover photo for the group. Only group leaders can upload."
-    //)]
-    //[ProducesResponseType(typeof(ApiResult<string>), 200)]
-    //[ProducesResponseType(typeof(ApiResult<string>), 400)]
-    //[ProducesResponseType(typeof(ApiResult<string>), 403)]
-    //[ProducesResponseType(typeof(ApiResult<string>), 404)]
-    //public async Task<IActionResult> UploadCoverPhoto([FromRoute] Guid groupId, [FromForm] IFormFile file)
-    //{
-    //    try
-    //    {
-    //        if (file == null || file.Length == 0)
-    //        {
-    //            return BadRequest(ApiResult<string>.Failure("400", "File is required."));
-    //        }
-
-    //        var result = await _groupService.UploadCoverPhotoAsync(groupId, file);
-    //        return Ok(ApiResult<string>.Success(result, "200", "Cover photo uploaded successfully."));
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        var statusCode = ExceptionUtils.ExtractStatusCode(ex);
-    //        var errorResponse = ExceptionUtils.CreateErrorResponse<string>(ex);
-    //        return StatusCode(statusCode, errorResponse);
-    //    }
-    //}
+    [HttpPost("{groupId:guid}/cover-photo")]
+    [Consumes("multipart/form-data")]
+    [SwaggerOperation(
+        Summary = "Upload group cover photo",
+        Description = "Upload a cover photo for the group. Only group leaders can upload."
+    )]
+    [ProducesResponseType(typeof(ApiResult<string>), 200)]
+    [ProducesResponseType(typeof(ApiResult<string>), 400)]
+    [ProducesResponseType(typeof(ApiResult<string>), 403)]
+    [ProducesResponseType(typeof(ApiResult<string>), 404)]
+    public async Task<IActionResult> UploadCoverPhoto([FromRoute] Guid groupId, IFormFile file)
+    {
+        var result = await _groupService.UploadCoverPhotoAsync(groupId, file);
+        return Ok(ApiResult<string>.Success(result, "200", "Cover photo uploaded successfully."));
+    }
 
     /// <summary>
     /// Delete a group.

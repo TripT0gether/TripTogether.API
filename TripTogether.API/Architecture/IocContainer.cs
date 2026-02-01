@@ -114,6 +114,7 @@ public static class IocContainer
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBlobService, BlobService>();
+        services.AddScoped<IFileService, FileService>();
         services.AddScoped<IFriendshipService, FriendshipService>();
         services.AddScoped<IGroupService, GroupService>();
         services.AddScoped<ITripService, TripService>();
@@ -179,6 +180,9 @@ public static class IocContainer
 
             c.UseAllOfForInheritance();
             c.EnableAnnotations();
+
+            // Add file upload operation filter
+            c.OperationFilter<TripTogether.API.Attributes.FileUploadOperationFilter>();
         });
 
         return services;
