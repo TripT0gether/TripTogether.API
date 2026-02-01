@@ -111,6 +111,7 @@ public static class IocContainer
     public static IServiceCollection SetupBusinessServicesLayer(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBlobService, BlobService>();
         services.AddScoped<IFriendshipService, FriendshipService>();

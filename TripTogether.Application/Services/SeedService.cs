@@ -102,6 +102,80 @@ public class SeedService : ISeedService
         // Load users from database for subsequent seeding operations
         users = (await _unitOfWork.Users.GetAllAsync()).ToList();
 
+        _loggerService.LogInformation("Starting seed friendships");
+        var existingFriendships = await _unitOfWork.Friendships.GetAllAsync();
+        if (existingFriendships.Any())
+        {
+            _loggerService.LogInformation("Friendships already exist, skipping friendship seeding");
+        }
+        else
+        {
+            if (users.Count < 5)
+            {
+                _loggerService.LogWarning("Not enough users to seed friendships");
+            }
+            else
+            {
+                var friendships = new List<Friendship>
+                {
+                    new Friendship
+                    {
+                        Id = Guid.NewGuid(),
+                        RequesterId = users[1].Id,
+                        AddresseeId = users[2].Id,
+                        Status = FriendshipStatus.Accepted,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = users[1].Id,
+                        IsDeleted = false
+                    },
+                    new Friendship
+                    {
+                        Id = Guid.NewGuid(),
+                        RequesterId = users[1].Id,
+                        AddresseeId = users[3].Id,
+                        Status = FriendshipStatus.Accepted,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = users[1].Id,
+                        IsDeleted = false
+                    },
+                    new Friendship
+                    {
+                        Id = Guid.NewGuid(),
+                        RequesterId = users[2].Id,
+                        AddresseeId = users[4].Id,
+                        Status = FriendshipStatus.Accepted,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = users[2].Id,
+                        IsDeleted = false
+                    },
+                    new Friendship
+                    {
+                        Id = Guid.NewGuid(),
+                        RequesterId = users[3].Id,
+                        AddresseeId = users[4].Id,
+                        Status = FriendshipStatus.Pending,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = users[3].Id,
+                        IsDeleted = false
+                    },
+                    new Friendship
+                    {
+                        Id = Guid.NewGuid(),
+                        RequesterId = users[1].Id,
+                        AddresseeId = users[4].Id,
+                        Status = FriendshipStatus.Accepted,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = users[1].Id,
+                        IsDeleted = false
+                    }
+                };
+
+                await _unitOfWork.Friendships.AddRangeAsync(friendships);
+                await _unitOfWork.SaveChangesAsync();
+                _loggerService.LogInformation("Finished seed friendships");
+            }
+        }
+
         _loggerService.LogInformation("Starting seed badges");
         var existingBadges = await _unitOfWork.Badges.GetAllAsync();
         if (existingBadges.Any())
@@ -378,6 +452,296 @@ public class SeedService : ISeedService
             };
 
             await _unitOfWork.Activities.AddRangeAsync(activities);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation("Adding packing items");
+
+            // Add packing items
+            var packingItems = new List<PackingItem>
+            {
+                // Beach trip items
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Name = "Sunscreen",
+                    Category = "Personal Care",
+                    IsShared = false,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Name = "Beach Umbrella",
+                    Category = "Equipment",
+                    IsShared = true,
+                    QuantityNeeded = 2,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Name = "Swimsuit",
+                    Category = "Clothing",
+                    IsShared = false,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Name = "Cooler",
+                    Category = "Equipment",
+                    IsShared = true,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                // Mountain trek items
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    Name = "Hiking Boots",
+                    Category = "Footwear",
+                    IsShared = false,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    Name = "Tent",
+                    Category = "Camping Gear",
+                    IsShared = true,
+                    QuantityNeeded = 2,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    Name = "First Aid Kit",
+                    Category = "Safety",
+                    IsShared = true,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    Name = "Water Bottle",
+                    Category = "Hydration",
+                    IsShared = false,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                // City tour items
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    Name = "Camera",
+                    Category = "Electronics",
+                    IsShared = false,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    Name = "Power Bank",
+                    Category = "Electronics",
+                    IsShared = false,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                },
+                new PackingItem
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    Name = "City Map",
+                    Category = "Navigation",
+                    IsShared = true,
+                    QuantityNeeded = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.PackingItems.AddRangeAsync(packingItems);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation("Adding packing assignments");
+
+            // Add packing assignments
+            var packingAssignments = new List<PackingAssignment>
+            {
+                // Beach trip assignments
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[0].Id, // Sunscreen
+                    UserId = users[1].Id,
+                    Quantity = 1,
+                    IsChecked = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[1].Id, // Beach Umbrella
+                    UserId = users[2].Id,
+                    Quantity = 2,
+                    IsChecked = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[2].Id, // Swimsuit
+                    UserId = users[1].Id,
+                    Quantity = 1,
+                    IsChecked = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[3].Id, // Cooler
+                    UserId = users[3].Id,
+                    Quantity = 1,
+                    IsChecked = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                // Mountain trek assignments
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[4].Id, // Hiking Boots
+                    UserId = users[2].Id,
+                    Quantity = 1,
+                    IsChecked = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[5].Id, // Tent
+                    UserId = users[1].Id,
+                    Quantity = 1,
+                    IsChecked = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[5].Id, // Tent (second one)
+                    UserId = users[3].Id,
+                    Quantity = 1,
+                    IsChecked = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[6].Id, // First Aid Kit
+                    UserId = users[4].Id,
+                    Quantity = 1,
+                    IsChecked = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[4].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[7].Id, // Water Bottle
+                    UserId = users[2].Id,
+                    Quantity = 1,
+                    IsChecked = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                // City tour assignments
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[8].Id, // Camera
+                    UserId = users[3].Id,
+                    Quantity = 1,
+                    IsChecked = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[9].Id, // Power Bank
+                    UserId = users[4].Id,
+                    Quantity = 1,
+                    IsChecked = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[4].Id,
+                    IsDeleted = false
+                },
+                new PackingAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    PackingItemId = packingItems[10].Id, // City Map
+                    UserId = users[1].Id,
+                    Quantity = 1,
+                    IsChecked = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.PackingAssignments.AddRangeAsync(packingAssignments);
             await _unitOfWork.SaveChangesAsync();
             _loggerService.LogInformation("Finished seed trips");
         }
