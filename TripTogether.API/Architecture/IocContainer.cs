@@ -122,6 +122,9 @@ public static class IocContainer
         services.AddScoped<IPollService, PollService>();
         services.AddScoped<IVoteService, VoteService>();
         services.AddScoped<ISeedService, SeedService>();
+        services.AddScoped<IActivityService, ActivityService>();
+        services.AddScoped<IPackingItemService, PackingItemService>();
+        services.AddScoped<IPackingAssignmentService, PackingAssignmentService>();
         return services;
     }
 

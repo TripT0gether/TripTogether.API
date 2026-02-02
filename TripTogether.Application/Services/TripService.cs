@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.TripDTO;
 using TripTogether.Application.DTOs.TripInviteDTO;
 using TripTogether.Application.Interfaces;
-using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -346,8 +345,8 @@ public sealed class TripService : ITripService
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
             var searchTerm = query.SearchTerm.ToLower();
-            tripsQuery = tripsQuery.Where(t => 
-                t.Title.ToLower().Contains(searchTerm) || 
+            tripsQuery = tripsQuery.Where(t =>
+                t.Title.ToLower().Contains(searchTerm) ||
                 group.Name.ToLower().Contains(searchTerm));
         }
 
@@ -358,14 +357,14 @@ public sealed class TripService : ITripService
 
         tripsQuery = query.SortBy switch
         {
-            TripSortBy.StartDate => query.SortDescending 
-                ? tripsQuery.OrderByDescending(t => t.StartDate) 
+            TripSortBy.StartDate => query.SortDescending
+                ? tripsQuery.OrderByDescending(t => t.StartDate)
                 : tripsQuery.OrderBy(t => t.StartDate),
-            TripSortBy.PlanningRangeStart => query.SortDescending 
-                ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart) 
+            TripSortBy.PlanningRangeStart => query.SortDescending
+                ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart)
                 : tripsQuery.OrderBy(t => t.PlanningRangeStart),
-            _ => query.SortDescending 
-                ? tripsQuery.OrderByDescending(t => t.CreatedAt) 
+            _ => query.SortDescending
+                ? tripsQuery.OrderByDescending(t => t.CreatedAt)
                 : tripsQuery.OrderBy(t => t.CreatedAt)
         };
 
@@ -467,8 +466,8 @@ public sealed class TripService : ITripService
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
             var searchTerm = query.SearchTerm.ToLower();
-            tripsQuery = tripsQuery.Where(t => 
-                t.Title.ToLower().Contains(searchTerm) || 
+            tripsQuery = tripsQuery.Where(t =>
+                t.Title.ToLower().Contains(searchTerm) ||
                 t.Group.Name.ToLower().Contains(searchTerm));
         }
 
@@ -479,14 +478,14 @@ public sealed class TripService : ITripService
 
         tripsQuery = query.SortBy switch
         {
-            TripSortBy.StartDate => query.SortDescending 
-                ? tripsQuery.OrderByDescending(t => t.StartDate) 
+            TripSortBy.StartDate => query.SortDescending
+                ? tripsQuery.OrderByDescending(t => t.StartDate)
                 : tripsQuery.OrderBy(t => t.StartDate),
-            TripSortBy.PlanningRangeStart => query.SortDescending 
-                ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart) 
+            TripSortBy.PlanningRangeStart => query.SortDescending
+                ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart)
                 : tripsQuery.OrderBy(t => t.PlanningRangeStart),
-            _ => query.SortDescending 
-                ? tripsQuery.OrderByDescending(t => t.CreatedAt) 
+            _ => query.SortDescending
+                ? tripsQuery.OrderByDescending(t => t.CreatedAt)
                 : tripsQuery.OrderBy(t => t.CreatedAt)
         };
 

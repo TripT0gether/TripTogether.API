@@ -3,6 +3,9 @@ namespace TripTogether.Domain.Enums;
 public enum TimeSlot
 {
     Morning,
+    Lunch,
     Afternoon,
-    Evening
+    Dinner,
+    Evening,
+    LateNight
 }

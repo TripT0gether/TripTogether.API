@@ -1,5 +1,4 @@
 using TripTogether.Application.DTOs.PollDTO;
-using TripTogether.Application.Utils;
 
 namespace TripTogether.Application.Interfaces;
 

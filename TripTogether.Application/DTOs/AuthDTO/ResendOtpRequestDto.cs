@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.DTOs.AuthDTO;
 

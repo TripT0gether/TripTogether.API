@@ -1,5 +1,4 @@
 using TripTogether.Application.DTOs.TripDTO;
-using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Interfaces;

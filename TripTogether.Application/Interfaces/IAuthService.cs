@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using TripTogether.Application.DTOs.AuthDTO;
 using TripTogether.Application.DTOs.UserDTO;
+using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Interfaces
 {
