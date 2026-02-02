@@ -25,7 +25,11 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                 "https://triptogether.ae-tao-fullstack-api.site",    // Production
-                "http://localhost:3000"                              // Local fe development
+                "http://localhost:3000",                             // Local fe development
+                "http://192.168.1.16:8081",                          // Mobile app (Expo)
+                "http://192.168.1.16:19000",                         // Expo DevTools
+                "http://192.168.1.16:19001",                         // Expo Metro bundler
+                "http://192.168.1.16:19002"                          // Expo alternative port
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
