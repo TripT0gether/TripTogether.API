@@ -15,7 +15,7 @@ public class BlobService : IBlobService
         _loggerService = logger;
 
         // Get key từ docker-compose
-        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "103.211.201.162:9000";
+        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
         var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY");
 
@@ -58,6 +58,9 @@ public class BlobService : IBlobService
                     new MakeBucketArgs().WithBucket(_bucketName),
                     cancellationToken);
                 _loggerService.LogInformation($"Bucket '{_bucketName}' created.");
+
+                // Set bucket policy to allow public read access
+                await SetPublicPolicyAsync(cancellationToken);
             }
             else
             {
@@ -78,6 +81,39 @@ public class BlobService : IBlobService
         {
             _loggerService.LogError($"Unexpected error in EnsureBucketExists: {ex.Message}");
             throw;
+        }
+    }
+
+    /// <summary>
+    ///     Set bucket policy to allow public read access to all objects
+    /// </summary>
+    private async Task SetPublicPolicyAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var policy = $$"""
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {"AWS": "*"},
+                        "Action": ["s3:GetObject"],
+                        "Resource": ["arn:aws:s3:::{{_bucketName}}/*"]
+                    }
+                ]
+            }
+            """;
+
+            await _minioClient.SetPolicyAsync(new SetPolicyArgs()
+                .WithBucket(_bucketName)
+                .WithPolicy(policy), cancellationToken);
+
+            _loggerService.LogInformation($"Public read policy set for bucket '{_bucketName}'");
+        }
+        catch (Exception ex)
+        {
+            _loggerService.LogWarning($"Failed to set public policy: {ex.Message}");
         }
     }
 
@@ -118,11 +154,10 @@ public class BlobService : IBlobService
     public Task<string> GetPreviewUrlAsync(string fileName)
     {
         var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST")
-                        ?? "https://minio.fpt-devteam.fun/";
+                        ?? "http://localhost:9000";
 
         _loggerService.LogInformation($"Generating preview URL for: {fileName}");
-        var previewUrl = $"{minioHost}/api/v1/buckets/{_bucketName}/objects/download?"
-                       + $"preview=true&prefix={fileName}&version_id=null";
+        var previewUrl = $"{minioHost}/{_bucketName}/{fileName}";
 
         _loggerService.LogInformation($"Preview URL: {previewUrl}");
         return Task.FromResult(previewUrl);
@@ -152,9 +187,9 @@ public class BlobService : IBlobService
                 : await presignTask.WaitAsync(cancellationToken);
 
             // Replace both http and https with the public domain
-            var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "https://minio.fpt-devteam.fun";
-            url = url.Replace("http://103.211.201.162:9000", minioHost)
-                     .Replace("https://103.211.201.162:9000", minioHost);
+            var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "http://localhost:9000";
+            url = url.Replace("http://minio:9000", minioHost)
+                     .Replace("http://localhost:9000", minioHost);
 
             _loggerService.LogInformation($"Presigned URL: {url}");
             return url;

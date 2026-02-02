@@ -16,8 +16,8 @@ services:
       - JWT__Audience=TripTogetherUsers
       - RESEND_APITOKEN=re_d7uvVXic_7nS9QjB6HAYryqrQ2jKsXu7J
       - RESEND_FROM=noreply@ae-tao-fullstack-api.site
-      - MINIO_ENDPOINT=103.211.201.162:9000
-      - MINIO_HOST=https://minio.fpt-devteam.fun
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_HOST=http://localhost:9000
       - MINIO_ACCESS_KEY=minioadmin 
       - MINIO_SECRET_KEY=minioadmin
     ports:
@@ -53,6 +53,22 @@ services:
       - redis-data:/data
     restart: unless-stopped
 
+  minio:
+    image: minio/minio:latest
+    container_name: triptogether-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+
 volumes:
   pgdata:
   redis-data:
+  minio-data:
