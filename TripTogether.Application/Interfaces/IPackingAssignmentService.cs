@@ -9,6 +9,6 @@ public interface IPackingAssignmentService
     Task<bool> DeleteAssignmentAsync(Guid assignmentId);
     Task<PackingAssignmentDto> GetAssignmentByIdAsync(Guid assignmentId);
     Task<IEnumerable<PackingAssignmentDto>> GetAssignmentsByPackingItemIdAsync(Guid packingItemId);
-    Task<IEnumerable<PackingAssignmentDto>> GetAssignmentsByUserIdAsync(Guid userId, Guid tripId);
+    Task<IEnumerable<PackingAssignmentDto>> GetUserAssignmentsForTripAsync(Guid? userId, Guid tripId);
     Task<PackingItemAssignmentSummaryDto> GetAssignmentSummaryAsync(Guid packingItemId);
 }

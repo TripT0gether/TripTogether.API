@@ -327,12 +327,15 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         return dtos;
     }
 
-    public async Task<IEnumerable<PackingAssignmentDto>> GetAssignmentsByUserIdAsync(Guid userId, Guid tripId)
+    public async Task<IEnumerable<PackingAssignmentDto>> GetUserAssignmentsForTripAsync(Guid? userId, Guid tripId)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
+        // If UserId is null, get assignments for current user (myself)
+        var targetUserId = userId ?? currentUserId;
+
         _loggerService.LogInformation("User {UserId} retrieving assignments for user {TargetUserId} in trip {TripId}",
-            currentUserId, userId, tripId);
+            currentUserId, targetUserId, tripId);
 
         var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
         if (trip == null)
@@ -353,7 +356,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         var assignments = await _unitOfWork.PackingAssignments.GetQueryable()
             .Include(pa => pa.PackingItem)
             .Include(pa => pa.User)
-            .Where(pa => pa.UserId == userId && pa.PackingItem.TripId == tripId)
+            .Where(pa => pa.UserId == targetUserId && pa.PackingItem.TripId == tripId)
             .ToListAsync();
 
         var dtos = new List<PackingAssignmentDto>();

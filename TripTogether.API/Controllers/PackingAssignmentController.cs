@@ -161,7 +161,7 @@ public class PackingAssignmentController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<IEnumerable<PackingAssignmentDto>>), 404)]
     public async Task<IActionResult> GetAssignmentsByUserAndTrip([FromRoute] Guid userId, [FromRoute] Guid tripId)
     {
-        var result = await _packingAssignmentService.GetAssignmentsByUserIdAsync(userId, tripId);
+        var result = await _packingAssignmentService.GetUserAssignmentsForTripAsync(userId, tripId);
         return Ok(ApiResult<IEnumerable<PackingAssignmentDto>>.Success(result, "200", "User assignments retrieved successfully."));
     }
 }

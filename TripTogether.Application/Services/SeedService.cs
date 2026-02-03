@@ -1355,6 +1355,12 @@ public class SeedService : ISeedService
                 throw new Exception("Please seed badges first");
             }
 
+            var trips = (await _unitOfWork.Trips.GetAllAsync()).ToList();
+            if (trips.Count == 0)
+            {
+                throw new Exception("Please seed trips first");
+            }
+
             var userBadges = new List<UserBadge>
             {
                 // First Trip badge
@@ -1363,6 +1369,7 @@ public class SeedService : ISeedService
                     Id = Guid.NewGuid(),
                     UserId = users[1].Id,
                     BadgeId = badges[0].Id,
+                    TripId = trips[0].Id,
                     EarnedAt = DateTime.UtcNow.AddDays(-10),
                     CreatedAt = DateTime.UtcNow.AddDays(-10),
                     CreatedBy = users[1].Id,
@@ -1373,6 +1380,7 @@ public class SeedService : ISeedService
                     Id = Guid.NewGuid(),
                     UserId = users[2].Id,
                     BadgeId = badges[0].Id,
+                    TripId = trips[0].Id,
                     EarnedAt = DateTime.UtcNow.AddDays(-8),
                     CreatedAt = DateTime.UtcNow.AddDays(-8),
                     CreatedBy = users[2].Id,
@@ -1384,6 +1392,7 @@ public class SeedService : ISeedService
                     Id = Guid.NewGuid(),
                     UserId = users[3].Id,
                     BadgeId = badges[1].Id,
+                    TripId = trips[0].Id,
                     EarnedAt = DateTime.UtcNow.AddDays(-5),
                     CreatedAt = DateTime.UtcNow.AddDays(-5),
                     CreatedBy = users[3].Id,
@@ -1395,6 +1404,7 @@ public class SeedService : ISeedService
                     Id = Guid.NewGuid(),
                     UserId = users[1].Id,
                     BadgeId = badges[2].Id,
+                    TripId = trips[1].Id,
                     EarnedAt = DateTime.UtcNow.AddDays(-3),
                     CreatedAt = DateTime.UtcNow.AddDays(-3),
                     CreatedBy = users[1].Id,
@@ -1406,6 +1416,7 @@ public class SeedService : ISeedService
                     Id = Guid.NewGuid(),
                     UserId = users[4].Id,
                     BadgeId = badges[4].Id,
+                    TripId = trips[2].Id,
                     EarnedAt = DateTime.UtcNow.AddDays(-1),
                     CreatedAt = DateTime.UtcNow.AddDays(-1),
                     CreatedBy = users[4].Id,
