@@ -66,15 +66,16 @@ public class TripTogetherDbContext : DbContext
         modelBuilder.Entity<Friendship>(entity =>
         {
             entity.ToTable("friendships");
-            entity.HasKey(e => new { e.RequesterId, e.AddresseeId });
-            entity.Property(e => e.RequesterId).HasColumnName("requester_id");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AddresseeId).HasColumnName("addressee_id");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
 
             entity.HasOne(e => e.Requester)
                 .WithMany(u => u.FriendshipsRequested)
-                .HasForeignKey(e => e.RequesterId)
+                .HasForeignKey(e => e.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.Addressee)
