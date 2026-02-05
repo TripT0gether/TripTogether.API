@@ -383,8 +383,8 @@ public sealed class GroupService : IGroupService
         }
 
         var isFriend = await _unitOfWork.Friendships.FirstOrDefaultAsync(f =>
-            ((f.RequesterId == currentUserId && f.AddresseeId == dto.UserId) ||
-             (f.RequesterId == dto.UserId && f.AddresseeId == currentUserId)) &&
+            ((f.CreatedBy == currentUserId && f.AddresseeId == dto.UserId) ||
+             (f.CreatedBy == dto.UserId && f.AddresseeId == currentUserId)) &&
             f.Status == FriendshipStatus.Accepted);
 
         if (isFriend == null)

@@ -45,7 +45,7 @@ public class SeedService : ISeedService
                 Id = Guid.NewGuid(),
                 Username = "john_doe",
                 Email = "john@example.com",
-                PasswordHash = new PasswordHasher().HashPassword("Password@123")!,
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
                 Gender = true,
                 IsEmailVerified = true,
                 CreatedAt = DateTime.UtcNow,
@@ -57,7 +57,7 @@ public class SeedService : ISeedService
                 Id = Guid.NewGuid(),
                 Username = "jane_smith",
                 Email = "jane@example.com",
-                PasswordHash = new PasswordHasher().HashPassword("Password@123") !,
+                PasswordHash = new PasswordHasher().HashPassword("1@") !,
                 Gender = false,
                 IsEmailVerified = true,
                 CreatedAt = DateTime.UtcNow,
@@ -69,7 +69,7 @@ public class SeedService : ISeedService
                 Id = Guid.NewGuid(),
                 Username = "mike_wilson",
                 Email = "mike@example.com",
-                PasswordHash = new PasswordHasher().HashPassword("Password@123") !,
+                PasswordHash = new PasswordHasher().HashPassword("1@") !,
                 Gender = true,
                 IsEmailVerified = true,
                 CreatedAt = DateTime.UtcNow,
@@ -81,7 +81,7 @@ public class SeedService : ISeedService
                 Id = Guid.NewGuid(),
                 Username = "sarah_johnson",
                 Email = "sarah@example.com",
-                PasswordHash = new PasswordHasher().HashPassword("Password@123") !,
+                PasswordHash = new PasswordHasher().HashPassword("1@") !,
                 Gender = false,
                 IsEmailVerified = true,
                 CreatedAt = DateTime.UtcNow,
@@ -120,8 +120,6 @@ public class SeedService : ISeedService
                 {
                     new Friendship
                     {
-                        Id = Guid.NewGuid(),
-                        RequesterId = users[1].Id,
                         AddresseeId = users[2].Id,
                         Status = FriendshipStatus.Accepted,
                         CreatedAt = DateTime.UtcNow,
@@ -130,8 +128,6 @@ public class SeedService : ISeedService
                     },
                     new Friendship
                     {
-                        Id = Guid.NewGuid(),
-                        RequesterId = users[1].Id,
                         AddresseeId = users[3].Id,
                         Status = FriendshipStatus.Accepted,
                         CreatedAt = DateTime.UtcNow,
@@ -140,8 +136,6 @@ public class SeedService : ISeedService
                     },
                     new Friendship
                     {
-                        Id = Guid.NewGuid(),
-                        RequesterId = users[2].Id,
                         AddresseeId = users[4].Id,
                         Status = FriendshipStatus.Accepted,
                         CreatedAt = DateTime.UtcNow,
@@ -150,8 +144,6 @@ public class SeedService : ISeedService
                     },
                     new Friendship
                     {
-                        Id = Guid.NewGuid(),
-                        RequesterId = users[3].Id,
                         AddresseeId = users[4].Id,
                         Status = FriendshipStatus.Pending,
                         CreatedAt = DateTime.UtcNow,
@@ -160,8 +152,6 @@ public class SeedService : ISeedService
                     },
                     new Friendship
                     {
-                        Id = Guid.NewGuid(),
-                        RequesterId = users[1].Id,
                         AddresseeId = users[4].Id,
                         Status = FriendshipStatus.Accepted,
                         CreatedAt = DateTime.UtcNow,
