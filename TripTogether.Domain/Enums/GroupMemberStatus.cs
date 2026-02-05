@@ -3,5 +3,6 @@ namespace TripTogether.Domain.Enums;
 public enum GroupMemberStatus
 {
     Pending,
-    Active
+    Active,
+    Banned
 }

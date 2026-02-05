@@ -23,17 +23,5 @@ public interface IGroupService
         string? sortBy = null, 
         bool ascending = true);
 
-    Task<GroupMemberDto> InviteMemberAsync(Guid groupId, InviteMemberDto dto);
-
     Task<GroupDto> JoinGroupByToken(string token);
-
-    Task<GroupMemberDto> AcceptInvitationAsync(Guid groupId);
-
-    Task<bool> RejectInvitationAsync(Guid groupId);
-
-    Task<bool> RemoveMemberAsync(Guid groupId, Guid userId);
-
-    Task<GroupMemberDto> PromoteToLeaderAsync(Guid groupId, Guid userId);
-
-    Task<bool> LeaveGroupAsync(Guid groupId);
 }
