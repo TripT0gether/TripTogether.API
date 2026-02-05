@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using TripTogether.Application.DTOs.PollDTO;
 using TripTogether.Application.Interfaces;
-using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;

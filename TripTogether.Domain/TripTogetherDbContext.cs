@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using TripTogether.Domain.Utils;
+using TripTogether.Domain.Common;
 
 namespace PRN232.TripTogether.Repo;
 
@@ -238,6 +238,7 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Category).HasColumnName("category");
+            entity.Property(e => e.Date).HasColumnName("date");
             entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.ScheduleDayIndex).HasColumnName("schedule_day_index");

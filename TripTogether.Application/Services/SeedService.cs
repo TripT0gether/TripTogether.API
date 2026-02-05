@@ -426,8 +426,9 @@ public class SeedService : ISeedService
                     Title = "Beach Volleyball",
                     Category = ActivityCategory.Attraction,
                     Status = ActivityStatus.Idea,
-                    StartTime = DateTime.UtcNow.AddDays(30).AddHours(10),
-                    EndTime = DateTime.UtcNow.AddDays(30).AddHours(12),
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+                    StartTime = new TimeOnly(10, 0),
+                    EndTime = new TimeOnly(12, 0),
                     LocationName = "Sunny Beach",
                     Notes = "Bring sunscreen!",
                     CreatedAt = DateTime.UtcNow,
@@ -441,8 +442,9 @@ public class SeedService : ISeedService
                     Title = "Summit Climb",
                     Category = ActivityCategory.Attraction,
                     Status = ActivityStatus.Idea,
-                    StartTime = DateTime.UtcNow.AddDays(61).AddHours(6),
-                    EndTime = DateTime.UtcNow.AddDays(61).AddHours(14),
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(61)),
+                    StartTime = new TimeOnly(6, 0),
+                    EndTime = new TimeOnly(14, 0),
                     LocationName = "Eagle Peak",
                     Notes = "Early start required",
                     CreatedAt = DateTime.UtcNow,
@@ -1038,6 +1040,393 @@ public class SeedService : ISeedService
             await _unitOfWork.TripInvites.AddRangeAsync(tripInvites);
             await _unitOfWork.SaveChangesAsync();
             _loggerService.LogInformation("Finished seed trip invites");
+        }
+
+        _loggerService.LogInformation("Starting seed expenses");
+        var existingExpenses = await _unitOfWork.Expenses.GetAllAsync();
+        if (existingExpenses.Any())
+        {
+            _loggerService.LogInformation("Expenses already exist, skipping expense seeding");
+        }
+        else
+        {
+            var trips = (await _unitOfWork.Trips.GetAllAsync()).Take(3).ToList();
+            if (trips.Count == 0)
+            {
+                throw new Exception("Please seed trips first");
+            }
+
+            var expenses = new List<Expense>
+            {
+                // Beach trip expenses
+                new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    PaidBy = users[1].Id,
+                    Description = "Hotel Reservation",
+                    Amount = 800.00m,
+                    Category = ExpenseCategory.Hotel,
+                    CurrencyCode = "USD",
+                    ExpenseDate = DateTime.UtcNow.AddDays(30),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    PaidBy = users[2].Id,
+                    Description = "Beach Restaurant Dinner",
+                    Amount = 150.00m,
+                    Category = ExpenseCategory.Food,
+                    CurrencyCode = "USD",
+                    ExpenseDate = DateTime.UtcNow.AddDays(31),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    PaidBy = users[3].Id,
+                    Description = "Boat Tour",
+                    Amount = 200.00m,
+                    Category = ExpenseCategory.Attraction,
+                    CurrencyCode = "USD",
+                    ExpenseDate = DateTime.UtcNow.AddDays(32),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                // Mountain trek expenses
+                new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    PaidBy = users[1].Id,
+                    Description = "Camping Equipment Rental",
+                    Amount = 300.00m,
+                    Category = ExpenseCategory.Other,
+                    CurrencyCode = "USD",
+                    ExpenseDate = DateTime.UtcNow.AddDays(60),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    PaidBy = users[2].Id,
+                    Description = "Mountain Guide Fee",
+                    Amount = 400.00m,
+                    Category = ExpenseCategory.Attraction,
+                    CurrencyCode = "USD",
+                    ExpenseDate = DateTime.UtcNow.AddDays(61),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                // City tour expenses
+                new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    PaidBy = users[3].Id,
+                    Description = "Museum Entry Tickets",
+                    Amount = 120.00m,
+                    Category = ExpenseCategory.Attraction,
+                    CurrencyCode = "USD",
+                    ExpenseDate = DateTime.UtcNow.AddDays(7),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    PaidBy = users[4].Id,
+                    Description = "City Transportation",
+                    Amount = 80.00m,
+                    Category = ExpenseCategory.Transportation,
+                    CurrencyCode = "USD",
+                    ExpenseDate = DateTime.UtcNow.AddDays(8),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[4].Id,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.Expenses.AddRangeAsync(expenses);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation("Adding expense splits");
+
+            // Add expense splits (assuming each expense is split equally among 4 people)
+            var expenseSplits = new List<ExpenseSplit>();
+            foreach (var expense in expenses)
+            {
+                var participantCount = 4;
+                var amountPerPerson = expense.Amount / participantCount;
+                
+                for (int i = 1; i <= 4; i++)
+                {
+                    expenseSplits.Add(new ExpenseSplit
+                    {
+                        Id = Guid.NewGuid(),
+                        ExpenseId = expense.Id,
+                        UserId = users[i].Id,
+                        AmountOwed = amountPerPerson,
+                        IsManualSplit = false,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = expense.CreatedBy,
+                        IsDeleted = false
+                    });
+                }
+            }
+
+            await _unitOfWork.ExpenseSplits.AddRangeAsync(expenseSplits);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation("Adding settlements");
+
+            // Add some settlements
+            var settlements = new List<Settlement>
+            {
+                new Settlement
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    PayerId = users[2].Id,
+                    PayeeId = users[1].Id,
+                    Amount = 200.00m,
+                    Status = SettlementStatus.Pending,
+                    TransactionDate = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new Settlement
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    PayerId = users[3].Id,
+                    PayeeId = users[1].Id,
+                    Amount = 75.00m,
+                    Status = SettlementStatus.Completed,
+                    TransactionDate = DateTime.UtcNow.AddHours(-1),
+                    CreatedAt = DateTime.UtcNow.AddDays(-1),
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.Settlements.AddRangeAsync(settlements);
+            await _unitOfWork.SaveChangesAsync();
+            _loggerService.LogInformation("Finished seed expenses");
+        }
+
+        _loggerService.LogInformation("Starting seed posts");
+        var existingPosts = await _unitOfWork.Posts.GetAllAsync();
+        if (existingPosts.Any())
+        {
+            _loggerService.LogInformation("Posts already exist, skipping post seeding");
+        }
+        else
+        {
+            var trips = (await _unitOfWork.Trips.GetAllAsync()).Take(3).ToList();
+            if (trips.Count == 0)
+            {
+                throw new Exception("Please seed trips first");
+            }
+
+            var posts = new List<Post>
+            {
+                // Beach trip posts
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    UserId = users[1].Id,
+                    Caption = "Can't wait for our beach vacation! ???",
+                    ImageUrl = "https://example.com/posts/beach-excited.jpg",
+                    CreatedAt = DateTime.UtcNow.AddDays(-2),
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    UserId = users[2].Id,
+                    Caption = "Just booked our hotel! It has an amazing ocean view! ??",
+                    CreatedAt = DateTime.UtcNow.AddDays(-1),
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    UserId = users[3].Id,
+                    Caption = "Found this great seafood restaurant we should try!",
+                    ImageUrl = "https://example.com/posts/restaurant.jpg",
+                    CreatedAt = DateTime.UtcNow.AddHours(-12),
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                // Mountain trek posts
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    UserId = users[1].Id,
+                    Caption = "Training for the big climb! ????",
+                    ImageUrl = "https://example.com/posts/training.jpg",
+                    CreatedAt = DateTime.UtcNow.AddDays(-3),
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    UserId = users[2].Id,
+                    Caption = "Weather forecast looks perfect for our trek!",
+                    CreatedAt = DateTime.UtcNow.AddDays(-2),
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    UserId = users[4].Id,
+                    Caption = "Packed my gear and ready to go! Check out my new hiking boots!",
+                    ImageUrl = "https://example.com/posts/hiking-boots.jpg",
+                    CreatedAt = DateTime.UtcNow.AddHours(-6),
+                    CreatedBy = users[4].Id,
+                    IsDeleted = false
+                },
+                // City tour posts
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    UserId = users[3].Id,
+                    Caption = "Created an itinerary with all the must-see museums! ???",
+                    CreatedAt = DateTime.UtcNow.AddDays(-1),
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                new Post
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    UserId = users[4].Id,
+                    Caption = "Looking forward to trying all the local street food! ??",
+                    ImageUrl = "https://example.com/posts/street-food.jpg",
+                    CreatedAt = DateTime.UtcNow.AddHours(-8),
+                    CreatedBy = users[4].Id,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.Posts.AddRangeAsync(posts);
+            await _unitOfWork.SaveChangesAsync();
+            _loggerService.LogInformation("Finished seed posts");
+        }
+
+        _loggerService.LogInformation("Starting seed user badges");
+        var existingUserBadges = await _unitOfWork.UserBadges.GetAllAsync();
+        if (existingUserBadges.Any())
+        {
+            _loggerService.LogInformation("User badges already exist, skipping user badge seeding");
+        }
+        else
+        {
+            var badges = (await _unitOfWork.Badges.GetAllAsync()).ToList();
+            if (badges.Count == 0)
+            {
+                throw new Exception("Please seed badges first");
+            }
+
+            var trips = (await _unitOfWork.Trips.GetAllAsync()).ToList();
+            if (trips.Count == 0)
+            {
+                throw new Exception("Please seed trips first");
+            }
+
+            var userBadges = new List<UserBadge>
+            {
+                // First Trip badge
+                new UserBadge
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = users[1].Id,
+                    BadgeId = badges[0].Id,
+                    TripId = trips[0].Id,
+                    EarnedAt = DateTime.UtcNow.AddDays(-10),
+                    CreatedAt = DateTime.UtcNow.AddDays(-10),
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                new UserBadge
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = users[2].Id,
+                    BadgeId = badges[0].Id,
+                    TripId = trips[0].Id,
+                    EarnedAt = DateTime.UtcNow.AddDays(-8),
+                    CreatedAt = DateTime.UtcNow.AddDays(-8),
+                    CreatedBy = users[2].Id,
+                    IsDeleted = false
+                },
+                // Photo Enthusiast badge
+                new UserBadge
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = users[3].Id,
+                    BadgeId = badges[1].Id,
+                    TripId = trips[0].Id,
+                    EarnedAt = DateTime.UtcNow.AddDays(-5),
+                    CreatedAt = DateTime.UtcNow.AddDays(-5),
+                    CreatedBy = users[3].Id,
+                    IsDeleted = false
+                },
+                // Budget Master badge
+                new UserBadge
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = users[1].Id,
+                    BadgeId = badges[2].Id,
+                    TripId = trips[1].Id,
+                    EarnedAt = DateTime.UtcNow.AddDays(-3),
+                    CreatedAt = DateTime.UtcNow.AddDays(-3),
+                    CreatedBy = users[1].Id,
+                    IsDeleted = false
+                },
+                // Social Butterfly badge
+                new UserBadge
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = users[4].Id,
+                    BadgeId = badges[4].Id,
+                    TripId = trips[2].Id,
+                    EarnedAt = DateTime.UtcNow.AddDays(-1),
+                    CreatedAt = DateTime.UtcNow.AddDays(-1),
+                    CreatedBy = users[4].Id,
+                    IsDeleted = false
+                }
+            };
+
+            await _unitOfWork.UserBadges.AddRangeAsync(userBadges);
+            await _unitOfWork.SaveChangesAsync();
+            _loggerService.LogInformation("Finished seed user badges");
         }
 
         _loggerService.LogInformation("Finished seed all data");

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using TripTogether.Domain.Enums;
 
 public class OtpStorage : BaseEntity
 {

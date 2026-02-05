@@ -7,7 +7,7 @@ using NpgsqlTypes;
 namespace TripTogether.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDb : Migration
+    public partial class InitDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -213,8 +213,9 @@ namespace TripTogether.Domain.Migrations
                     status = table.Column<string>(type: "text", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
                     category = table.Column<string>(type: "text", nullable: true),
-                    start_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    end_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    date = table.Column<DateOnly>(type: "date", nullable: true),
+                    start_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
+                    end_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     schedule_day_index = table.Column<int>(type: "integer", nullable: true),
                     schedule_slot = table.Column<string>(type: "text", nullable: true),
                     location_name = table.Column<string>(type: "text", nullable: true),

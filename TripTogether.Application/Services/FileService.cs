@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -115,5 +117,58 @@ public class FileService : IFileService
         _loggerService.LogInformation("Cover photo uploaded successfully for group {GroupId}", groupId);
 
         return coverPhotoUrl;
+    }
+
+    public async Task<string> UploadActivityImageAsync(Guid activityId, IFormFile file)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation("User {CurrentUserId} uploading image for activity {ActivityId}", currentUserId, activityId);
+
+        if (file == null || file.Length == 0)
+            throw ErrorHelper.BadRequest("No file provided.");
+
+        var activity = await _unitOfWork.Activities.GetQueryable()
+            .Include(a => a.Trip)
+            .FirstOrDefaultAsync(a => a.Id == activityId);
+
+        if (activity == null)
+            throw ErrorHelper.NotFound("The activity does not exist.");
+
+        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .AnyAsync(gm => gm.GroupId == activity.Trip.GroupId
+                && gm.UserId == currentUserId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (!isMember)
+            throw ErrorHelper.Forbidden("You must be a member of the trip's group to upload activity images.");
+
+        // Delete old image if exists
+        if (!string.IsNullOrEmpty(activity.ImageUrl))
+        {
+            _loggerService.LogInformation("Deleting old image for activity {ActivityId}", activityId);
+            await _blobService.DeleteFileAsync(activity.ImageUrl);
+        }
+
+        var fileName = $"{activityId}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var folder = $"activities/{activity.TripId}";
+
+        using var stream = file.OpenReadStream();
+        await _blobService.UploadFileAsync(fileName, stream, folder);
+
+        var imageUrl = await _blobService.GetFileUrlAsync($"{folder}/{fileName}");
+        if (string.IsNullOrEmpty(imageUrl))
+        {
+            _loggerService.LogError("Failed to generate URL for activity image");
+            throw ErrorHelper.Internal("Could not generate file URL.");
+        }
+
+        activity.ImageUrl = imageUrl;
+        await _unitOfWork.Activities.Update(activity);
+        await _unitOfWork.SaveChangesAsync();
+
+        _loggerService.LogInformation("Activity image uploaded successfully for activity {ActivityId}", activityId);
+
+        return imageUrl;
     }
 }

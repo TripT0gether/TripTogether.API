@@ -1,5 +1,4 @@
 ﻿using TripTogether.Application.DTOs.FriendshipDTO;
-using TripTogether.Application.Utils;
 
 namespace TripTogether.Application.Interfaces
 {
@@ -14,24 +13,24 @@ namespace TripTogether.Application.Interfaces
         Task<bool> UnfriendAsync(Guid friendId);
 
         Task<Pagination<FriendListDto>> GetFriendsListAsync(
-            int pageNumber = 1, 
-            int pageSize = 10, 
-            string? searchTerm = null, 
-            string? sortBy = null, 
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? searchTerm = null,
+            string? sortBy = null,
             bool ascending = true);
 
         Task<Pagination<FriendshipDto>> GetPendingRequestsAsync(
-            int pageNumber = 1, 
-            int pageSize = 10, 
-            string? searchTerm = null, 
-            string? sortBy = null, 
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? searchTerm = null,
+            string? sortBy = null,
             bool ascending = true);
 
         Task<Pagination<FriendshipDto>> GetSentRequestsAsync(
-            int pageNumber = 1, 
-            int pageSize = 10, 
-            string? searchTerm = null, 
-            string? sortBy = null, 
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? searchTerm = null,
+            string? sortBy = null,
             bool ascending = true);
     }
 }

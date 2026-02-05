@@ -13,8 +13,8 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260129155531_InitDb")]
-    partial class InitDb
+    [Migration("20260202160103_InitDB")]
+    partial class InitDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,14 +44,18 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
 
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("EndTime")
-                        .HasColumnType("timestamp with time zone")
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone")
                         .HasColumnName("end_time");
 
                     b.Property<NpgsqlPoint?>("GeoCoordinates")
@@ -85,8 +89,8 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("text")
                         .HasColumnName("schedule_slot");
 
-                    b.Property<DateTime?>("StartTime")
-                        .HasColumnType("timestamp with time zone")
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone")
                         .HasColumnName("start_time");
 
                     b.Property<string>("Status")

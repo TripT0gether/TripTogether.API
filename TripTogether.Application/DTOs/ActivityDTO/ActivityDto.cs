@@ -1,31 +1,25 @@
-using NpgsqlTypes;
 using TripTogether.Domain.Enums;
 
-public class Activity : BaseEntity
+namespace TripTogether.Application.DTOs.ActivityDTO;
+
+public class ActivityDto
 {
+    public Guid Id { get; set; }
     public Guid TripId { get; set; }
     public ActivityStatus Status { get; set; }
     public string Title { get; set; } = null!;
     public ActivityCategory? Category { get; set; }
-
-    // Scheduling details (Null if status is 'idea')
     public DateOnly? Date { get; set; }
-
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }
-
-    // Step 4 Scheduling
     public int? ScheduleDayIndex { get; set; }
     public TimeSlot? ScheduleSlot { get; set; }
-
     public string? LocationName { get; set; }
-    public NpgsqlPoint? GeoCoordinates { get; set; }
-
-    // Metadata
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public string? LinkUrl { get; set; }
     public string? ImageUrl { get; set; }
     public string? Notes { get; set; }
-
-    // Navigation properties
-    public virtual Trip Trip { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

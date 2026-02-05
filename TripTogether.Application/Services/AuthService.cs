@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.AuthDTO;
 using TripTogether.Application.DTOs.UserDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services
 {
