@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.GroupDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Application.Services;
 
 namespace TripTogether.API.Controllers;
 

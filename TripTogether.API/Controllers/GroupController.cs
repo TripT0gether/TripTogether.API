@@ -12,10 +12,11 @@ namespace TripTogether.API.Controllers;
 public class GroupController : ControllerBase
 {
     private readonly IGroupService _groupService;
-
-    public GroupController(IGroupService groupService)
+    private readonly IGroupMemberService _groupMemberService;
+    public GroupController(IGroupService groupService, IGroupMemberService groupMemberService)
     {
         _groupService = groupService;
+        _groupMemberService = groupMemberService;
     }
 
     /// <summary>
@@ -163,5 +164,27 @@ public class GroupController : ControllerBase
     {
         var result = await _groupService.JoinGroupByToken(token);
         return Ok(ApiResult<GroupDto>.Success(result, "200", "Joined group successfully."));
+    }
+
+    /// <summary>
+    /// Get pending group invitations for the current user.
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Page size (default: 10).</param>
+    /// <param name="searchTerm">Search by group name.</param>
+    /// <returns>Paginated list of pending group invitations.</returns>
+    [HttpGet("invitations")]
+    [SwaggerOperation(
+        Summary = "Get pending group invitations",
+        Description = "Retrieve all pending group invitations for the current user with search and pagination. Results are sorted by invitation date (newest first)."
+    )]
+    [ProducesResponseType(typeof(ApiResult<Pagination<GroupInvitationDto>>), 200)]
+    public async Task<IActionResult> GetPendingInvitations(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null)
+    {
+        var result = await _groupMemberService.GetPendingInvitationsAsync(pageNumber, pageSize, searchTerm);
+        return Ok(ApiResult<Pagination<GroupInvitationDto>>.Success(result, "200", "Pending invitations retrieved successfully."));
     }
 }

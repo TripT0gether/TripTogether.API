@@ -16,4 +16,9 @@ public interface IGroupMemberService
     Task<GroupMemberDto> PromoteToLeaderAsync(Guid groupId, Guid userId);
 
     Task<bool> LeaveGroupAsync(Guid groupId);
+
+    Task<Pagination<GroupInvitationDto>> GetPendingInvitationsAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? searchTerm = null);
 }

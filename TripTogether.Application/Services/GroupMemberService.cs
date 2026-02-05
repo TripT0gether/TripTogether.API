@@ -269,4 +269,62 @@ public sealed class GroupMemberService : IGroupMemberService
 
         return membership != null;
     }
+
+    public async Task<Pagination<GroupInvitationDto>> GetPendingInvitationsAsync(int pageNumber = 1, int pageSize = 10, string? searchTerm = null)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation("Getting pending group invitations for user {CurrentUserId}", currentUserId);
+
+        IQueryable<GroupMember> invitationsQuery = _unitOfWork.GroupMembers.GetQueryable()
+            .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Pending)
+            .Include(gm => gm.Group);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lowerSearchTerm = searchTerm.ToLower();
+            invitationsQuery = invitationsQuery.Where(gm => gm.Group.Name.ToLower().Contains(lowerSearchTerm));
+        }
+
+        var totalCount = await invitationsQuery.CountAsync();
+
+        invitationsQuery = invitationsQuery.OrderByDescending(gm => gm.CreatedAt);
+
+        var invitations = await invitationsQuery
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var groupIds = invitations.Select(i => i.GroupId).ToList();
+        var memberCounts = await _unitOfWork.GroupMembers.GetQueryable()
+            .Where(gm => groupIds.Contains(gm.GroupId) && gm.Status == GroupMemberStatus.Active)
+            .GroupBy(gm => gm.GroupId)
+            .Select(g => new { GroupId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.GroupId, x => x.Count);
+
+        var inviterIds = invitations.Select(i => i.CreatedBy).Distinct().ToList();
+        var inviters = await _unitOfWork.Users.GetQueryable()
+            .Where(u => inviterIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u);
+
+        var invitationDtos = invitations.Select(gm =>
+        {
+            var inviter = inviters.GetValueOrDefault(gm.CreatedBy);
+            return new GroupInvitationDto
+            {
+                GroupId = gm.GroupId,
+                GroupName = gm.Group.Name,
+                CoverPhotoUrl = gm.Group.CoverPhotoUrl,
+                InvitedBy = gm.CreatedBy,
+                InviterUsername = inviter?.Username ?? "Unknown",
+                InviterAvatarUrl = inviter?.AvatarUrl,
+                InvitedAt = gm.CreatedAt,
+                MemberCount = memberCounts.GetValueOrDefault(gm.GroupId, 0)
+            };
+        }).ToList();
+
+        _loggerService.LogInformation("Found {InvitationsCount} pending invitations for user {CurrentUserId}", invitationDtos.Count, currentUserId);
+
+        return new Pagination<GroupInvitationDto>(invitationDtos, totalCount, pageNumber, pageSize);
+    }
 }
