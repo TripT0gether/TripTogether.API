@@ -153,11 +153,14 @@ public sealed class FriendshipService : IFriendshipService
         _loggerService.LogInformation("User {CurrentUserId} unfriending via friendship {FriendshipId}", currentUserId, friendshipId);
 
         var friendship = await _unitOfWork.Friendships.FirstOrDefaultAsync(
-            f => f.Id == friendshipId && f.Status == FriendshipStatus.Accepted
+            f => f.Id == friendshipId && f.Status == FriendshipStatus.Accepted,
+            f => f.Requester,
+            f => f.Addressee
         );
 
         if (friendship == null)
         {
+            _loggerService.LogWarning("Friendship {FriendshipId} not found or not accepted for user {CurrentUserId}", friendshipId, currentUserId);
             throw ErrorHelper.NotFound("The friendship does not exist.");
         }
 
@@ -225,7 +228,7 @@ public sealed class FriendshipService : IFriendshipService
             var friend = f.CreatedBy == currentUserId ? f.Addressee : f.Requester;
             return new FriendListDto
             {
-                FriendId = friend.Id,
+                FriendshipId = f.Id,
                 Username = friend.Username,
                 Email = friend.Email,
                 AvatarUrl = friend.AvatarUrl,
