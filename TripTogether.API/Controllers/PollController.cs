@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.PollDTO;
 using TripTogether.Application.Interfaces;
-using TripTogether.Application.Utils;
 
 namespace TripTogether.API.Controllers;
 
 [Route("api/polls")]
 [ApiController]
 [Authorize]
-public class PollController : ControllerBase
+public sealed class PollController : ControllerBase
 {
     private readonly IPollService _pollService;
 
@@ -26,9 +25,9 @@ public class PollController : ControllerBase
     /// <returns>Created poll information.</returns>
     [HttpPost]
     [SwaggerOperation(
-        Summary = "Create new poll",
+      Summary = "Create new poll",
         Description = "Create a new poll for a trip with multiple options. The creator must be an active member of the group."
-    )]
+       )]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 201)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 400)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 403)]
@@ -37,10 +36,10 @@ public class PollController : ControllerBase
     {
         var result = await _pollService.CreatePollAsync(dto);
         return CreatedAtAction(
-            nameof(GetPollDetail),
-            new { pollId = result.Id },
-            ApiResult<PollDto>.Success(result, "201", "Poll created successfully.")
-        );
+              nameof(GetPollDetail),
+       new { pollId = result.Id },
+        ApiResult<PollDto>.Success(result, "201", "Poll created successfully.")
+    );
     }
 
     /// <summary>
@@ -70,9 +69,9 @@ public class PollController : ControllerBase
     /// <returns>Deletion result.</returns>
     [HttpDelete("{pollId:guid}")]
     [SwaggerOperation(
-        Summary = "Delete poll",
-        Description = "Delete a poll. Only the poll creator or group leaders can delete polls."
-    )]
+ Summary = "Delete poll",
+     Description = "Delete a poll. Only the poll creator or group leaders can delete polls."
+ )]
     [ProducesResponseType(typeof(ApiResult<bool>), 200)]
     [ProducesResponseType(typeof(ApiResult<bool>), 403)]
     [ProducesResponseType(typeof(ApiResult<bool>), 404)]
@@ -89,9 +88,9 @@ public class PollController : ControllerBase
     /// <returns>Detailed poll information including all options and vote counts.</returns>
     [HttpGet("{pollId:guid}")]
     [SwaggerOperation(
-        Summary = "Get poll details",
-        Description = "Get detailed information about a poll including all options and votes. Only active group members can view."
-    )]
+           Summary = "Get poll details",
+    Description = "Get detailed information about a poll including all options and votes. Only active group members can view."
+     )]
     [ProducesResponseType(typeof(ApiResult<PollDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<PollDetailDto>), 403)]
     [ProducesResponseType(typeof(ApiResult<PollDetailDto>), 404)]
@@ -112,7 +111,7 @@ public class PollController : ControllerBase
     [SwaggerOperation(
         Summary = "Get trip polls",
         Description = "Get all polls for a specific trip. Only active group members can view the polls."
-    )]
+ )]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 403)]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 404)]
@@ -129,9 +128,9 @@ public class PollController : ControllerBase
     /// <returns>Updated poll information.</returns>
     [HttpPatch("{pollId:guid}/close")]
     [SwaggerOperation(
-        Summary = "Close poll",
-        Description = "Close a poll to prevent further voting. Only the poll creator or group leaders can close polls."
-    )]
+         Summary = "Close poll",
+           Description = "Close a poll to prevent further voting. Only the poll creator or group leaders can close polls."
+       )]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 403)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 404)]
@@ -139,6 +138,26 @@ public class PollController : ControllerBase
     {
         var result = await _pollService.ClosePollAsync(pollId);
         return Ok(ApiResult<PollDto>.Success(result, "200", "Poll closed successfully."));
+    }
+
+    /// <summary>
+    /// Finalize a date poll and apply the selected option to the trip.
+    /// </summary>
+    /// <param name="dto">Finalize date poll data with selected option.</param>
+    /// <returns>Updated poll information.</returns>
+    [HttpPatch("finalize-date")]
+    [SwaggerOperation(
+        Summary = "Finalize date poll",
+        Description = "Finalize a date poll by selecting the winning option. This will update the trip's start and end dates. Only group leaders can finalize date polls."
+    )]
+    [ProducesResponseType(typeof(ApiResult<PollDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<PollDto>), 400)]
+    [ProducesResponseType(typeof(ApiResult<PollDto>), 403)]
+    [ProducesResponseType(typeof(ApiResult<PollDto>), 404)]
+    public async Task<IActionResult> FinalizeDatePoll([FromBody] FinalizeDatePollDto dto)
+    {
+        var result = await _pollService.FinalizeDatePollAsync(dto);
+        return Ok(ApiResult<PollDto>.Success(result, "200", "Date poll finalized successfully. Trip dates have been updated."));
     }
 
     /// <summary>
@@ -169,7 +188,7 @@ public class PollController : ControllerBase
     /// <returns>Removal result.</returns>
     [HttpDelete("options/{optionId:guid}")]
     [SwaggerOperation(
-        Summary = "Remove poll option",
+Summary = "Remove poll option",
         Description = "Remove an option from an open poll. Only the option creator or group leaders can remove options."
     )]
     [ProducesResponseType(typeof(ApiResult<bool>), 200)]
