@@ -8,5 +8,5 @@ public interface IVoteService
     Task<bool> RemoveVoteAsync(Guid voteId);
     Task<VoteDto> ChangeVoteAsync(Guid pollId, Guid newOptionId);
     Task<List<VoteDto>> GetPollVotesAsync(Guid pollId);
-    Task<VoteDto?> GetUserVoteForPollAsync(Guid pollId);
+    Task<List<VoteDto>> GetUserVotesForPollAsync(Guid pollId);
 }

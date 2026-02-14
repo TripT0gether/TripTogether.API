@@ -103,24 +103,6 @@ public class TripController : ControllerBase
     }
 
     /// <summary>
-    /// Get trip information by invite token.
-    /// </summary>
-    /// <param name="token">The invite token.</param>
-    /// <returns>Trip information.</returns>
-    [HttpGet("by-token")]
-    [SwaggerOperation(
-        Summary = "Get trip by token",
-        Description = "Get trip information using an invite token. This is typically used before joining a group."
-    )]
-    [ProducesResponseType(typeof(ApiResult<TripDto>), 200)]
-    [ProducesResponseType(typeof(ApiResult<TripDto>), 404)]
-    public async Task<IActionResult> GetTripByToken([FromQuery] string token)
-    {
-        var result = await _tripService.GetTripByTokenAsync(token);
-        return Ok(ApiResult<TripDto>.Success(result, "200", "Trip retrieved successfully."));
-    }
-
-    /// <summary>
     /// Get all trips for a specific group.
     /// </summary>
     /// <param name="groupId">Group ID.</param>

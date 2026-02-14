@@ -157,6 +157,11 @@ public sealed class GroupService : IGroupService
             gm => gm.User
         );
 
+        var activeInvite = await _unitOfWork.GroupInvites.GetQueryable()
+            .Where(i => i.GroupId == groupId && i.ExpiresAt > DateTime.UtcNow)
+            .OrderByDescending(i => i.CreatedAt)
+            .FirstOrDefaultAsync();
+
         return new GroupDetailDto
         {
             Id = group.Id,
@@ -164,6 +169,9 @@ public sealed class GroupService : IGroupService
             CoverPhotoUrl = group.CoverPhotoUrl,
             CreatedBy = group.CreatedBy,
             CreatedAt = group.CreatedAt,
+            InviteToken = activeInvite?.Token,
+            InviteExpiresAt = activeInvite?.ExpiresAt,
+            IsInviteExpired = activeInvite == null ? null : activeInvite.ExpiresAt <= DateTime.UtcNow,
             Members = members.Select(gm => new GroupMemberDto
             {
                 UserId = gm.UserId,
@@ -291,19 +299,13 @@ public sealed class GroupService : IGroupService
 
         _loggerService.LogInformation("User {CurrentUserId} joining group with token", currentUserId);
 
-        var tripInvite = await _unitOfWork.TripInvites.FirstOrDefaultAsync(invite => invite.Token == token);
-        if (tripInvite == null)
+        var groupInvite = await _unitOfWork.GroupInvites.FirstOrDefaultAsync(invite => invite.Token == token);
+        if (groupInvite == null)
         {
             throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
         }
 
-        var trip = await _unitOfWork.Trips.GetByIdAsync(tripInvite.TripId);
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip associated with the invite does not exist.");
-        }
-
-        var group = await _unitOfWork.Groups.GetByIdAsync(trip.GroupId);
+        var group = await _unitOfWork.Groups.GetByIdAsync(groupInvite.GroupId);
         if (group == null)
         {
             throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");

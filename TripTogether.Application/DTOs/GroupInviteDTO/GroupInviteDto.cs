@@ -1,10 +1,10 @@
-namespace TripTogether.Application.DTOs.TripInviteDTO;
+namespace TripTogether.Application.DTOs.GroupInviteDTO;
 
-public class TripInviteDto
+public class GroupInviteDto
 {
     public Guid Id { get; set; }
-    public Guid TripId { get; set; }
-    public string TripTitle { get; set; } = null!;
+    public Guid GroupId { get; set; }
+    public string GroupName { get; set; } = null!;
     public string Token { get; set; } = null!;
     public DateTime ExpiresAt { get; set; }
     public bool IsExpired { get; set; }

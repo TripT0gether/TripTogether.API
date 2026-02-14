@@ -8,7 +8,7 @@
     IGenericRepository<Group> Groups { get; }
     IGenericRepository<GroupMember> GroupMembers { get; }
     IGenericRepository<Trip> Trips { get; }
-    IGenericRepository<TripInvite> TripInvites { get; }
+    IGenericRepository<GroupInvite> GroupInvites { get; }
     IGenericRepository<Poll> Polls { get; }
     IGenericRepository<PollOption> PollOptions { get; }
     IGenericRepository<Activity> Activities { get; }

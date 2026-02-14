@@ -9,10 +9,7 @@ public class TripDto
     public string GroupName { get; set; }
     public string Title { get; set; } = null!;
     public TripStatus Status { get; set; }
-    public DateOnly? PlanningRangeStart { get; set; }
-    public DateOnly? PlanningRangeEnd { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public DateTime CreatedAt { get; set; }
-    public string InviteToken { get; set; }
 }

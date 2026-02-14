@@ -1,53 +1,52 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
-using TripTogether.Application.DTOs.TripInviteDTO;
+using TripTogether.Application.DTOs.GroupInviteDTO;
 using TripTogether.Application.Interfaces;
 
 namespace TripTogether.Application.Services;
 
-public sealed class TripInviteService : ITripInviteService
+public sealed class GroupInviteService : IGroupInviteService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILogger _loggerService;
 
-    public TripInviteService(
+    public GroupInviteService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
-        ILogger<TripInviteService> loggerService)
+        ILogger<GroupInviteService> loggerService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
     }
 
-    public async Task<TripInviteDto> CreateInviteAsync(CreateTripInviteDto dto)
+    public async Task<GroupInviteDto> CreateInviteAsync(CreateGroupInviteDto dto)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} creating invite for trip {dto.TripId}");
+        _loggerService.LogInformation($"User {currentUserId} creating invite for group {dto.GroupId}");
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Group)
-            .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(t => t.Id == dto.TripId);
+        var group = await _unitOfWork.Groups.GetQueryable()
+            .Include(g => g.Members)
+            .FirstOrDefaultAsync(g => g.Id == dto.GroupId);
 
-        if (trip == null)
+        if (group == null)
         {
-            throw ErrorHelper.NotFound("The trip does not exist.");
+            throw ErrorHelper.NotFound("The group does not exist.");
         }
 
-        var isGroupMember = trip.Group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
+        var isGroupMember = group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
         if (!isGroupMember)
         {
             throw ErrorHelper.Forbidden("You must be a member of the group to create an invite.");
         }
 
-        if (await _unitOfWork.TripInvites.GetQueryable()
-            .AnyAsync(i => i.TripId == dto.TripId && i.ExpiresAt > DateTime.UtcNow))
+        if (await _unitOfWork.GroupInvites.GetQueryable()
+            .AnyAsync(i => i.GroupId == dto.GroupId && i.ExpiresAt > DateTime.UtcNow))
         {
-            throw ErrorHelper.Conflict("An active invite already exists for this trip.");
+            throw ErrorHelper.Conflict("An active invite already exists for this group.");
         }
 
         if (dto.ExpiresInHours <= 0 || dto.ExpiresInHours > 168)
@@ -58,25 +57,25 @@ public sealed class TripInviteService : ITripInviteService
         var token = GenerateSecureToken();
         var expiresAt = DateTime.UtcNow.AddHours(dto.ExpiresInHours);
 
-        var invite = new TripInvite
+        var invite = new GroupInvite
         {
-            TripId = dto.TripId,
+            GroupId = dto.GroupId,
             Token = token,
             ExpiresAt = expiresAt,
             CreatedBy = currentUserId,
             CreatedAt = DateTime.UtcNow
         };
 
-        await _unitOfWork.TripInvites.AddAsync(invite);
+        await _unitOfWork.GroupInvites.AddAsync(invite);
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation($"Invite created successfully with token: {token.Substring(0, 8)}...");
 
-        return new TripInviteDto
+        return new GroupInviteDto
         {
             Id = invite.Id,
-            TripId = invite.TripId,
-            TripTitle = trip.Title,
+            GroupId = invite.GroupId,
+            GroupName = group.Name,
             Token = invite.Token,
             ExpiresAt = invite.ExpiresAt,
             IsExpired = invite.ExpiresAt <= DateTime.UtcNow,
@@ -84,15 +83,14 @@ public sealed class TripInviteService : ITripInviteService
         };
     }
 
-    public async Task<TripInviteDto> RefreshInviteAsync(Guid inviteId)
+    public async Task<GroupInviteDto> RefreshInviteAsync(Guid inviteId)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
         _loggerService.LogInformation($"User {currentUserId} refreshing invite {inviteId}");
 
-        var invite = await _unitOfWork.TripInvites.GetQueryable()
-            .Include(i => i.Trip)
-            .ThenInclude(t => t.Group)
+        var invite = await _unitOfWork.GroupInvites.GetQueryable()
+            .Include(i => i.Group)
             .ThenInclude(g => g.Members)
             .FirstOrDefaultAsync(i => i.Id == inviteId);
 
@@ -101,7 +99,7 @@ public sealed class TripInviteService : ITripInviteService
             throw ErrorHelper.NotFound("The invite does not exist.");
         }
 
-        var isGroupMember = invite.Trip.Group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
+        var isGroupMember = invite.Group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
         if (!isGroupMember)
         {
             throw ErrorHelper.Forbidden("You must be a member of the group to refresh this invite.");
@@ -112,11 +110,11 @@ public sealed class TripInviteService : ITripInviteService
 
         _loggerService.LogInformation($"Invite {inviteId} refreshed successfully to expire at {invite.ExpiresAt}");
 
-        return new TripInviteDto
+        return new GroupInviteDto
         {
             Id = invite.Id,
-            TripId = invite.TripId,
-            TripTitle = invite.Trip.Title,
+            GroupId = invite.GroupId,
+            GroupName = invite.Group.Name,
             Token = invite.Token,
             ExpiresAt = invite.ExpiresAt,
             IsExpired = invite.ExpiresAt <= DateTime.UtcNow,
@@ -126,7 +124,7 @@ public sealed class TripInviteService : ITripInviteService
 
     public async Task<bool> ValidateInviteTokenAsync(string token)
     {
-        var invite = await _unitOfWork.TripInvites.GetQueryable()
+        var invite = await _unitOfWork.GroupInvites.GetQueryable()
             .FirstOrDefaultAsync(i => i.Token == token);
 
         if (invite == null)
@@ -141,9 +139,8 @@ public sealed class TripInviteService : ITripInviteService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        var invite = await _unitOfWork.TripInvites.GetQueryable()
-            .Include(i => i.Trip)
-            .ThenInclude(t => t.Group)
+        var invite = await _unitOfWork.GroupInvites.GetQueryable()
+            .Include(i => i.Group)
             .ThenInclude(g => g.Members)
             .FirstOrDefaultAsync(i => i.Id == inviteId);
 
@@ -152,13 +149,13 @@ public sealed class TripInviteService : ITripInviteService
             throw ErrorHelper.NotFound("The invite does not exist.");
         }
 
-        var isGroupMember = invite.Trip.Group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
+        var isGroupMember = invite.Group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
         if (!isGroupMember)
         {
             throw ErrorHelper.Forbidden("You must be a member of the group to revoke this invite.");
         }
 
-        await _unitOfWork.TripInvites.SoftRemove(invite);
+        await _unitOfWork.GroupInvites.SoftRemove(invite);
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation($"User {currentUserId} revoked invite {inviteId}");
@@ -166,37 +163,36 @@ public sealed class TripInviteService : ITripInviteService
         return true;
     }
 
-    public async Task<List<TripInviteDto>> GetTripInvitesAsync(Guid tripId)
+    public async Task<List<GroupInviteDto>> GetGroupInvitesAsync(Guid groupId)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Group)
-            .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
+        var group = await _unitOfWork.Groups.GetQueryable()
+            .Include(g => g.Members)
+            .FirstOrDefaultAsync(g => g.Id == groupId);
 
-        if (trip == null)
+        if (group == null)
         {
-            throw ErrorHelper.NotFound("The trip does not exist.");
+            throw ErrorHelper.NotFound("The group does not exist.");
         }
 
-        var isGroupMember = trip.Group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
+        var isGroupMember = group.Members.Any(m => m.UserId == currentUserId && m.Status == Domain.Enums.GroupMemberStatus.Active);
         if (!isGroupMember)
         {
             throw ErrorHelper.Forbidden("You must be a member of the group to view invites.");
         }
 
-        var invites = await _unitOfWork.TripInvites.GetQueryable()
-            .Include(i => i.Trip)
-            .Where(i => i.TripId == tripId)
+        var invites = await _unitOfWork.GroupInvites.GetQueryable()
+            .Include(i => i.Group)
+            .Where(i => i.GroupId == groupId)
             .OrderByDescending(i => i.CreatedAt)
             .ToListAsync();
 
-        return invites.Select(i => new TripInviteDto
+        return invites.Select(i => new GroupInviteDto
         {
             Id = i.Id,
-            TripId = i.TripId,
-            TripTitle = i.Trip.Title,
+            GroupId = i.GroupId,
+            GroupName = i.Group.Name,
             Token = i.Token,
             ExpiresAt = i.ExpiresAt,
             IsExpired = i.ExpiresAt <= DateTime.UtcNow,

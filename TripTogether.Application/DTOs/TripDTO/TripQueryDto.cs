@@ -15,6 +15,5 @@ public class TripQueryDto
 public enum TripSortBy
 {
     CreatedAt,
-    StartDate,
-    PlanningRangeStart
+    StartDate
 }

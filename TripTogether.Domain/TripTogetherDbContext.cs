@@ -19,7 +19,7 @@ public class TripTogetherDbContext : DbContext
     public DbSet<Group> Groups { get; set; }
     public DbSet<GroupMember> GroupMembers { get; set; }
     public DbSet<Trip> Trips { get; set; }
-    public DbSet<TripInvite> TripInvites { get; set; }
+    public DbSet<GroupInvite> GroupInvites { get; set; }
     public DbSet<Poll> Polls { get; set; }
     public DbSet<PollOption> PollOptions { get; set; }
     public DbSet<Vote> Votes { get; set; }
@@ -125,8 +125,6 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.GroupId).HasColumnName("group_id");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Status).HasColumnName("status");
-            entity.Property(e => e.PlanningRangeStart).HasColumnName("planning_range_start");
-            entity.Property(e => e.PlanningRangeEnd).HasColumnName("planning_range_end");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.Property(e => e.Settings).HasColumnName("settings").HasColumnType("jsonb");
@@ -137,22 +135,22 @@ public class TripTogetherDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // TripInvite
-        modelBuilder.Entity<TripInvite>(entity =>
+        // GroupInvite
+        modelBuilder.Entity<GroupInvite>(entity =>
         {
-            entity.ToTable("trip_invites");
+            entity.ToTable("group_invites");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
             entity.Property(e => e.Token).HasColumnName("token");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
 
             entity.HasIndex(e => e.Token).IsUnique();
 
-            entity.HasOne(e => e.Trip)
-                .WithMany(t => t.Invites)
-                .HasForeignKey(e => e.TripId)
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Invites)
+                .HasForeignKey(e => e.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -475,7 +473,7 @@ public class TripTogetherDbContext : DbContext
         modelBuilder.Entity<Group>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<GroupMember>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Trip>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<TripInvite>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<GroupInvite>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Poll>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PollOption>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Vote>().HasQueryFilter(e => !e.IsDeleted);

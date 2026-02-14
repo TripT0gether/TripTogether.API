@@ -10,10 +10,6 @@ public class Trip : BaseEntity
     public string Title { get; set; } = null!;
     public TripStatus Status { get; set; }
 
-    // Step 1 Planning Context
-    public DateOnly? PlanningRangeStart { get; set; }
-    public DateOnly? PlanningRangeEnd { get; set; }
-
     // Final confirmed dates (Result of Step 3)
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
@@ -23,7 +19,6 @@ public class Trip : BaseEntity
 
     // Navigation properties
     public virtual Group Group { get; set; } = null!;
-    public virtual ICollection<TripInvite> Invites { get; set; } = new List<TripInvite>();
     public virtual ICollection<Poll> Polls { get; set; } = new List<Poll>();
     public virtual ICollection<Activity> Activities { get; set; } = new List<Activity>();
     public virtual ICollection<PackingItem> PackingItems { get; set; } = new List<PackingItem>();

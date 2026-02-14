@@ -46,19 +46,31 @@ public sealed class VoteService : IVoteService
             throw ErrorHelper.Forbidden("You must be a member of the group to vote.");
         }
 
-        if (pollOption.Poll.Status == PollStatus.Closed)
+        if (pollOption.Poll.Status == PollStatus.Closed || pollOption.Poll.Status == PollStatus.Finalized)
         {
-            throw ErrorHelper.BadRequest("Cannot vote on a closed poll.");
+            throw ErrorHelper.BadRequest("Cannot vote on a closed or finalized poll.");
         }
 
-        // Check if user already voted for this poll
-        var existingVote = await _unitOfWork.Votes.GetQueryable()
-            .Include(v => v.PollOption)
-            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOption.PollId == pollOption.PollId);
+        // Check if user already voted for this specific option
+        var existingVoteForOption = await _unitOfWork.Votes.GetQueryable()
+            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOptionId == dto.PollOptionId);
 
-        if (existingVote != null)
+        if (existingVoteForOption != null)
         {
-            throw ErrorHelper.Conflict("You have already voted on this poll. Use change vote to update your vote.");
+            throw ErrorHelper.Conflict("You have already voted for this option.");
+        }
+
+        // For non-Date polls, check if user already voted for any option (single vote only)
+        if (pollOption.Poll.Type != PollType.Date)
+        {
+            var existingVote = await _unitOfWork.Votes.GetQueryable()
+                .Include(v => v.PollOption)
+                .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOption.PollId == pollOption.PollId);
+
+            if (existingVote != null)
+            {
+                throw ErrorHelper.Conflict("You have already voted on this poll. Use change vote to update your vote.");
+            }
         }
 
         var vote = new Vote
@@ -107,9 +119,9 @@ public sealed class VoteService : IVoteService
             throw ErrorHelper.Forbidden("You can only remove your own votes.");
         }
 
-        if (vote.PollOption.Poll.Status == PollStatus.Closed)
+        if (vote.PollOption.Poll.Status == PollStatus.Closed || vote.PollOption.Poll.Status == PollStatus.Finalized)
         {
-            throw ErrorHelper.BadRequest("Cannot remove vote from a closed poll.");
+            throw ErrorHelper.BadRequest("Cannot remove vote from a closed or finalized poll.");
         }
 
         await _unitOfWork.Votes.SoftRemove(vote);
@@ -145,9 +157,15 @@ public sealed class VoteService : IVoteService
             throw ErrorHelper.Forbidden("You must be a member of the group to vote.");
         }
 
-        if (poll.Status == PollStatus.Closed)
+        if (poll.Status == PollStatus.Closed || poll.Status == PollStatus.Finalized)
         {
-            throw ErrorHelper.BadRequest("Cannot change vote on a closed poll.");
+            throw ErrorHelper.BadRequest("Cannot change vote on a closed or finalized poll.");
+        }
+
+        // For Date polls, change vote is not applicable (users can have multiple votes)
+        if (poll.Type == PollType.Date)
+        {
+            throw ErrorHelper.BadRequest("For Date polls, use cast vote and remove vote instead of change vote.");
         }
 
         // Verify new option belongs to this poll
@@ -236,11 +254,11 @@ public sealed class VoteService : IVoteService
         }).ToList();
     }
 
-    public async Task<VoteDto?> GetUserVoteForPollAsync(Guid pollId)
+    public async Task<List<VoteDto>> GetUserVotesForPollAsync(Guid pollId)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting their vote for poll {pollId}");
+        _loggerService.LogInformation($"User {currentUserId} getting their votes for poll {pollId}");
 
         var poll = await _unitOfWork.Polls.GetQueryable()
             .Include(p => p.Trip)
@@ -259,23 +277,20 @@ public sealed class VoteService : IVoteService
             throw ErrorHelper.Forbidden("You must be a member of the group to view votes.");
         }
 
-        var vote = await _unitOfWork.Votes.GetQueryable()
+        var votes = await _unitOfWork.Votes.GetQueryable()
             .Include(v => v.PollOption)
             .Include(v => v.User)
-            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOption.PollId == pollId);
+            .Where(v => v.UserId == currentUserId && v.PollOption.PollId == pollId)
+            .OrderBy(v => v.CreatedAt)
+            .ToListAsync();
 
-        if (vote == null)
+        return votes.Select(v => new VoteDto
         {
-            return null;
-        }
-
-        return new VoteDto
-        {
-            Id = vote.Id,
-            PollOptionId = vote.PollOptionId,
-            UserId = vote.UserId,
-            Username = vote.User.Username,
-            CreatedAt = vote.CreatedAt
-        };
+            Id = v.Id,
+            PollOptionId = v.PollOptionId,
+            UserId = v.UserId,
+            Username = v.User.Username,
+            CreatedAt = v.CreatedAt
+        }).ToList();
     }
 }
