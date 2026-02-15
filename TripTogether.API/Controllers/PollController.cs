@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.PollDTO;
@@ -111,7 +111,7 @@ public sealed class PollController : ControllerBase
     [SwaggerOperation(
         Summary = "Get trip polls",
         Description = "Get all polls for a specific trip. Only active group members can view the polls."
- )]
+    )]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 403)]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 404)]
@@ -188,7 +188,7 @@ public sealed class PollController : ControllerBase
     /// <returns>Removal result.</returns>
     [HttpDelete("options/{optionId:guid}")]
     [SwaggerOperation(
-Summary = "Remove poll option",
+        Summary = "Remove poll option",
         Description = "Remove an option from an open poll. Only the option creator or group leaders can remove options."
     )]
     [ProducesResponseType(typeof(ApiResult<bool>), 200)]
@@ -200,4 +200,4 @@ Summary = "Remove poll option",
         var result = await _pollService.RemovePollOptionAsync(optionId);
         return Ok(ApiResult<bool>.Success(result, "200", "Poll option removed successfully."));
     }
-}
+}\

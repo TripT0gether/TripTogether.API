@@ -92,50 +92,50 @@ public sealed class TripService : ITripService
         _loggerService.LogInformation($"User {currentUserId} updating trip {tripId}");
 
         var trip = await _unitOfWork.Trips.GetQueryable()
-  .Include(t => t.Group)
+          .Include(t => t.Group)
           .FirstOrDefaultAsync(t => t.Id == tripId);
 
-  if (trip == null)
+        if (trip == null)
         {
-          throw ErrorHelper.NotFound("The trip does not exist.");
+            throw ErrorHelper.NotFound("The trip does not exist.");
         }
 
-   var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-    && gm.Status == GroupMemberStatus.Active);
+        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
+                 .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
+                     && gm.UserId == currentUserId
+         && gm.Status == GroupMemberStatus.Active);
 
         if (groupMember == null)
-    {
-        throw ErrorHelper.Forbidden("You must be a member of the group to update this trip.");
+        {
+            throw ErrorHelper.Forbidden("You must be a member of the group to update this trip.");
         }
 
-   if (!string.IsNullOrWhiteSpace(dto.Title))
-      {
+        if (!string.IsNullOrWhiteSpace(dto.Title))
+        {
             trip.Title = dto.Title;
-     }
+        }
 
- if (dto.Settings != null)
+        if (dto.Settings != null)
         {
             trip.SettingsDetails = dto.Settings;
         }
 
         await _unitOfWork.Trips.Update(trip);
-await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation($"Trip {tripId} updated successfully");
 
         return new TripDto
-   {
+        {
             Id = trip.Id,
             GroupId = trip.GroupId,
             GroupName = trip.Group.Name,
-  Title = trip.Title,
-     Status = trip.Status,
-       PlanningRangeStart = trip.PlanningRangeStart,
+            Title = trip.Title,
+            Status = trip.Status,
+            PlanningRangeStart = trip.PlanningRangeStart,
             PlanningRangeEnd = trip.PlanningRangeEnd,
-     StartDate = trip.StartDate,
-       EndDate = trip.EndDate,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
             CreatedAt = trip.CreatedAt
         };
     }
