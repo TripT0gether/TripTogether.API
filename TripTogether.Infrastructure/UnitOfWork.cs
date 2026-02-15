@@ -1,5 +1,6 @@
 ﻿using PRN232.TripTogether.Repo;
 using System.Collections.Concurrent;
+using TripTogether.Domain.Entities;
 
 public class UnitOfWork : IUnitOfWork
 {
@@ -34,8 +35,8 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<User> Users => Repository<User>();
     public IGenericRepository<Group> Groups => Repository<Group>();
     public IGenericRepository<GroupMember> GroupMembers => Repository<GroupMember>();
+    public IGenericRepository<GroupInvite> GroupInvites => Repository<GroupInvite>();
     public IGenericRepository<Trip> Trips => Repository<Trip>();
-    public IGenericRepository<TripInvite> TripInvites => Repository<TripInvite>();
     public IGenericRepository<Poll> Polls => Repository<Poll>();
     public IGenericRepository<PollOption> PollOptions => Repository<PollOption>();
     public IGenericRepository<Activity> Activities => Repository<Activity>();

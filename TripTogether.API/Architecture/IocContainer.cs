@@ -118,8 +118,8 @@ public static class IocContainer
         services.AddScoped<IFriendshipService, FriendshipService>();
         services.AddScoped<IGroupService, GroupService>();
         services.AddScoped<IGroupMemberService, GroupMemberService>();
+        services.AddScoped<IGroupInviteService, GroupInviteService>();
         services.AddScoped<ITripService, TripService>();
-        services.AddScoped<ITripInviteService, TripInviteService>();
         services.AddScoped<IPollService, PollService>();
         services.AddScoped<IVoteService, VoteService>();
         services.AddScoped<ISeedService, SeedService>();

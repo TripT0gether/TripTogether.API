@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
 using TripTogether.Application.DTOs.GroupDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Domain.Entities;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
@@ -45,13 +47,27 @@ public sealed class GroupService : IGroupService
             GroupId = group.Id,
             UserId = currentUserId,
             Role = GroupMemberRole.Leader,
-            Status = GroupMemberStatus.Active
+            Status = GroupMemberStatus.Active,
+            CreatedBy = currentUserId,
+            CreatedAt = DateTime.UtcNow
         };
 
         await _unitOfWork.GroupMembers.AddAsync(creatorMember);
+
+        // Auto-generate invite for the group (24 hours expiration)
+        var invite = new GroupInvite
+        {
+            GroupId = group.Id,
+            Token = GenerateSecureToken(),
+            ExpiresAt = DateTime.UtcNow.AddHours(24),
+            CreatedBy = currentUserId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.GroupInvites.AddAsync(invite);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation("Group {GroupId} created successfully by user {CurrentUserId}", group.Id, currentUserId);
+        _loggerService.LogInformation("Group {GroupId} created successfully by user {CurrentUserId} with invite token", group.Id, currentUserId);
 
         return new GroupDto
         {
@@ -60,7 +76,8 @@ public sealed class GroupService : IGroupService
             CoverPhotoUrl = group.CoverPhotoUrl,
             CreatedBy = group.CreatedBy,
             CreatedAt = group.CreatedAt,
-            MemberCount = 1
+            MemberCount = 1,
+            InviteToken = invite.Token
         };
     }
 
@@ -291,26 +308,24 @@ public sealed class GroupService : IGroupService
 
         _loggerService.LogInformation("User {CurrentUserId} joining group with token", currentUserId);
 
-        var tripInvite = await _unitOfWork.TripInvites.FirstOrDefaultAsync(invite => invite.Token == token);
-        if (tripInvite == null)
+        var groupInvite = await _unitOfWork.GroupInvites.GetQueryable()
+ .Include(i => i.Group)
+            .FirstOrDefaultAsync(i => i.Token == token);
+
+        if (groupInvite == null)
         {
-            throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
+            throw ErrorHelper.NotFound("The invite does not exist or has been revoked.");
         }
 
-        var trip = await _unitOfWork.Trips.GetByIdAsync(tripInvite.TripId);
-        if (trip == null)
+        if (groupInvite.ExpiresAt <= DateTime.UtcNow)
         {
-            throw ErrorHelper.NotFound("The trip associated with the invite does not exist.");
+            throw ErrorHelper.BadRequest("The invite has expired. Please request a new invite link.");
         }
 
-        var group = await _unitOfWork.Groups.GetByIdAsync(trip.GroupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
-        }
+        var group = groupInvite.Group;
 
         var existingMember = await _unitOfWork.GroupMembers.FirstOrDefaultAsync(gm =>
-            gm.GroupId == group.Id && gm.UserId == currentUserId);
+         gm.GroupId == group.Id && gm.UserId == currentUserId);
 
         if (existingMember != null)
         {
@@ -320,22 +335,34 @@ public sealed class GroupService : IGroupService
             }
             if (existingMember.Status == GroupMemberStatus.Pending)
             {
-                throw ErrorHelper.Conflict("You have a pending invitation to the group.");
+                // Activate pending membership
+                existingMember.Status = GroupMemberStatus.Active;
+                existingMember.UpdatedAt = DateTime.UtcNow;
+                existingMember.UpdatedBy = currentUserId;
+                await _unitOfWork.GroupMembers.Update(existingMember);
             }
         }
-
-        var newMember = new GroupMember
+        else
         {
-            GroupId = group.Id,
-            UserId = currentUserId,
-            Role = GroupMemberRole.Member,
-            Status = GroupMemberStatus.Active
-        };
+            var newMember = new GroupMember
+            {
+                GroupId = group.Id,
+                UserId = currentUserId,
+                Role = GroupMemberRole.Member,
+                Status = GroupMemberStatus.Active,
+                CreatedBy = currentUserId,
+                CreatedAt = DateTime.UtcNow
+            };
 
-        await _unitOfWork.GroupMembers.AddAsync(newMember);
+            await _unitOfWork.GroupMembers.AddAsync(newMember);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation("User {CurrentUserId} joined group {GroupId} successfully", currentUserId, group.Id);
+
+        var memberCount = await _unitOfWork.GroupMembers.GetQueryable()
+       .CountAsync(gm => gm.GroupId == group.Id && gm.Status == GroupMemberStatus.Active);
 
         return new GroupDto
         {
@@ -344,10 +371,8 @@ public sealed class GroupService : IGroupService
             CoverPhotoUrl = group.CoverPhotoUrl,
             CreatedBy = group.CreatedBy,
             CreatedAt = group.CreatedAt,
-            MemberCount = await _unitOfWork.GroupMembers.GetQueryable()
-                .CountAsync(gm => gm.GroupId == group.Id && gm.Status == GroupMemberStatus.Active)
+            MemberCount = memberCount
         };
-
     }
 
     private async Task<bool> IsGroupLeaderAsync(Guid userId, Guid groupId)
@@ -369,5 +394,17 @@ public sealed class GroupService : IGroupService
             gm.Status == GroupMemberStatus.Active);
 
         return membership != null;
+    }
+
+    private string GenerateSecureToken()
+    {
+        using var rng = new RNGCryptoServiceProvider();
+        var tokenData = new byte[32];
+        rng.GetBytes(tokenData);
+
+        return Convert.ToBase64String(tokenData)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .TrimEnd('=');
     }
 }

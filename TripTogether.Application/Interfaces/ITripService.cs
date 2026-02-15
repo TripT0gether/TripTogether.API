@@ -9,7 +9,6 @@ public interface ITripService
     Task<TripDto> UpdateTripAsync(Guid tripId, UpdateTripDto dto);
     Task<bool> DeleteTripAsync(Guid tripId);
     Task<TripDetailDto> GetTripDetailAsync(Guid tripId);
-    Task<TripDto> GetTripByTokenAsync(string token);
     Task<Pagination<TripDto>> GetGroupTripsAsync(Guid groupId, TripQueryDto query);
     Task<TripDto> UpdateTripStatusAsync(Guid tripId, TripStatus status);
     Task<Pagination<TripDto>> GetMyTripsAsync(TripQueryDto query);

@@ -1,5 +1,3 @@
-
-
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using TripTogether.Domain.Enums;
@@ -23,7 +21,6 @@ public class Trip : BaseEntity
 
     // Navigation properties
     public virtual Group Group { get; set; } = null!;
-    public virtual ICollection<TripInvite> Invites { get; set; } = new List<TripInvite>();
     public virtual ICollection<Poll> Polls { get; set; } = new List<Poll>();
     public virtual ICollection<Activity> Activities { get; set; } = new List<Activity>();
     public virtual ICollection<PackingItem> PackingItems { get; set; } = new List<PackingItem>();
@@ -45,4 +42,9 @@ public class TripSettings
 {
     public List<Contact>? EmergencyContacts { get; set; }
 }
-public class Contact { public string Name { get; set; } public string Number { get; set; } }
+
+public class Contact 
+{ 
+    public string Name { get; set; } = null!;
+    public string Number { get; set; } = null!;
+}

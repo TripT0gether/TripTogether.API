@@ -48,9 +48,9 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"User {currentUserId} creating poll: {dto.Title} for trip {dto.TripId}");
 
         var trip = await _unitOfWork.Trips.GetQueryable()
- .Include(t => t.Group)
-   .ThenInclude(g => g.Members)
-          .FirstOrDefaultAsync(t => t.Id == dto.TripId);
+            .Include(t => t.Group)
+            .ThenInclude(g => g.Members)
+            .FirstOrDefaultAsync(t => t.Id == dto.TripId);
 
         if (trip == null)
         {
@@ -78,11 +78,11 @@ public sealed class PollService : IPollService
         foreach (var optionDto in dto.Options)
         {
             if (string.IsNullOrWhiteSpace(optionDto.TextValue) &&
-             string.IsNullOrWhiteSpace(optionDto.MediaUrl) &&
-           string.IsNullOrWhiteSpace(optionDto.Metadata) &&
-               optionDto.DateStart == null &&
+                string.IsNullOrWhiteSpace(optionDto.MediaUrl) &&
+                string.IsNullOrWhiteSpace(optionDto.Metadata) &&
+                optionDto.DateStart == null &&
                 optionDto.DateEnd == null &&
-             optionDto.TimeOfDay == null)
+                optionDto.TimeOfDay == null)
             {
                 throw ErrorHelper.BadRequest("Poll option must have at least one valid value.");
             }
@@ -423,12 +423,12 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"User {currentUserId} finalizing date poll {dto.PollId} with option {dto.SelectedOptionId}");
 
         var poll = await _unitOfWork.Polls.GetQueryable()
-   .Include(p => p.Trip)
+            .Include(p => p.Trip)
             .ThenInclude(t => t.Group)
-       .ThenInclude(g => g.Members)
+            .ThenInclude(g => g.Members)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-      .FirstOrDefaultAsync(p => p.Id == dto.PollId);
+            .FirstOrDefaultAsync(p => p.Id == dto.PollId);
 
         if (poll == null)
         {
@@ -476,7 +476,7 @@ public sealed class PollService : IPollService
         var trip = poll.Trip;
         trip.PlanningRangeStart = DateOnly.FromDateTime(selectedOption.DateStart.Value);
         trip.PlanningRangeEnd = selectedOption.DateEnd.HasValue
-      ? DateOnly.FromDateTime(selectedOption.DateEnd.Value)
+            ? DateOnly.FromDateTime(selectedOption.DateEnd.Value)
             : DateOnly.FromDateTime(selectedOption.DateStart.Value);
         trip.StartDate = selectedOption.DateStart;
         trip.EndDate = selectedOption.DateEnd ?? selectedOption.DateStart;
@@ -512,10 +512,10 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"User {currentUserId} adding option to poll {pollId}");
 
         var poll = await _unitOfWork.Polls.GetQueryable()
-       .Include(p => p.Trip)
-   .ThenInclude(t => t.Group)
-        .ThenInclude(g => g.Members)
-      .FirstOrDefaultAsync(p => p.Id == pollId);
+            .Include(p => p.Trip)
+            .ThenInclude(t => t.Group)
+            .ThenInclude(g => g.Members)
+            .FirstOrDefaultAsync(p => p.Id == pollId);
 
         if (poll == null)
         {
@@ -598,10 +598,10 @@ public sealed class PollService : IPollService
 
         var option = await _unitOfWork.PollOptions.GetQueryable()
             .Include(o => o.Poll)
-   .ThenInclude(p => p.Trip)
+            .ThenInclude(p => p.Trip)
             .ThenInclude(t => t.Group)
-.ThenInclude(g => g.Members)
-        .FirstOrDefaultAsync(o => o.Id == optionId);
+            .ThenInclude(g => g.Members)
+            .FirstOrDefaultAsync(o => o.Id == optionId);
 
         if (option == null)
         {

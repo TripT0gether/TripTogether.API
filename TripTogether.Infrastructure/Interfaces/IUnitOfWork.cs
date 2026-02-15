@@ -1,4 +1,6 @@
-﻿public interface IUnitOfWork : IDisposable
+﻿using TripTogether.Domain.Entities;
+
+public interface IUnitOfWork : IDisposable
 {
     // Generic method - truy cập bất kỳ repository nào
     IGenericRepository<TEntity> Repository<TEntity>() where TEntity : BaseEntity;
@@ -7,8 +9,8 @@
     IGenericRepository<User> Users { get; }
     IGenericRepository<Group> Groups { get; }
     IGenericRepository<GroupMember> GroupMembers { get; }
+    IGenericRepository<GroupInvite> GroupInvites { get; }
     IGenericRepository<Trip> Trips { get; }
-    IGenericRepository<TripInvite> TripInvites { get; }
     IGenericRepository<Poll> Polls { get; }
     IGenericRepository<PollOption> PollOptions { get; }
     IGenericRepository<Activity> Activities { get; }

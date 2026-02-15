@@ -6,7 +6,7 @@ public class TripDto
 {
     public Guid Id { get; set; }
     public Guid GroupId { get; set; }
-    public string GroupName { get; set; }
+    public string GroupName { get; set; } = null!;
     public string Title { get; set; } = null!;
     public TripStatus Status { get; set; }
     public DateOnly? PlanningRangeStart { get; set; }
@@ -14,5 +14,4 @@ public class TripDto
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public DateTime CreatedAt { get; set; }
-    public string InviteToken { get; set; }
 }

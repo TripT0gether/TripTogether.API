@@ -1,4 +1,4 @@
-
+using TripTogether.Domain.Entities;
 
 public class Group : BaseEntity
 {
@@ -8,4 +8,5 @@ public class Group : BaseEntity
     // Navigation properties
     public virtual ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
     public virtual ICollection<Trip> Trips { get; set; } = new List<Trip>();
+    public virtual ICollection<GroupInvite> Invites { get; set; } = new List<GroupInvite>();
 }

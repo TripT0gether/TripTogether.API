@@ -11,7 +11,7 @@ namespace TripTogether.API.Controllers;
 [Route("api/trips")]
 [ApiController]
 [Authorize]
-public class TripController : ControllerBase
+public sealed class TripController : ControllerBase
 {
     private readonly ITripService _tripService;
 
@@ -24,11 +24,11 @@ public class TripController : ControllerBase
     /// Create a new trip for a group.
     /// </summary>
     /// <param name="dto">Trip creation data.</param>
-    /// <returns>Created trip information with invite token.</returns>
+    /// <returns>Created trip information.</returns>
     [HttpPost]
     [SwaggerOperation(
         Summary = "Create new trip",
-        Description = "Create a new trip for a group. The creator must be an active member of the group. An invite token is automatically generated."
+        Description = "Create a new trip for a group. The creator must be an active member of the group."
     )]
     [ProducesResponseType(typeof(ApiResult<TripDto>), 201)]
     [ProducesResponseType(typeof(ApiResult<TripDto>), 400)]
@@ -100,24 +100,6 @@ public class TripController : ControllerBase
     {
         var result = await _tripService.GetTripDetailAsync(tripId);
         return Ok(ApiResult<TripDetailDto>.Success(result, "200", "Trip details retrieved successfully."));
-    }
-
-    /// <summary>
-    /// Get trip information by invite token.
-    /// </summary>
-    /// <param name="token">The invite token.</param>
-    /// <returns>Trip information.</returns>
-    [HttpGet("by-token")]
-    [SwaggerOperation(
-        Summary = "Get trip by token",
-        Description = "Get trip information using an invite token. This is typically used before joining a group."
-    )]
-    [ProducesResponseType(typeof(ApiResult<TripDto>), 200)]
-    [ProducesResponseType(typeof(ApiResult<TripDto>), 404)]
-    public async Task<IActionResult> GetTripByToken([FromQuery] string token)
-    {
-        var result = await _tripService.GetTripByTokenAsync(token);
-        return Ok(ApiResult<TripDto>.Success(result, "200", "Trip retrieved successfully."));
     }
 
     /// <summary>

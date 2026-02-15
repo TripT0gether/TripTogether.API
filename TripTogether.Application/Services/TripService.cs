@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.TripDTO;
-using TripTogether.Application.DTOs.TripInviteDTO;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
 
@@ -12,25 +11,22 @@ public sealed class TripService : ITripService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILogger _loggerService;
-    private readonly ITripInviteService _tripInviteService;
 
     public TripService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
-        ILogger<TripService> loggerService,
-        ITripInviteService tripInviteService)
+        ILogger<TripService> loggerService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
-        _tripInviteService = tripInviteService;
     }
 
     public async Task<TripDto> CreateTripAsync(CreateTripDto dto)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} creating trip: {dto.Title} for group {dto.GroupId}");
+        _loggerService.LogInformation("User {UserId} creating trip: {Title} for group {GroupId}", currentUserId, dto.Title, dto.GroupId);
 
         var group = await _unitOfWork.Groups.GetByIdAsync(dto.GroupId);
         if (group == null)
@@ -53,21 +49,14 @@ public sealed class TripService : ITripService
             GroupId = dto.GroupId,
             Title = dto.Title,
             Status = TripStatus.Planning,
-            CreatedBy = currentUserId
+            CreatedBy = currentUserId,
+            CreatedAt = DateTime.UtcNow
         };
 
         await _unitOfWork.Trips.AddAsync(trip);
         await _unitOfWork.SaveChangesAsync();
 
-
-
-        var token = await _tripInviteService.CreateInviteAsync(new CreateTripInviteDto
-        {
-            TripId = trip.Id,
-            ExpiresInHours = 24
-        });
-
-        _loggerService.LogInformation($"Trip {trip.Id} created successfully by user {currentUserId}");
+        _loggerService.LogInformation("Trip {TripId} created successfully by user {UserId}", trip.Id, currentUserId);
 
         return new TripDto
         {
@@ -80,8 +69,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = token.Token
+            CreatedAt = trip.CreatedAt
         };
     }
 
@@ -178,11 +166,10 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting trip detail {tripId}");
+        _loggerService.LogInformation("User {UserId} getting trip detail {TripId}", currentUserId, tripId);
 
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .Include(t => t.Invites)
             .Include(t => t.Polls)
             .Include(t => t.Activities)
             .Include(t => t.Expenses)
@@ -194,16 +181,14 @@ public sealed class TripService : ITripService
         }
 
         var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
+               .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
+        && gm.UserId == currentUserId
+     && gm.Status == GroupMemberStatus.Active);
 
         if (groupMember == null)
         {
             throw ErrorHelper.Forbidden("You must be a member of the group to view this trip.");
         }
-
-        var tripInvites = trip.Invites.FirstOrDefault();
 
         return new TripDetailDto
         {
@@ -218,48 +203,9 @@ public sealed class TripService : ITripService
             EndDate = trip.EndDate,
             Settings = trip.SettingsDetails,
             CreatedAt = trip.CreatedAt,
-            InviteToken = tripInvites.Token,
             PollCount = trip.Polls.Count,
             ActivityCount = trip.Activities.Count,
             ExpenseCount = trip.Expenses.Count
-        };
-    }
-
-    public async Task<TripDto> GetTripByTokenAsync(string token)
-    {
-        var invite = await _unitOfWork.TripInvites.GetQueryable()
-            .Include(i => i.Trip)
-            .FirstOrDefaultAsync(i => i.Token == token);
-
-        var trip = invite?.Trip;
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-        var group = await _unitOfWork.Groups.GetByIdAsync(trip.GroupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-
-        if (invite == null)
-        {
-            throw ErrorHelper.NotFound("The invite does not exist.");
-        }
-
-        return new TripDto
-        {
-            Id = trip.Id,
-            GroupId = trip.GroupId,
-            GroupName = group.Name,
-            Title = trip.Title,
-            Status = trip.Status,
-            PlanningRangeStart = trip.PlanningRangeStart,
-            PlanningRangeEnd = trip.PlanningRangeEnd,
-            StartDate = trip.StartDate,
-            EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = invite.Token
         };
     }
 
@@ -267,7 +213,7 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting trips for group {groupId}");
+        _loggerService.LogInformation("User {UserId} getting trips for group {GroupId}", currentUserId, groupId);
 
         var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
         if (group == null)
@@ -277,8 +223,8 @@ public sealed class TripService : ITripService
 
         var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
             .FirstOrDefaultAsync(gm => gm.GroupId == groupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
+       && gm.UserId == currentUserId
+          && gm.Status == GroupMemberStatus.Active);
 
         if (groupMember == null)
         {
@@ -286,15 +232,14 @@ public sealed class TripService : ITripService
         }
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Invites)
-            .Where(t => t.GroupId == groupId);
+                .Where(t => t.GroupId == groupId);
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
             var searchTerm = query.SearchTerm.ToLower();
             tripsQuery = tripsQuery.Where(t =>
-                t.Title.ToLower().Contains(searchTerm) ||
-                group.Name.ToLower().Contains(searchTerm));
+               t.Title.ToLower().Contains(searchTerm) ||
+          group.Name.ToLower().Contains(searchTerm));
         }
 
         if (query.Status.HasValue)
@@ -305,14 +250,14 @@ public sealed class TripService : ITripService
         tripsQuery = query.SortBy switch
         {
             TripSortBy.StartDate => query.SortDescending
-                ? tripsQuery.OrderByDescending(t => t.StartDate)
-                : tripsQuery.OrderBy(t => t.StartDate),
+            ? tripsQuery.OrderByDescending(t => t.StartDate)
+            : tripsQuery.OrderBy(t => t.StartDate),
             TripSortBy.PlanningRangeStart => query.SortDescending
-                ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart)
-                : tripsQuery.OrderBy(t => t.PlanningRangeStart),
+            ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart)
+            : tripsQuery.OrderBy(t => t.PlanningRangeStart),
             _ => query.SortDescending
-                ? tripsQuery.OrderByDescending(t => t.CreatedAt)
-                : tripsQuery.OrderBy(t => t.CreatedAt)
+            ? tripsQuery.OrderByDescending(t => t.CreatedAt)
+            : tripsQuery.OrderBy(t => t.CreatedAt)
         };
 
         var totalCount = await tripsQuery.CountAsync();
@@ -333,8 +278,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = trip.Invites.FirstOrDefault()?.Token
+            CreatedAt = trip.CreatedAt
         }).ToList();
 
         return new Pagination<TripDto>(tripDtos, totalCount, query.PageNumber, query.PageSize);
@@ -392,7 +336,7 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting their trips");
+        _loggerService.LogInformation("User {UserId} getting their trips", currentUserId);
 
         var groupIds = await _unitOfWork.GroupMembers.GetQueryable()
             .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active)
@@ -401,21 +345,20 @@ public sealed class TripService : ITripService
 
         if (groupIds.Count == 0)
         {
-            _loggerService.LogInformation($"User {currentUserId} is not a member of any active groups");
+            _loggerService.LogInformation("User {UserId} is not a member of any active groups", currentUserId);
             return new Pagination<TripDto>(new List<TripDto>(), 0, query.PageNumber, query.PageSize);
         }
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .Include(t => t.Invites)
             .Where(t => groupIds.Contains(t.GroupId));
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
             var searchTerm = query.SearchTerm.ToLower();
             tripsQuery = tripsQuery.Where(t =>
-                t.Title.ToLower().Contains(searchTerm) ||
-                t.Group.Name.ToLower().Contains(searchTerm));
+            t.Title.ToLower().Contains(searchTerm) ||
+            t.Group.Name.ToLower().Contains(searchTerm));
         }
 
         if (query.Status.HasValue)
@@ -432,8 +375,8 @@ public sealed class TripService : ITripService
                 ? tripsQuery.OrderByDescending(t => t.PlanningRangeStart)
                 : tripsQuery.OrderBy(t => t.PlanningRangeStart),
             _ => query.SortDescending
-                ? tripsQuery.OrderByDescending(t => t.CreatedAt)
-                : tripsQuery.OrderBy(t => t.CreatedAt)
+            ? tripsQuery.OrderByDescending(t => t.CreatedAt)
+            : tripsQuery.OrderBy(t => t.CreatedAt)
         };
 
         var totalCount = await tripsQuery.CountAsync();
@@ -454,8 +397,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = trip.Invites.FirstOrDefault()?.Token
+            CreatedAt = trip.CreatedAt
         }).ToList();
 
         return new Pagination<TripDto>(tripDtos, totalCount, query.PageNumber, query.PageSize);

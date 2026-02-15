@@ -15,7 +15,6 @@ public class TripDetailDto
     public DateTime? EndDate { get; set; }
     public TripSettings? Settings { get; set; }
     public DateTime CreatedAt { get; set; }
-    public string InviteToken { get; set; }
     public int PollCount { get; set; }
     public int ActivityCount { get; set; }
     public int ExpenseCount { get; set; }
