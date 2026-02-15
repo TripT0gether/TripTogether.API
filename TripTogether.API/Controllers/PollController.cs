@@ -200,4 +200,4 @@ public sealed class PollController : ControllerBase
         var result = await _pollService.RemovePollOptionAsync(optionId);
         return Ok(ApiResult<bool>.Success(result, "200", "Poll option removed successfully."));
     }
-}\
+}
