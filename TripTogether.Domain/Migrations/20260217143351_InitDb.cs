@@ -7,7 +7,7 @@ using NpgsqlTypes;
 namespace TripTogether.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDB : Migration
+    public partial class InitDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -106,6 +106,33 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "group_invites",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    group_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    token = table.Column<string>(type: "text", nullable: false),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_group_invites", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_group_invites_groups_group_id",
+                        column: x => x.group_id,
+                        principalTable: "groups",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "trips",
                 columns: table => new
                 {
@@ -141,13 +168,12 @@ namespace TripTogether.Domain.Migrations
                 name: "friendships",
                 columns: table => new
                 {
-                    requester_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     addressee_id = table.Column<Guid>(type: "uuid", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -155,7 +181,7 @@ namespace TripTogether.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_friendships", x => new { x.requester_id, x.addressee_id });
+                    table.PrimaryKey("PK_friendships", x => x.id);
                     table.ForeignKey(
                         name: "FK_friendships_users_addressee_id",
                         column: x => x.addressee_id,
@@ -163,8 +189,8 @@ namespace TripTogether.Domain.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_friendships_users_requester_id",
-                        column: x => x.requester_id,
+                        name: "FK_friendships_users_created_by",
+                        column: x => x.created_by,
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
@@ -416,33 +442,6 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "trip_invites",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    trip_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    token = table.Column<string>(type: "text", nullable: false),
-                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_trip_invites", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_trip_invites_trips_trip_id",
-                        column: x => x.trip_id,
-                        principalTable: "trips",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "user_badges",
                 columns: table => new
                 {
@@ -644,6 +643,22 @@ namespace TripTogether.Domain.Migrations
                 column: "addressee_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_friendships_created_by",
+                table: "friendships",
+                column: "created_by");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_group_invites_group_id",
+                table: "group_invites",
+                column: "group_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_group_invites_token",
+                table: "group_invites",
+                column: "token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_group_members_user_id",
                 table: "group_members",
                 column: "user_id");
@@ -700,17 +715,6 @@ namespace TripTogether.Domain.Migrations
                 column: "trip_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_trip_invites_token",
-                table: "trip_invites",
-                column: "token",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_trip_invites_trip_id",
-                table: "trip_invites",
-                column: "trip_id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_trips_group_id",
                 table: "trips",
                 column: "group_id");
@@ -750,6 +754,9 @@ namespace TripTogether.Domain.Migrations
                 name: "friendships");
 
             migrationBuilder.DropTable(
+                name: "group_invites");
+
+            migrationBuilder.DropTable(
                 name: "group_members");
 
             migrationBuilder.DropTable(
@@ -763,9 +770,6 @@ namespace TripTogether.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "settlements");
-
-            migrationBuilder.DropTable(
-                name: "trip_invites");
 
             migrationBuilder.DropTable(
                 name: "user_badges");

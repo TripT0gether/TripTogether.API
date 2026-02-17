@@ -35,7 +35,7 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Group> Groups => Repository<Group>();
     public IGenericRepository<GroupMember> GroupMembers => Repository<GroupMember>();
     public IGenericRepository<Trip> Trips => Repository<Trip>();
-    public IGenericRepository<TripInvite> TripInvites => Repository<TripInvite>();
+    public IGenericRepository<GroupInvite> GroupInvites => Repository<GroupInvite>();
     public IGenericRepository<Poll> Polls => Repository<Poll>();
     public IGenericRepository<PollOption> PollOptions => Repository<PollOption>();
     public IGenericRepository<Activity> Activities => Repository<Activity>();

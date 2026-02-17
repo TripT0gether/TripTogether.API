@@ -982,54 +982,54 @@ public class SeedService : ISeedService
             _loggerService.LogInformation("Finished seed polls");
         }
 
-        _loggerService.LogInformation("Starting seed trip invites");
-        var existingInvites = await _unitOfWork.TripInvites.GetAllAsync();
+        _loggerService.LogInformation("Starting seed group invites");
+        var existingInvites = await _unitOfWork.GroupInvites.GetAllAsync();
         if (existingInvites.Any())
         {
-            _loggerService.LogInformation("Trip invites already exist, skipping invite seeding");
+            _loggerService.LogInformation("Group invites already exist, skipping invite seeding");
         }
         else
         {
-            var trips = (await _unitOfWork.Trips.GetAllAsync()).Take(3).ToList();
-            if (trips.Count == 0)
+            var groups = (await _unitOfWork.Groups.GetAllAsync()).Take(3).ToList();
+            if (groups.Count == 0)
             {
-                throw new Exception("Please seed trips first");
+                throw new Exception("Please seed groups first");
             }
 
-            var tripInvites = new List<TripInvite>
+            var groupInvites = new List<GroupInvite>
             {
-                new TripInvite
+                new GroupInvite
                 {
-                    TripId = trips[0].Id,
+                    GroupId = groups[0].Id,
                     Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("+", "-").Replace("/", "_").Replace("=", ""),
                     ExpiresAt = DateTime.UtcNow.AddDays(7),
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = groups[0].CreatedBy,
                     IsDeleted = false
                 },
-                new TripInvite
+                new GroupInvite
                 {
-                    TripId = trips[1].Id,
+                    GroupId = groups[1].Id,
                     Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("+", "-").Replace("/", "_").Replace("=", ""),
                     ExpiresAt = DateTime.UtcNow.AddDays(14),
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
+                    CreatedBy = groups[1].CreatedBy,
                     IsDeleted = false
                 },
-                new TripInvite
+                new GroupInvite
                 {
-                    TripId = trips[2].Id,
+                    GroupId = groups[2].Id,
                     Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("+", "-").Replace("/", "_").Replace("=", ""),
                     ExpiresAt = DateTime.UtcNow.AddDays(3),
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[2].CreatedBy,
+                    CreatedBy = groups[2].CreatedBy,
                     IsDeleted = false
                 }
             };
 
-            await _unitOfWork.TripInvites.AddRangeAsync(tripInvites);
+            await _unitOfWork.GroupInvites.AddRangeAsync(groupInvites);
             await _unitOfWork.SaveChangesAsync();
-            _loggerService.LogInformation("Finished seed trip invites");
+            _loggerService.LogInformation("Finished seed group invites");
         }
 
         _loggerService.LogInformation("Starting seed expenses");
@@ -1441,7 +1441,7 @@ public class SeedService : ISeedService
         await _unitOfWork.Settlements.HardRemove(x => true);
         await _unitOfWork.Posts.HardRemove(x => true);
         await _unitOfWork.Activities.HardRemove(x => true);
-        await _unitOfWork.TripInvites.HardRemove(x => true);
+        await _unitOfWork.GroupInvites.HardRemove(x => true);
         await _unitOfWork.Trips.HardRemove(x => true);
         await _unitOfWork.GroupMembers.HardRemove(x => true);
         await _unitOfWork.Groups.HardRemove(x => true);
