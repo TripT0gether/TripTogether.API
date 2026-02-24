@@ -136,18 +136,6 @@ public sealed class GroupInviteService : IGroupInviteService
         };
     }
 
-    public async Task<bool> ValidateInviteTokenAsync(string token)
-    {
-        var invite = await _unitOfWork.GroupInvites.GetQueryable()
-            .FirstOrDefaultAsync(i => i.Token == token);
-
-        if (invite == null)
-        {
-            return false;
-        }
-
-        return invite.ExpiresAt > DateTime.UtcNow;
-    }
 
     public async Task<bool> RevokeInviteAsync(Guid inviteId)
     {
@@ -179,43 +167,6 @@ public sealed class GroupInviteService : IGroupInviteService
         return true;
     }
 
-    public async Task<List<GroupInviteDto>> GetGroupInvitesAsync(Guid groupId)
-    {
-        var currentUserId = _claimsService.GetCurrentUserId;
-
-        var group = await _unitOfWork.Groups.GetQueryable()
-            .Include(g => g.Members)
-            .FirstOrDefaultAsync(g => g.Id == groupId);
-
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-
-        var isGroupMember = group.Members.Any(m => m.UserId == currentUserId && m.Status == GroupMemberStatus.Active);
-        if (!isGroupMember)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to view invites.");
-        }
-
-        var invites = await _unitOfWork.GroupInvites.GetQueryable()
-            .Include(i => i.Group)
-            .Where(i => i.GroupId == groupId)
-            .OrderByDescending(i => i.CreatedAt)
-            .ToListAsync();
-
-        return invites.Select(i => new GroupInviteDto
-        {
-            Id = i.Id,
-            GroupId = i.GroupId,
-            GroupName = i.Group.Name,
-            Token = i.Token,
-            InviteUrl = BuildInviteUrl(i.Token),
-            ExpiresAt = i.ExpiresAt,
-            IsExpired = i.ExpiresAt <= DateTime.UtcNow,
-            CreatedAt = i.CreatedAt
-        }).ToList();
-    }
 
     public async Task<GroupInviteDto?> GetActiveInviteAsync(Guid groupId)
     {

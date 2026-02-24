@@ -31,17 +31,6 @@ public class GroupInviteController : ControllerBase
         return StatusCode(201, ApiResult<GroupInviteDto>.Success(result, "201", "Group invite created successfully."));
     }
 
-    [HttpGet("validate")]
-    [SwaggerOperation(
-        Summary = "Validate invite token",
-        Description = "Check if a group invite token is valid and not expired."
-    )]
-    [ProducesResponseType(typeof(ApiResult<bool>), 200)]
-    public async Task<IActionResult> ValidateInviteToken([FromQuery] string token)
-    {
-        var result = await _groupInviteService.ValidateInviteTokenAsync(token);
-        return Ok(ApiResult<bool>.Success(result, "200", result ? "Token is valid." : "Token is invalid or expired."));
-    }
 
     [HttpGet("token/{token}")]
     [SwaggerOperation(
@@ -91,17 +80,6 @@ public class GroupInviteController : ControllerBase
         return Ok(ApiResult<bool>.Success(result, "200", "Group invite revoked successfully."));
     }
 
-    [HttpGet("group/{groupId:guid}")]
-    [SwaggerOperation(
-        Summary = "Get group invites",
-        Description = "Get all invite tokens for a specific group."
-    )]
-    [ProducesResponseType(typeof(ApiResult<List<GroupInviteDto>>), 200)]
-    public async Task<IActionResult> GetGroupInvites([FromRoute] Guid groupId)
-    {
-        var result = await _groupInviteService.GetGroupInvitesAsync(groupId);
-        return Ok(ApiResult<List<GroupInviteDto>>.Success(result, "200", "Group invites retrieved successfully."));
-    }
 
     [HttpGet("group/{groupId:guid}/active")]
     [SwaggerOperation(
