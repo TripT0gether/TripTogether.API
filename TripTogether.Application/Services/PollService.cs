@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using TripTogether.Application.DTOs.PollDTO;
+using TripTogether.Application.Helpers;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
 
@@ -48,9 +49,9 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"User {currentUserId} creating poll: {dto.Title} for trip {dto.TripId}");
 
         var trip = await _unitOfWork.Trips.GetQueryable()
- .Include(t => t.Group)
-   .ThenInclude(g => g.Members)
-          .FirstOrDefaultAsync(t => t.Id == dto.TripId);
+        .Include(t => t.Group)
+        .ThenInclude(g => g.Members)
+        .FirstOrDefaultAsync(t => t.Id == dto.TripId);
 
         if (trip == null)
         {
@@ -69,6 +70,31 @@ public sealed class PollService : IPollService
             if (activity == null || activity.TripId != dto.TripId)
             {
                 throw ErrorHelper.BadRequest("The specified activity does not exist or does not belong to this trip.");
+            }
+
+            // Check if an activity-level poll of this type already exists
+            var existingActivityPoll = await _unitOfWork.Polls.GetQueryable()
+                .AnyAsync(p => p.ActivityId == dto.ActivityId.Value
+                    && p.Type == dto.Type
+                    && (p.Status == PollStatus.Open || p.Status == PollStatus.Closed));
+
+            if (existingActivityPoll)
+            {
+                throw ErrorHelper.Conflict($"A {dto.Type} poll already exists for this activity. Each activity can only have one poll per type.");
+            }
+        }
+        else
+        {
+            // Check if a trip-level poll of this type already exists
+            var existingTripPoll = await _unitOfWork.Polls.GetQueryable()
+                .AnyAsync(p => p.TripId == dto.TripId
+                    && p.ActivityId == null
+                    && p.Type == dto.Type
+                    && (p.Status == PollStatus.Open || p.Status == PollStatus.Closed));
+
+            if (existingTripPoll)
+            {
+                throw ErrorHelper.Conflict($"A {dto.Type} poll already exists for this trip. Each trip can only have one poll per type.");
             }
         }
 
@@ -529,8 +555,7 @@ public sealed class PollService : IPollService
                 }
             }
 
-            // Utilize shared validation logic
-            ValidateTimeLogic(newStartTime, newEndTime, selectedOption.TimeOfDay);
+            TimeSlotHelper.ValidateTimeLogic(newStartTime, newEndTime, selectedOption.TimeOfDay);
 
             activity.Date = targetDate;
             activity.StartTime = newStartTime;
@@ -548,7 +573,6 @@ public sealed class PollService : IPollService
         }
         else
         {
-            // Validate dates for Trip update
             var startDate = selectedOption.DateStart.Value;
             var endDate = selectedOption.DateEnd;
 
@@ -556,21 +580,43 @@ public sealed class PollService : IPollService
             {
                 throw ErrorHelper.BadRequest("Trip end date must be after start date.");
             }
+
             if (!endDate.HasValue)
             {
-                 // Decide policy for single-date options on trips.
-                 // Assuming trips must be multi-day or explicitly set end > start.
-                 // For now, if no end date provided in option, we cannot create a valid Trip range (Start < End).
-                 // We reject it.
-                 throw ErrorHelper.BadRequest("Cannot finalize trip dates: Selected option has no end date, but trips require a duration.");
+                throw ErrorHelper.BadRequest("Cannot finalize trip dates: Selected option must have both start and end dates for trip-level polls.");
             }
 
-            // TripService invariants: StartDate > PlanningRangeStart AND EndDate < PlanningRangeEnd
-            // We set PlanningRange to accommodate the dates with 1-day buffer.
             var trip = poll.Trip;
+            var startDateOnly = DateOnly.FromDateTime(startDate);
+            var endDateOnly = DateOnly.FromDateTime(endDate.Value);
 
-            trip.PlanningRangeStart = DateOnly.FromDateTime(startDate).AddDays(-1); 
-            trip.PlanningRangeEnd = DateOnly.FromDateTime(endDate.Value).AddDays(1);
+            // Validate that selected dates fall within or can extend the planning range
+            if (trip.PlanningRangeStart.HasValue)
+            {
+                if (startDateOnly < trip.PlanningRangeStart.Value)
+                {
+                    throw ErrorHelper.BadRequest($"Selected start date {startDateOnly} is before the planning range start {trip.PlanningRangeStart.Value}.");
+                }
+            }
+
+            if (trip.PlanningRangeEnd.HasValue)
+            {
+                if (endDateOnly > trip.PlanningRangeEnd.Value)
+                {
+                    throw ErrorHelper.BadRequest($"Selected end date {endDateOnly} is after the planning range end {trip.PlanningRangeEnd.Value}.");
+                }
+            }
+
+            // If no planning range is set, create one with buffer
+            if (!trip.PlanningRangeStart.HasValue)
+            {
+                trip.PlanningRangeStart = startDateOnly.AddDays(-1);
+            }
+
+            if (!trip.PlanningRangeEnd.HasValue)
+            {
+                trip.PlanningRangeEnd = endDateOnly.AddDays(1);
+            }
 
             trip.StartDate = startDate;
             trip.EndDate = endDate.Value;
@@ -727,59 +773,5 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"Poll option {optionId} removed successfully");
 
         return true;
-    }
-
-    private void ValidateTimeLogic(TimeOnly? startTime, TimeOnly? endTime, TimeSlot? scheduleSlot)
-    {
-        // Validate StartTime and EndTime relationship
-        if (startTime.HasValue && endTime.HasValue)
-        {
-            if (endTime.Value <= startTime.Value)
-            {
-                throw ErrorHelper.BadRequest("EndTime must be after StartTime.");
-            }
-        }
-
-        // Validate ScheduleSlot matches time range
-        if (scheduleSlot.HasValue && startTime.HasValue)
-        {
-            var expectedSlot = GetTimeSlotFromTime(startTime.Value);
-            if (expectedSlot != scheduleSlot.Value)
-            {
-                var slotRange = GetTimeSlotRange(scheduleSlot.Value);
-                throw ErrorHelper.BadRequest(
-                    $"StartTime {startTime.Value:HH:mm} doesn't match ScheduleSlot {scheduleSlot.Value}. " +
-                    $"Expected time range: {slotRange}");
-            }
-        }
-    }
-
-    private TimeSlot GetTimeSlotFromTime(TimeOnly time)
-    {
-        var hour = time.Hour;
-
-        return hour switch
-        {
-            >= 6 and < 11 => TimeSlot.Morning,      // 06:00 - 10:59
-            >= 11 and < 13 => TimeSlot.Lunch,       // 11:00 - 12:59
-            >= 13 and < 17 => TimeSlot.Afternoon,   // 13:00 - 16:59
-            >= 17 and < 19 => TimeSlot.Dinner,      // 17:00 - 18:59
-            >= 19 and < 23 => TimeSlot.Evening,     // 19:00 - 22:59
-            _ => TimeSlot.LateNight                 // 23:00 - 05:59
-        };
-    }
-
-    private string GetTimeSlotRange(TimeSlot slot)
-    {
-        return slot switch
-        {
-            TimeSlot.Morning => "06:00 - 10:59",
-            TimeSlot.Lunch => "11:00 - 12:59",
-            TimeSlot.Afternoon => "13:00 - 16:59",
-            TimeSlot.Dinner => "17:00 - 18:59",
-            TimeSlot.Evening => "19:00 - 22:59",
-            TimeSlot.LateNight => "23:00 - 05:59",
-            _ => "Unknown"
-        };
     }
 }

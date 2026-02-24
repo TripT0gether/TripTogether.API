@@ -125,7 +125,8 @@ public sealed class TripService : ITripService
 
         if (dto.PlanningRangeEnd.HasValue)
         {
-            if (dto.PlanningRangeEnd <= trip.PlanningRangeStart)
+            var effectivePlanningStart = trip.PlanningRangeStart ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            if (dto.PlanningRangeEnd <= effectivePlanningStart)
             {
                 throw ErrorHelper.BadRequest("Planning range end date must be after start date.");
             }
@@ -134,21 +135,27 @@ public sealed class TripService : ITripService
 
         if (dto.StartDate.HasValue)
         {
-            if (dto.PlanningRangeStart.HasValue && DateOnly.FromDateTime(dto.StartDate.Value) <= trip.PlanningRangeStart)
+            var startDateOnly = DateOnly.FromDateTime(dto.StartDate.Value);
+            if (trip.PlanningRangeStart.HasValue && startDateOnly <= trip.PlanningRangeStart)
             {
-                throw ErrorHelper.BadRequest("Trip start date must be in the future.");
+                throw ErrorHelper.BadRequest("Trip start date must be after planning range start date.");
+            }
+            if (trip.PlanningRangeEnd.HasValue && startDateOnly >= trip.PlanningRangeEnd)
+            {
+                throw ErrorHelper.BadRequest("Trip start date must be before planning range end date.");
             }
             trip.StartDate = dto.StartDate;
         }
 
         if (dto.EndDate.HasValue)
         {
-
             if (trip.StartDate.HasValue && dto.EndDate <= trip.StartDate)
             {
                 throw ErrorHelper.BadRequest("Trip end date must be after start date.");
             }
-            if (dto.PlanningRangeEnd.HasValue && DateOnly.FromDateTime(dto.EndDate.Value) >= trip.PlanningRangeEnd)
+
+            var endDateOnly = DateOnly.FromDateTime(dto.EndDate.Value);
+            if (trip.PlanningRangeEnd.HasValue && endDateOnly >= trip.PlanningRangeEnd)
             {
                 throw ErrorHelper.BadRequest("Trip end date must be before planning range end date.");
             }
@@ -279,10 +286,6 @@ public sealed class TripService : ITripService
         }
 
         var trip = invite.Group.Trips.FirstOrDefault();
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("No trips found in this group.");
-        }
         if (trip == null)
         {
             throw ErrorHelper.NotFound("No trips found in this group.");

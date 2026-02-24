@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NpgsqlTypes;
 using TripTogether.Application.DTOs.ActivityDTO;
+using TripTogether.Application.Helpers;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
 
@@ -81,8 +82,7 @@ public sealed class ActivityService : IActivityService
             }
         }
 
-        // Validate time logic (StartTime, EndTime, ScheduleSlot)
-        ValidateTimeLogic(dto.StartTime, dto.EndTime, dto.ScheduleSlot);
+        TimeSlotHelper.ValidateTimeLogic(dto.StartTime, dto.EndTime, dto.ScheduleSlot);
 
         var activity = new Activity
         {
@@ -177,12 +177,11 @@ public sealed class ActivityService : IActivityService
             }
         }
 
-        // Validate time logic if being updated
         var startTimeToValidate = dto.StartTime ?? activity.StartTime;
         var endTimeToValidate = dto.EndTime ?? activity.EndTime;
         var scheduleSlotToValidate = dto.ScheduleSlot ?? activity.ScheduleSlot;
 
-        ValidateTimeLogic(startTimeToValidate, endTimeToValidate, scheduleSlotToValidate);
+        TimeSlotHelper.ValidateTimeLogic(startTimeToValidate, endTimeToValidate, scheduleSlotToValidate);
 
         if (dto.Title != null) activity.Title = dto.Title;
         if (dto.Status.HasValue) activity.Status = dto.Status.Value;
@@ -308,11 +307,11 @@ public sealed class ActivityService : IActivityService
 
         _loggerService.LogInformation("User {UserId} retrieving activities with filters", currentUserId);
 
-        // Get all trips where user is an active member
-        var userTripIds = await _unitOfWork.GroupMembers.GetQueryable()
-            .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active)
-            .SelectMany(gm => gm.Group.Trips.Select(t => t.Id))
-            .Distinct()
+        // Get all trip IDs where user is an active member (optimized query)
+        var userTripIds = await _unitOfWork.Trips.GetQueryable()
+            .Where(t => t.Group.Members.Any(gm => 
+                gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active))
+            .Select(t => t.Id)
             .ToListAsync();
 
         if (!userTripIds.Any())
@@ -422,60 +421,6 @@ public sealed class ActivityService : IActivityService
             availableIndexes.Count, date);
 
         return availableIndexes;
-    }
-
-    private void ValidateTimeLogic(TimeOnly? startTime, TimeOnly? endTime, TimeSlot? scheduleSlot)
-    {
-        // Validate StartTime and EndTime relationship
-        if (startTime.HasValue && endTime.HasValue)
-        {
-            if (endTime.Value <= startTime.Value)
-            {
-                throw ErrorHelper.BadRequest("EndTime must be after StartTime.");
-            }
-        }
-
-        // Validate ScheduleSlot matches time range
-        if (scheduleSlot.HasValue && startTime.HasValue)
-        {
-            var expectedSlot = GetTimeSlotFromTime(startTime.Value);
-            if (expectedSlot != scheduleSlot.Value)
-            {
-                var slotRange = GetTimeSlotRange(scheduleSlot.Value);
-                throw ErrorHelper.BadRequest(
-                    $"StartTime {startTime.Value:HH:mm} doesn't match ScheduleSlot {scheduleSlot.Value}. " +
-                    $"Expected time range: {slotRange}");
-            }
-        }
-    }
-
-    private TimeSlot GetTimeSlotFromTime(TimeOnly time)
-    {
-        var hour = time.Hour;
-
-        return hour switch
-        {
-            >= 6 and < 11 => TimeSlot.Morning,      // 06:00 - 10:59
-            >= 11 and < 13 => TimeSlot.Lunch,       // 11:00 - 12:59
-            >= 13 and < 17 => TimeSlot.Afternoon,   // 13:00 - 16:59
-            >= 17 and < 19 => TimeSlot.Dinner,      // 17:00 - 18:59
-            >= 19 and < 23 => TimeSlot.Evening,     // 19:00 - 22:59
-            _ => TimeSlot.LateNight                 // 23:00 - 05:59
-        };
-    }
-
-    private string GetTimeSlotRange(TimeSlot slot)
-    {
-        return slot switch
-        {
-            TimeSlot.Morning => "06:00 - 10:59",
-            TimeSlot.Lunch => "11:00 - 12:59",
-            TimeSlot.Afternoon => "13:00 - 16:59",
-            TimeSlot.Dinner => "17:00 - 18:59",
-            TimeSlot.Evening => "19:00 - 22:59",
-            TimeSlot.LateNight => "23:00 - 05:59",
-            _ => "Unknown"
-        };
     }
 
     private ActivityDto MapToDto(Activity activity)
