@@ -7,7 +7,7 @@ using NpgsqlTypes;
 namespace TripTogether.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDb : Migration
+    public partial class InitDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -336,34 +336,6 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "polls",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    trip_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    type = table.Column<string>(type: "text", nullable: false),
-                    title = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<string>(type: "text", nullable: false),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_polls", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_polls_trips_trip_id",
-                        column: x => x.trip_id,
-                        principalTable: "trips",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "posts",
                 columns: table => new
                 {
@@ -477,6 +449,41 @@ namespace TripTogether.Domain.Migrations
                         name: "FK_user_badges_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "polls",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    trip_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    activity_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    title = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_polls", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_polls_activities_activity_id",
+                        column: x => x.activity_id,
+                        principalTable: "activities",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_polls_trips_trip_id",
+                        column: x => x.trip_id,
+                        principalTable: "trips",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -685,6 +692,11 @@ namespace TripTogether.Domain.Migrations
                 column: "poll_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_polls_activity_id",
+                table: "polls",
+                column: "activity_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_polls_trip_id",
                 table: "polls",
                 column: "trip_id");
@@ -745,9 +757,6 @@ namespace TripTogether.Domain.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "activities");
-
-            migrationBuilder.DropTable(
                 name: "expense_splits");
 
             migrationBuilder.DropTable(
@@ -794,6 +803,9 @@ namespace TripTogether.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "polls");
+
+            migrationBuilder.DropTable(
+                name: "activities");
 
             migrationBuilder.DropTable(
                 name: "trips");

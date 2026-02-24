@@ -63,9 +63,19 @@ public sealed class PollService : IPollService
             throw ErrorHelper.Forbidden("You must be a member of the group to create a poll.");
         }
 
+        if (dto.ActivityId.HasValue)
+        {
+            var activity = await _unitOfWork.Activities.GetByIdAsync(dto.ActivityId.Value);
+            if (activity == null || activity.TripId != dto.TripId)
+            {
+                throw ErrorHelper.BadRequest("The specified activity does not exist or does not belong to this trip.");
+            }
+        }
+
         var poll = new Poll
         {
             TripId = dto.TripId,
+            ActivityId = dto.ActivityId,
             Type = dto.Type,
             Title = dto.Title,
             Status = PollStatus.Open,
@@ -137,6 +147,7 @@ public sealed class PollService : IPollService
             Id = poll.Id,
             TripId = poll.TripId,
             TripTitle = trip.Title,
+            ActivityId = poll.ActivityId,
             Type = poll.Type,
             Title = poll.Title,
             Status = poll.Status,
@@ -167,10 +178,15 @@ public sealed class PollService : IPollService
             throw ErrorHelper.NotFound("The poll does not exist.");
         }
 
-        var isGroupMember = poll.Trip.Group.Members.Any(m => m.UserId == currentUserId && m.Status == GroupMemberStatus.Active);
-        if (!isGroupMember)
+        var groupMember = poll.Trip.Group.Members.FirstOrDefault(m => m.UserId == currentUserId && m.Status == GroupMemberStatus.Active);
+        if (groupMember == null)
         {
             throw ErrorHelper.Forbidden("You must be a member of the group to update this poll.");
+        }
+
+        if (poll.CreatedBy != currentUserId && groupMember.Role != GroupMemberRole.Leader)
+        {
+            throw ErrorHelper.Forbidden("Only the poll creator or group leaders can update polls.");
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Title))
@@ -198,6 +214,7 @@ public sealed class PollService : IPollService
             Id = poll.Id,
             TripId = poll.TripId,
             TripTitle = poll.Trip.Title,
+            ActivityId = poll.ActivityId,
             Type = poll.Type,
             Title = poll.Title,
             Status = poll.Status,
@@ -277,6 +294,7 @@ public sealed class PollService : IPollService
             Id = poll.Id,
             TripId = poll.TripId,
             TripTitle = poll.Trip.Title,
+            ActivityId = poll.ActivityId,
             Type = poll.Type,
             Title = poll.Title,
             Status = poll.Status,
@@ -300,11 +318,11 @@ public sealed class PollService : IPollService
         };
     }
 
-    public async Task<Pagination<PollDto>> GetTripPollsAsync(Guid tripId, int pageNumber = 1, int pageSize = 10)
+    public async Task<Pagination<PollDto>> GetPollsAsync(Guid tripId, PollScope scope = PollScope.All, int pageNumber = 1, int pageSize = 10)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting polls for trip {tripId}");
+        _loggerService.LogInformation($"User {currentUserId} getting {scope} polls for trip {tripId}");
 
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
@@ -328,6 +346,13 @@ public sealed class PollService : IPollService
             .ThenInclude(o => o.Votes)
             .Where(p => p.TripId == tripId);
 
+        pollsQuery = scope switch
+        {
+            PollScope.TripOnly => pollsQuery.Where(p => p.ActivityId == null),
+            PollScope.ActivityOnly => pollsQuery.Where(p => p.ActivityId != null),
+            _ => pollsQuery
+        };
+
         var totalCount = await pollsQuery.CountAsync();
 
         var polls = await pollsQuery
@@ -346,6 +371,7 @@ public sealed class PollService : IPollService
             Id = poll.Id,
             TripId = poll.TripId,
             TripTitle = poll.Trip.Title,
+            ActivityId = poll.ActivityId,
             Type = poll.Type,
             Title = poll.Title,
             Status = poll.Status,
@@ -405,6 +431,7 @@ public sealed class PollService : IPollService
             Id = poll.Id,
             TripId = poll.TripId,
             TripTitle = poll.Trip.Title,
+            ActivityId = poll.ActivityId,
             Type = poll.Type,
             Title = poll.Title,
             Status = poll.Status,
@@ -423,12 +450,13 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"User {currentUserId} finalizing date poll {dto.PollId} with option {dto.SelectedOptionId}");
 
         var poll = await _unitOfWork.Polls.GetQueryable()
-   .Include(p => p.Trip)
+            .Include(p => p.Trip)
             .ThenInclude(t => t.Group)
-       .ThenInclude(g => g.Members)
+            .ThenInclude(g => g.Members)
+            .Include(p => p.Activity)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-      .FirstOrDefaultAsync(p => p.Id == dto.PollId);
+            .FirstOrDefaultAsync(p => p.Id == dto.PollId);
 
         if (poll == null)
         {
@@ -472,20 +500,88 @@ public sealed class PollService : IPollService
         poll.UpdatedAt = DateTime.UtcNow;
         poll.UpdatedBy = currentUserId;
 
-        // Update trip with the selected dates
-        var trip = poll.Trip;
-        trip.PlanningRangeStart = DateOnly.FromDateTime(selectedOption.DateStart.Value);
-        trip.PlanningRangeEnd = selectedOption.DateEnd.HasValue
-      ? DateOnly.FromDateTime(selectedOption.DateEnd.Value)
-            : DateOnly.FromDateTime(selectedOption.DateStart.Value);
-        trip.StartDate = selectedOption.DateStart;
-        trip.EndDate = selectedOption.DateEnd ?? selectedOption.DateStart;
+        if (poll.ActivityId.HasValue && poll.Activity != null)
+        {
+            var activity = poll.Activity;
+            var targetDate = DateOnly.FromDateTime(selectedOption.DateStart.Value);
+
+            if (activity.Date != targetDate)
+            {
+                var activitiesOnDate = await _unitOfWork.Activities.GetQueryable()
+                    .CountAsync(a => a.TripId == poll.TripId && a.Date == targetDate);
+
+                if (activitiesOnDate >= 10)
+                {
+                    throw ErrorHelper.BadRequest("Cannot finalize poll: Maximum of 10 activities per day has been reached for the selected date.");
+                }
+            }
+
+            // Prepare new values for validation
+            TimeOnly? newStartTime = null;
+            TimeOnly? newEndTime = null;
+
+            if (selectedOption.DateStart.Value.TimeOfDay != TimeSpan.Zero || selectedOption.DateEnd.HasValue)
+            {
+                newStartTime = TimeOnly.FromDateTime(selectedOption.DateStart.Value);
+                if (selectedOption.DateEnd.HasValue)
+                {
+                    newEndTime = TimeOnly.FromDateTime(selectedOption.DateEnd.Value);
+                }
+            }
+
+            // Utilize shared validation logic
+            ValidateTimeLogic(newStartTime, newEndTime, selectedOption.TimeOfDay);
+
+            activity.Date = targetDate;
+            activity.StartTime = newStartTime;
+            activity.EndTime = newEndTime;
+
+            if (selectedOption.TimeOfDay.HasValue)
+            {
+                activity.ScheduleSlot = selectedOption.TimeOfDay;
+            }
+
+            activity.Status = ActivityStatus.Scheduled;
+            await _unitOfWork.Activities.Update(activity);
+
+            _loggerService.LogInformation($"Date poll {dto.PollId} finalized successfully. Activity {activity.Id} scheduled for {activity.Date}");
+        }
+        else
+        {
+            // Validate dates for Trip update
+            var startDate = selectedOption.DateStart.Value;
+            var endDate = selectedOption.DateEnd;
+
+            if (endDate.HasValue && endDate.Value <= startDate)
+            {
+                throw ErrorHelper.BadRequest("Trip end date must be after start date.");
+            }
+            if (!endDate.HasValue)
+            {
+                 // Decide policy for single-date options on trips.
+                 // Assuming trips must be multi-day or explicitly set end > start.
+                 // For now, if no end date provided in option, we cannot create a valid Trip range (Start < End).
+                 // We reject it.
+                 throw ErrorHelper.BadRequest("Cannot finalize trip dates: Selected option has no end date, but trips require a duration.");
+            }
+
+            // TripService invariants: StartDate > PlanningRangeStart AND EndDate < PlanningRangeEnd
+            // We set PlanningRange to accommodate the dates with 1-day buffer.
+            var trip = poll.Trip;
+
+            trip.PlanningRangeStart = DateOnly.FromDateTime(startDate).AddDays(-1); 
+            trip.PlanningRangeEnd = DateOnly.FromDateTime(endDate.Value).AddDays(1);
+
+            trip.StartDate = startDate;
+            trip.EndDate = endDate.Value;
+
+            await _unitOfWork.Trips.Update(trip);
+
+            _loggerService.LogInformation($"Date poll {dto.PollId} finalized successfully. Trip {trip.Id} dates updated to {trip.StartDate} - {trip.EndDate}");
+        }
 
         await _unitOfWork.Polls.Update(poll);
-        await _unitOfWork.Trips.Update(trip);
         await _unitOfWork.SaveChangesAsync();
-
-        _loggerService.LogInformation($"Date poll {dto.PollId} finalized successfully. Trip {trip.Id} dates updated to {trip.StartDate} - {trip.EndDate}");
 
         var creator = await _unitOfWork.Users.GetByIdAsync(poll.CreatedBy);
 
@@ -494,6 +590,7 @@ public sealed class PollService : IPollService
             Id = poll.Id,
             TripId = poll.TripId,
             TripTitle = poll.Trip.Title,
+            ActivityId = poll.ActivityId,
             Type = poll.Type,
             Title = poll.Title,
             Status = poll.Status,
@@ -630,5 +727,59 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"Poll option {optionId} removed successfully");
 
         return true;
+    }
+
+    private void ValidateTimeLogic(TimeOnly? startTime, TimeOnly? endTime, TimeSlot? scheduleSlot)
+    {
+        // Validate StartTime and EndTime relationship
+        if (startTime.HasValue && endTime.HasValue)
+        {
+            if (endTime.Value <= startTime.Value)
+            {
+                throw ErrorHelper.BadRequest("EndTime must be after StartTime.");
+            }
+        }
+
+        // Validate ScheduleSlot matches time range
+        if (scheduleSlot.HasValue && startTime.HasValue)
+        {
+            var expectedSlot = GetTimeSlotFromTime(startTime.Value);
+            if (expectedSlot != scheduleSlot.Value)
+            {
+                var slotRange = GetTimeSlotRange(scheduleSlot.Value);
+                throw ErrorHelper.BadRequest(
+                    $"StartTime {startTime.Value:HH:mm} doesn't match ScheduleSlot {scheduleSlot.Value}. " +
+                    $"Expected time range: {slotRange}");
+            }
+        }
+    }
+
+    private TimeSlot GetTimeSlotFromTime(TimeOnly time)
+    {
+        var hour = time.Hour;
+
+        return hour switch
+        {
+            >= 6 and < 11 => TimeSlot.Morning,      // 06:00 - 10:59
+            >= 11 and < 13 => TimeSlot.Lunch,       // 11:00 - 12:59
+            >= 13 and < 17 => TimeSlot.Afternoon,   // 13:00 - 16:59
+            >= 17 and < 19 => TimeSlot.Dinner,      // 17:00 - 18:59
+            >= 19 and < 23 => TimeSlot.Evening,     // 19:00 - 22:59
+            _ => TimeSlot.LateNight                 // 23:00 - 05:59
+        };
+    }
+
+    private string GetTimeSlotRange(TimeSlot slot)
+    {
+        return slot switch
+        {
+            TimeSlot.Morning => "06:00 - 10:59",
+            TimeSlot.Lunch => "11:00 - 12:59",
+            TimeSlot.Afternoon => "13:00 - 16:59",
+            TimeSlot.Dinner => "17:00 - 18:59",
+            TimeSlot.Evening => "19:00 - 22:59",
+            TimeSlot.LateNight => "23:00 - 05:59",
+            _ => "Unknown"
+        };
     }
 }

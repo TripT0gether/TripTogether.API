@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.GroupDTO;
+using TripTogether.Application.DTOs.GroupInviteDTO;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
 
@@ -50,6 +51,13 @@ public sealed class GroupService : IGroupService
             Role = GroupMemberRole.Leader,
             Status = GroupMemberStatus.Active
         };
+
+        var invite = new CreateGroupInviteDto
+        {
+            GroupId = group.Id,
+            ExpiresInHours = 24
+        };
+        await _groupInviteService.CreateInviteAsync(invite);
 
         await _unitOfWork.GroupMembers.AddAsync(creatorMember);
         await _unitOfWork.SaveChangesAsync();

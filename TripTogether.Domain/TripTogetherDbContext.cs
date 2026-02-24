@@ -163,6 +163,7 @@ public class TripTogetherDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.ActivityId).HasColumnName("activity_id");
             entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Status).HasColumnName("status");
@@ -178,6 +179,11 @@ public class TripTogetherDbContext : DbContext
                 .WithMany(t => t.Polls)
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Activity)
+                .WithMany()
+                .HasForeignKey(e => e.ActivityId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // PollOption
