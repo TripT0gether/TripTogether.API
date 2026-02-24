@@ -8,5 +8,5 @@ public class UpdateTripDto
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public TripSettings? Settings { get; set; }
-
+    public decimal? Budget { get; set; }
 }

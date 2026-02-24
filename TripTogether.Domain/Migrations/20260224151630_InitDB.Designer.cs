@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260224110732_InitDB")]
+    [Migration("20260224151630_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -779,6 +779,10 @@ namespace TripTogether.Domain.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("Index")
+                        .HasColumnType("integer")
+                        .HasColumnName("index");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -949,6 +953,11 @@ namespace TripTogether.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<decimal?>("Budget")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("budget");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");

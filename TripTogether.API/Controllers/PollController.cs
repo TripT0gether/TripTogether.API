@@ -147,19 +147,19 @@ public sealed class PollController : ControllerBase
     /// </summary>
     /// <param name="dto">Finalize date poll data with selected option.</param>
     /// <returns>Updated poll information.</returns>
-    [HttpPatch("finalize-date")]
+    [HttpPatch("finalize")]
     [SwaggerOperation(
-        Summary = "Finalize date poll",
-        Description = "Finalize a date poll by selecting the winning option. This will update the trip's start and end dates. Only group leaders can finalize date polls."
+        Summary = "Finalize poll",
+        Description = "Finalize a poll by selecting the winning option. This will update the relevant trip or activity fields based on poll type. Only group leaders can finalize polls."
     )]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 400)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 403)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 404)]
-    public async Task<IActionResult> FinalizeDatePoll([FromBody] FinalizeDatePollDto dto)
+    public async Task<IActionResult> FinalizePoll([FromBody] FinalizePollDto dto)
     {
-        var result = await _pollService.FinalizeDatePollAsync(dto);
-        return Ok(ApiResult<PollDto>.Success(result, "200", "Date poll finalized successfully. Trip dates have been updated."));
+        var result = await _pollService.FinalizePollAsync(dto);
+        return Ok(ApiResult<PollDto>.Success(result, "200", "Poll finalized successfully."));
     }
 
     /// <summary>

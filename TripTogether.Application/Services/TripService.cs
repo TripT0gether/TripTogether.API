@@ -61,6 +61,7 @@ public sealed class TripService : ITripService
             Status = TripStatus.Planning,
             PlanningRangeStart = dto.PlanningRangeStart,
             PlanningRangeEnd = dto.PlanningRangeEnd,
+            Budget = dto.Budget,
             CreatedBy = currentUserId
         };
 
@@ -80,6 +81,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
     }
@@ -167,6 +169,11 @@ public sealed class TripService : ITripService
             trip.SettingsDetails = dto.Settings;
         }
 
+        if (dto.Budget.HasValue)
+        {
+            trip.Budget = dto.Budget;
+        }
+
         await _unitOfWork.Trips.Update(trip);
         await _unitOfWork.SaveChangesAsync();
 
@@ -183,6 +190,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
     }
@@ -260,6 +268,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             Settings = trip.SettingsDetails,
             CreatedAt = trip.CreatedAt,
             PollCount = trip.Polls.Count,
@@ -268,44 +277,6 @@ public sealed class TripService : ITripService
         };
     }
 
-    public async Task<TripDto> GetTripByTokenAsync(string token)
-    {
-        var invite = await _unitOfWork.GroupInvites.GetQueryable()
-            .Include(i => i.Group)
-            .ThenInclude(g => g.Trips)
-            .FirstOrDefaultAsync(i => i.Token == token);
-
-        if (invite == null)
-        {
-            throw ErrorHelper.NotFound("The invite does not exist.");
-        }
-
-        if (invite.Group == null || !invite.Group.Trips.Any())
-        {
-            throw ErrorHelper.NotFound("The group or trips do not exist.");
-        }
-
-        var trip = invite.Group.Trips.FirstOrDefault();
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("No trips found in this group.");
-        }
-
-        return new TripDto
-        {
-            Id = trip.Id,
-            GroupId = trip.GroupId,
-            GroupName = invite.Group.Name,
-            Title = trip.Title,
-            Status = trip.Status,
-            PlanningRangeStart = trip.PlanningRangeStart,
-            PlanningRangeEnd = trip.PlanningRangeEnd,
-            StartDate = trip.StartDate,
-            EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = invite.Token
-        };
-    }
 
     public async Task<Pagination<TripDto>> GetGroupTripsAsync(Guid groupId, TripQueryDto query)
     {
@@ -376,6 +347,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         }).ToList();
 
@@ -426,6 +398,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
     }
@@ -495,6 +468,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         }).ToList();
 

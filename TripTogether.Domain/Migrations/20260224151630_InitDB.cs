@@ -145,6 +145,7 @@ namespace TripTogether.Domain.Migrations
                     start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     end_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     settings = table.Column<string>(type: "jsonb", nullable: true),
+                    budget = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
@@ -562,6 +563,7 @@ namespace TripTogether.Domain.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     poll_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    index = table.Column<int>(type: "integer", nullable: true),
                     text_value = table.Column<string>(type: "text", nullable: true),
                     media_url = table.Column<string>(type: "text", nullable: true),
                     metadata = table.Column<string>(type: "jsonb", nullable: true),

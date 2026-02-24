@@ -21,6 +21,8 @@ public class Trip : BaseEntity
     // Stores WiFi, Contacts, Packing settings as JSON
     public string? Settings { get; set; }
 
+    public decimal? Budget { get; set; }
+
     // Navigation properties
     public virtual Group Group { get; set; } = null!;
     public virtual ICollection<Poll> Polls { get; set; } = new List<Poll>();

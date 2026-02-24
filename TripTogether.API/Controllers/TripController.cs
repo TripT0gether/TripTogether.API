@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.TripDTO;
 using TripTogether.Application.Interfaces;
-using TripTogether.Application.Utils;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.API.Controllers;
@@ -103,24 +102,6 @@ public class TripController : ControllerBase
     }
 
     /// <summary>
-    /// Get trip information by invite token.
-    /// </summary>
-    /// <param name="token">The invite token.</param>
-    /// <returns>Trip information.</returns>
-    [HttpGet("by-token")]
-    [SwaggerOperation(
-        Summary = "Get trip by token",
-        Description = "Get trip information using an invite token. This is typically used before joining a group."
-    )]
-    [ProducesResponseType(typeof(ApiResult<TripDto>), 200)]
-    [ProducesResponseType(typeof(ApiResult<TripDto>), 404)]
-    public async Task<IActionResult> GetTripByToken([FromQuery] string token)
-    {
-        var result = await _tripService.GetTripByTokenAsync(token);
-        return Ok(ApiResult<TripDto>.Success(result, "200", "Trip retrieved successfully."));
-    }
-
-    /// <summary>
     /// Get all trips for a specific group.
     /// </summary>
     /// <param name="groupId">Group ID.</param>
@@ -140,12 +121,12 @@ public class TripController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 403)]
     [ProducesResponseType(typeof(ApiResult<Pagination<TripDto>>), 404)]
     public async Task<IActionResult> GetGroupTrips(
-        [FromRoute] Guid groupId, 
+        [FromRoute] Guid groupId,
         [FromQuery] string? searchTerm = null,
         [FromQuery] TripStatus? status = null,
         [FromQuery] TripSortBy sortBy = TripSortBy.CreatedAt,
         [FromQuery] bool sortDescending = true,
-        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
         var query = new TripQueryDto
@@ -202,7 +183,7 @@ public class TripController : ControllerBase
         [FromQuery] TripStatus? status = null,
         [FromQuery] TripSortBy sortBy = TripSortBy.CreatedAt,
         [FromQuery] bool sortDescending = true,
-        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
         var query = new TripQueryDto

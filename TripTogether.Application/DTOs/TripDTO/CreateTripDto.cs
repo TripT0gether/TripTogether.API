@@ -6,4 +6,5 @@ public class CreateTripDto
     public string Title { get; set; } = null!;
     public DateOnly? PlanningRangeStart { get; set; }
     public DateOnly? PlanningRangeEnd { get; set; }
+    public decimal? Budget { get; set; }
 }

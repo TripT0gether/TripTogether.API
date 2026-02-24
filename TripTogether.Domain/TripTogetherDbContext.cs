@@ -130,6 +130,7 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.Property(e => e.Settings).HasColumnName("settings").HasColumnType("jsonb");
+            entity.Property(e => e.Budget).HasColumnName("budget").HasPrecision(10, 2);
 
             entity.HasOne(e => e.Group)
                 .WithMany(g => g.Trips)
@@ -193,6 +194,7 @@ public class TripTogetherDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.PollId).HasColumnName("poll_id");
+            entity.Property(e => e.Index).HasColumnName("index");
             entity.Property(e => e.TextValue).HasColumnName("text_value");
             entity.Property(e => e.MediaUrl).HasColumnName("media_url");
             entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");

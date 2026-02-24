@@ -42,6 +42,111 @@ public sealed class PollService : IPollService
         }
     }
 
+    private static void ValidatePollOptionForType(PollType pollType, CreatePollOptionDto optionDto)
+    {
+        switch (pollType)
+        {
+            case PollType.Date:
+                // Date polls: ONLY DateStart, DateEnd (optional), TimeOfDay (optional)
+                if (!string.IsNullOrWhiteSpace(optionDto.TextValue))
+                {
+                    throw ErrorHelper.BadRequest("Date polls cannot have TextValue. Use DateStart and DateEnd instead.");
+                }
+                if (!string.IsNullOrWhiteSpace(optionDto.MediaUrl))
+                {
+                    throw ErrorHelper.BadRequest("Date polls cannot have MediaUrl.");
+                }
+                if (!string.IsNullOrWhiteSpace(optionDto.Metadata))
+                {
+                    throw ErrorHelper.BadRequest("Date polls cannot have Metadata.");
+                }
+                if (optionDto.DateStart == null)
+                {
+                    throw ErrorHelper.BadRequest("Date poll options must have a start date.");
+                }
+                if (optionDto.DateStart < DateTime.UtcNow)
+                {
+                    throw ErrorHelper.BadRequest("Poll option start date must be in the future.");
+                }
+                if (optionDto.DateEnd != null && optionDto.DateEnd < optionDto.DateStart)
+                {
+                    throw ErrorHelper.BadRequest("Poll option end date cannot be before start date.");
+                }
+                break;
+
+            case PollType.Time:
+                // Time polls: ONLY TextValue (for time description) and/or TimeOfDay
+                if (optionDto.DateStart != null || optionDto.DateEnd != null)
+                {
+                    throw ErrorHelper.BadRequest("Time polls cannot have DateStart or DateEnd. Use TimeOfDay instead.");
+                }
+                if (!string.IsNullOrWhiteSpace(optionDto.MediaUrl))
+                {
+                    throw ErrorHelper.BadRequest("Time polls cannot have MediaUrl.");
+                }
+                if (!string.IsNullOrWhiteSpace(optionDto.Metadata))
+                {
+                    throw ErrorHelper.BadRequest("Time polls cannot have Metadata.");
+                }
+                if (string.IsNullOrWhiteSpace(optionDto.TextValue) && optionDto.TimeOfDay == null)
+                {
+                    throw ErrorHelper.BadRequest("Time poll options must have either TextValue (time description) or TimeOfDay.");
+                }
+                break;
+
+            case PollType.Destination:
+                // Destination polls: ONLY TextValue (destination name), MediaUrl (optional)
+                if (optionDto.DateStart != null || optionDto.DateEnd != null)
+                {
+                    throw ErrorHelper.BadRequest("Destination polls cannot have DateStart or DateEnd.");
+                }
+                if (optionDto.TimeOfDay != null)
+                {
+                    throw ErrorHelper.BadRequest("Destination polls cannot have TimeOfDay.");
+                }
+                if (!string.IsNullOrWhiteSpace(optionDto.Metadata))
+                {
+                    throw ErrorHelper.BadRequest("Destination polls cannot have Metadata.");
+                }
+                if (string.IsNullOrWhiteSpace(optionDto.TextValue))
+                {
+                    throw ErrorHelper.BadRequest("Destination poll options must have a TextValue (destination name).");
+                }
+                break;
+
+            case PollType.Budget:
+                // Budget polls: ONLY Metadata (for budget range as JSON)
+                if (optionDto.DateStart != null || optionDto.DateEnd != null)
+                {
+                    throw ErrorHelper.BadRequest("Budget polls cannot have DateStart or DateEnd.");
+                }
+                if (optionDto.TimeOfDay != null)
+                {
+                    throw ErrorHelper.BadRequest("Budget polls cannot have TimeOfDay.");
+                }
+                if (!string.IsNullOrWhiteSpace(optionDto.TextValue))
+                {
+                    throw ErrorHelper.BadRequest("Budget polls cannot have TextValue. Use Metadata for budget range (JSON format).");
+                }
+                if (!string.IsNullOrWhiteSpace(optionDto.MediaUrl))
+                {
+                    throw ErrorHelper.BadRequest("Budget polls cannot have MediaUrl.");
+                }
+                if (string.IsNullOrWhiteSpace(optionDto.Metadata))
+                {
+                    throw ErrorHelper.BadRequest("Budget poll options must have Metadata (budget range in JSON format).");
+                }
+                if (!IsValidJson(optionDto.Metadata))
+                {
+                    throw ErrorHelper.BadRequest("Budget poll Metadata must be valid JSON.");
+                }
+                break;
+
+            default:
+                throw ErrorHelper.BadRequest($"Unknown poll type: {pollType}");
+        }
+    }
+
     public async Task<PollDto> CreatePollAsync(CreatePollDto dto)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
@@ -113,43 +218,13 @@ public sealed class PollService : IPollService
 
         foreach (var optionDto in dto.Options)
         {
-            if (string.IsNullOrWhiteSpace(optionDto.TextValue) &&
-             string.IsNullOrWhiteSpace(optionDto.MediaUrl) &&
-           string.IsNullOrWhiteSpace(optionDto.Metadata) &&
-               optionDto.DateStart == null &&
-                optionDto.DateEnd == null &&
-             optionDto.TimeOfDay == null)
-            {
-                throw ErrorHelper.BadRequest("Poll option must have at least one valid value.");
-            }
-
-            if (!IsValidJson(optionDto.Metadata))
-            {
-                throw ErrorHelper.BadRequest("Poll option metadata must be valid JSON.");
-            }
-
-            // For Date polls, validate date range
-            if (dto.Type == PollType.Date)
-            {
-                if (optionDto.DateStart == null)
-                {
-                    throw ErrorHelper.BadRequest("Date poll options must have a start date.");
-                }
-
-                if (optionDto.DateStart < DateTime.UtcNow)
-                {
-                    throw ErrorHelper.BadRequest("Poll option start date must be in the future.");
-                }
-
-                if (optionDto.DateEnd != null && optionDto.DateEnd < optionDto.DateStart)
-                {
-                    throw ErrorHelper.BadRequest("Poll option end date cannot be before start date.");
-                }
-            }
+            // Validate poll option based on poll type
+            ValidatePollOptionForType(dto.Type, optionDto);
 
             var option = new PollOption
             {
                 PollId = poll.Id,
+                Index = optionDto.Index,
                 TextValue = optionDto.TextValue,
                 MediaUrl = optionDto.MediaUrl,
                 Metadata = optionDto.Metadata,
@@ -331,6 +406,7 @@ public sealed class PollService : IPollService
             {
                 Id = o.Id,
                 PollId = o.PollId,
+                Index = o.Index,
                 TextValue = o.TextValue,
                 MediaUrl = o.MediaUrl,
                 Metadata = o.Metadata,
@@ -469,11 +545,11 @@ public sealed class PollService : IPollService
         };
     }
 
-    public async Task<PollDto> FinalizeDatePollAsync(FinalizeDatePollDto dto)
+    public async Task<PollDto> FinalizePollAsync(FinalizePollDto dto)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} finalizing date poll {dto.PollId} with option {dto.SelectedOptionId}");
+        _loggerService.LogInformation($"User {currentUserId} finalizing poll {dto.PollId} with option {dto.SelectedOptionId}");
 
         var poll = await _unitOfWork.Polls.GetQueryable()
             .Include(p => p.Trip)
@@ -489,11 +565,6 @@ public sealed class PollService : IPollService
             throw ErrorHelper.NotFound("The poll does not exist.");
         }
 
-        if (poll.Type != PollType.Date)
-        {
-            throw ErrorHelper.BadRequest("Only Date polls can be finalized with this method.");
-        }
-
         var groupMember = poll.Trip.Group.Members.FirstOrDefault(m => m.UserId == currentUserId && m.Status == GroupMemberStatus.Active);
         if (groupMember == null)
         {
@@ -502,7 +573,7 @@ public sealed class PollService : IPollService
 
         if (groupMember.Role != GroupMemberRole.Leader)
         {
-            throw ErrorHelper.Forbidden("Only group leaders can finalize date polls.");
+            throw ErrorHelper.Forbidden("Only group leaders can finalize polls.");
         }
 
         if (poll.Status == PollStatus.Finalized)
@@ -516,15 +587,62 @@ public sealed class PollService : IPollService
             throw ErrorHelper.BadRequest("The selected option does not belong to this poll.");
         }
 
-        if (!selectedOption.DateStart.HasValue)
-        {
-            throw ErrorHelper.BadRequest("The selected option does not have a valid date.");
-        }
-
         // Update poll status to Finalized
         poll.Status = PollStatus.Finalized;
         poll.UpdatedAt = DateTime.UtcNow;
         poll.UpdatedBy = currentUserId;
+
+        // Handle finalization based on poll type
+        switch (poll.Type)
+        {
+            case PollType.Date:
+                await FinalizeDatePoll(poll, selectedOption, currentUserId);
+                break;
+
+            case PollType.Time:
+                await FinalizeTimePoll(poll, selectedOption);
+                break;
+
+            case PollType.Destination:
+                await FinalizeDestinationPoll(poll, selectedOption);
+                break;
+
+            case PollType.Budget:
+                await FinalizeBudgetPoll(poll, selectedOption);
+                break;
+
+            default:
+                throw ErrorHelper.BadRequest($"Poll type {poll.Type} cannot be finalized.");
+        }
+
+        await _unitOfWork.Polls.Update(poll);
+        await _unitOfWork.SaveChangesAsync();
+
+        var creator = await _unitOfWork.Users.GetByIdAsync(poll.CreatedBy);
+
+        return new PollDto
+        {
+            Id = poll.Id,
+            TripId = poll.TripId,
+            TripTitle = poll.Trip.Title,
+            ActivityId = poll.ActivityId,
+            Type = poll.Type,
+            Title = poll.Title,
+            Status = poll.Status,
+            CreatedBy = poll.CreatedBy,
+            CreatorName = creator?.Username ?? "Unknown",
+            CreatedAt = poll.CreatedAt,
+            OptionCount = poll.Options.Count,
+            TotalVotes = poll.Options.Sum(o => o.Votes.Count)
+        };
+    }
+
+    private async Task FinalizeDatePoll(Poll poll, PollOption selectedOption, Guid currentUserId)
+    {
+        if (!selectedOption.DateStart.HasValue)
+        {
+            throw ErrorHelper.BadRequest("The selected option does not have a valid date.");
+        }
 
         if (poll.ActivityId.HasValue && poll.Activity != null)
         {
@@ -566,10 +684,13 @@ public sealed class PollService : IPollService
                 activity.ScheduleSlot = selectedOption.TimeOfDay;
             }
 
+            // ScheduleDayIndex should be set manually or remain null
+            // It represents the order of activities within the same day (1-10), not which day of the trip
+
             activity.Status = ActivityStatus.Scheduled;
             await _unitOfWork.Activities.Update(activity);
 
-            _loggerService.LogInformation($"Date poll {dto.PollId} finalized successfully. Activity {activity.Id} scheduled for {activity.Date}");
+            _loggerService.LogInformation($"Date poll {poll.Id} finalized successfully. Activity {activity.Id} scheduled for {activity.Date}");
         }
         else
         {
@@ -623,29 +744,113 @@ public sealed class PollService : IPollService
 
             await _unitOfWork.Trips.Update(trip);
 
-            _loggerService.LogInformation($"Date poll {dto.PollId} finalized successfully. Trip {trip.Id} dates updated to {trip.StartDate} - {trip.EndDate}");
+            _loggerService.LogInformation($"Date poll {poll.Id} finalized successfully. Trip {trip.Id} dates updated to {trip.StartDate} - {trip.EndDate}");
+        }
+    }
+
+    private async Task FinalizeTimePoll(Poll poll, PollOption selectedOption)
+    {
+        if (poll.ActivityId.HasValue && poll.Activity != null)
+        {
+            var activity = poll.Activity;
+
+            // Set ScheduleSlot from the selected option
+            if (selectedOption.TimeOfDay.HasValue)
+            {
+                activity.ScheduleSlot = selectedOption.TimeOfDay;
+                _loggerService.LogInformation($"Time poll {poll.Id} finalized successfully. Activity {activity.Id} time slot set to {activity.ScheduleSlot}");
+            }
+            else
+            {
+                throw ErrorHelper.BadRequest("The selected time option does not have a valid TimeOfDay value.");
+            }
+
+            await _unitOfWork.Activities.Update(activity);
+        }
+        else
+        {
+            throw ErrorHelper.BadRequest("Time polls can only be finalized for activities, not for trips.");
+        }
+    }
+
+    private async Task FinalizeDestinationPoll(Poll poll, PollOption selectedOption)
+    {
+        if (poll.ActivityId.HasValue && poll.Activity != null)
+        {
+            var activity = poll.Activity;
+
+            // Set LocationName from the selected option
+            if (!string.IsNullOrWhiteSpace(selectedOption.TextValue))
+            {
+                activity.LocationName = selectedOption.TextValue;
+                _loggerService.LogInformation($"Destination poll {poll.Id} finalized successfully. Activity {activity.Id} location set to {activity.LocationName}");
+            }
+            else
+            {
+                throw ErrorHelper.BadRequest("The selected destination option does not have a valid location name.");
+            }
+
+            await _unitOfWork.Activities.Update(activity);
+        }
+        else
+        {
+            throw ErrorHelper.BadRequest("Destination polls can only be finalized for activities, not for trips.");
+        }
+    }
+
+    private async Task FinalizeBudgetPoll(Poll poll, PollOption selectedOption)
+    {
+        if (poll.ActivityId.HasValue)
+        {
+            throw ErrorHelper.BadRequest("Budget polls can only be finalized for trips, not for activities.");
         }
 
-        await _unitOfWork.Polls.Update(poll);
-        await _unitOfWork.SaveChangesAsync();
+        var trip = poll.Trip;
 
-        var creator = await _unitOfWork.Users.GetByIdAsync(poll.CreatedBy);
-
-        return new PollDto
+        // Parse budget from Metadata (should be JSON with budget information)
+        if (string.IsNullOrWhiteSpace(selectedOption.Metadata))
         {
-            Id = poll.Id,
-            TripId = poll.TripId,
-            TripTitle = poll.Trip.Title,
-            ActivityId = poll.ActivityId,
-            Type = poll.Type,
-            Title = poll.Title,
-            Status = poll.Status,
-            CreatedBy = poll.CreatedBy,
-            CreatorName = creator?.Username ?? "Unknown",
-            CreatedAt = poll.CreatedAt,
-            OptionCount = poll.Options.Count,
-            TotalVotes = poll.Options.Sum(o => o.Votes.Count)
-        };
+            throw ErrorHelper.BadRequest("The selected budget option does not have valid budget data.");
+        }
+
+        try
+        {
+            var budgetData = JsonDocument.Parse(selectedOption.Metadata);
+
+            // Try to get budget value from different possible JSON structures
+            decimal budgetValue = 0;
+
+            if (budgetData.RootElement.TryGetProperty("budget", out var budgetProp))
+            {
+                budgetValue = budgetProp.GetDecimal();
+            }
+            else if (budgetData.RootElement.TryGetProperty("max", out var maxProp))
+            {
+                budgetValue = maxProp.GetDecimal();
+            }
+            else if (budgetData.RootElement.TryGetProperty("amount", out var amountProp))
+            {
+                budgetValue = amountProp.GetDecimal();
+            }
+            else
+            {
+                throw ErrorHelper.BadRequest("Budget metadata must contain 'budget', 'max', or 'amount' property.");
+            }
+
+            if (budgetValue <= 0)
+            {
+                throw ErrorHelper.BadRequest("Budget must be a positive value.");
+            }
+
+            trip.Budget = budgetValue;
+            await _unitOfWork.Trips.Update(trip);
+
+            _loggerService.LogInformation($"Budget poll {poll.Id} finalized successfully. Trip {trip.Id} budget set to {trip.Budget}");
+        }
+        catch (JsonException ex)
+        {
+            throw ErrorHelper.BadRequest($"Invalid budget metadata format: {ex.Message}");
+        }
     }
 
     public async Task<PollOptionDto> AddPollOptionAsync(Guid pollId, CreatePollOptionDto dto)
@@ -676,33 +881,13 @@ public sealed class PollService : IPollService
             throw ErrorHelper.BadRequest("Cannot add options to a closed or finalized poll.");
         }
 
-        if (!IsValidJson(dto.Metadata))
-        {
-            throw ErrorHelper.BadRequest("Poll option metadata must be valid JSON.");
-        }
-
-        // For Date polls, validate date range
-        if (poll.Type == PollType.Date)
-        {
-            if (dto.DateStart == null)
-            {
-                throw ErrorHelper.BadRequest("Date poll options must have a start date.");
-            }
-
-            if (dto.DateStart < DateTime.UtcNow)
-            {
-                throw ErrorHelper.BadRequest("Poll option start date must be in the future.");
-            }
-
-            if (dto.DateEnd != null && dto.DateEnd < dto.DateStart)
-            {
-                throw ErrorHelper.BadRequest("Poll option end date cannot be before start date.");
-            }
-        }
+        // Validate poll option based on poll type
+        ValidatePollOptionForType(poll.Type, dto);
 
         var option = new PollOption
         {
             PollId = pollId,
+            Index = dto.Index,
             TextValue = dto.TextValue,
             MediaUrl = dto.MediaUrl,
             Metadata = dto.Metadata,
@@ -722,6 +907,7 @@ public sealed class PollService : IPollService
         {
             Id = option.Id,
             PollId = option.PollId,
+            Index = option.Index,
             TextValue = option.TextValue,
             MediaUrl = option.MediaUrl,
             Metadata = option.Metadata,

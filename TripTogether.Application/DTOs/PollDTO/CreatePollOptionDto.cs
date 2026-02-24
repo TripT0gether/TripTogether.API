@@ -5,6 +5,7 @@ namespace TripTogether.Application.DTOs.PollDTO;
 
 public class CreatePollOptionDto
 {
+    public int? Index { get; set; }
     public string? TextValue { get; set; }
     public string? MediaUrl { get; set; }
 

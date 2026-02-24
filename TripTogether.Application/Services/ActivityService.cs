@@ -294,7 +294,8 @@ public sealed class ActivityService : IActivityService
 
         var activities = await _unitOfWork.Activities.GetQueryable()
             .Where(a => a.TripId == tripId)
-            .OrderBy(a => a.ScheduleDayIndex)
+            .OrderBy(a => a.Date)
+            .ThenBy(a => a.ScheduleDayIndex)
             .ThenBy(a => a.StartTime)
             .ToListAsync();
 
@@ -362,7 +363,10 @@ public sealed class ActivityService : IActivityService
             activitiesQuery = activitiesQuery.Where(a => a.Date <= query.ToDate.Value);
         }
 
-        activitiesQuery.OrderBy(a => a.Date).ThenBy(a => a.StartTime);
+        activitiesQuery = activitiesQuery
+            .OrderBy(a => a.Date)
+            .ThenBy(a => a.ScheduleDayIndex)
+            .ThenBy(a => a.StartTime);
 
         // Get total count
         var totalCount = await activitiesQuery.CountAsync();
