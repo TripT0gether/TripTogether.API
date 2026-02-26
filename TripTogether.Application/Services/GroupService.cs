@@ -52,15 +52,15 @@ public sealed class GroupService : IGroupService
             Status = GroupMemberStatus.Active
         };
 
+        await _unitOfWork.GroupMembers.AddAsync(creatorMember);
+        await _unitOfWork.SaveChangesAsync();
+
         var invite = new CreateGroupInviteDto
         {
             GroupId = group.Id,
             ExpiresInHours = 24
         };
         await _groupInviteService.CreateInviteAsync(invite);
-
-        await _unitOfWork.GroupMembers.AddAsync(creatorMember);
-        await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation("Group {GroupId} created successfully by user {CurrentUserId}", group.Id, currentUserId);
 
