@@ -114,6 +114,7 @@ public sealed class GroupInviteService : IGroupInviteService
             throw ErrorHelper.Forbidden("You must be a member of the group to refresh this invite.");
         }
 
+        invite.Token = GenerateSecureToken();
         invite.ExpiresAt = DateTime.UtcNow.AddHours(24);
         invite.UpdatedAt = DateTime.UtcNow;
         invite.UpdatedBy = currentUserId;
