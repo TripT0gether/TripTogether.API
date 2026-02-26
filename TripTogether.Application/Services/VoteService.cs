@@ -33,7 +33,7 @@ public sealed class VoteService : IVoteService
             .ThenInclude(p => p.Trip)
             .ThenInclude(t => t.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(po => po.Id == dto.PollOptionId);
+            .FirstOrDefaultAsync(po => po.Id == dto.PollOptionId && !po.IsDeleted);
 
         if (pollOption == null)
         {
@@ -53,7 +53,7 @@ public sealed class VoteService : IVoteService
 
         // Check if user already voted for this specific option
         var existingVoteForOption = await _unitOfWork.Votes.GetQueryable()
-            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOptionId == dto.PollOptionId);
+            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOptionId == dto.PollOptionId && !v.IsDeleted);
 
         if (existingVoteForOption != null)
         {
@@ -65,7 +65,7 @@ public sealed class VoteService : IVoteService
         {
             var existingVote = await _unitOfWork.Votes.GetQueryable()
                 .Include(v => v.PollOption)
-                .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOption.PollId == pollOption.PollId);
+                .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOption.PollId == pollOption.PollId && !v.IsDeleted);
 
             if (existingVote != null)
             {
@@ -107,7 +107,7 @@ public sealed class VoteService : IVoteService
         var vote = await _unitOfWork.Votes.GetQueryable()
             .Include(v => v.PollOption)
             .ThenInclude(po => po.Poll)
-            .FirstOrDefaultAsync(v => v.Id == voteId);
+            .FirstOrDefaultAsync(v => v.Id == voteId && !v.IsDeleted);
 
         if (vote == null)
         {
@@ -144,7 +144,7 @@ public sealed class VoteService : IVoteService
             .ThenInclude(t => t.Group)
             .ThenInclude(g => g.Members)
             .Include(p => p.Options)
-            .FirstOrDefaultAsync(p => p.Id == pollId);
+            .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -178,7 +178,7 @@ public sealed class VoteService : IVoteService
         // Find existing vote
         var existingVote = await _unitOfWork.Votes.GetQueryable()
             .Include(v => v.PollOption)
-            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOption.PollId == pollId);
+            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOption.PollId == pollId && !v.IsDeleted);
 
         if (existingVote == null)
         {
@@ -224,7 +224,7 @@ public sealed class VoteService : IVoteService
             .Include(p => p.Trip)
             .ThenInclude(t => t.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(p => p.Id == pollId);
+            .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -240,7 +240,7 @@ public sealed class VoteService : IVoteService
         var votes = await _unitOfWork.Votes.GetQueryable()
             .Include(v => v.PollOption)
             .Include(v => v.User)
-            .Where(v => v.PollOption.PollId == pollId)
+            .Where(v => v.PollOption.PollId == pollId && !v.IsDeleted)
             .OrderBy(v => v.CreatedAt)
             .ToListAsync();
 
@@ -264,7 +264,7 @@ public sealed class VoteService : IVoteService
             .Include(p => p.Trip)
             .ThenInclude(t => t.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(p => p.Id == pollId);
+            .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -280,7 +280,7 @@ public sealed class VoteService : IVoteService
         var votes = await _unitOfWork.Votes.GetQueryable()
             .Include(v => v.PollOption)
             .Include(v => v.User)
-            .Where(v => v.UserId == currentUserId && v.PollOption.PollId == pollId)
+            .Where(v => v.UserId == currentUserId && v.PollOption.PollId == pollId && !v.IsDeleted)
             .OrderBy(v => v.CreatedAt)
             .ToListAsync();
 

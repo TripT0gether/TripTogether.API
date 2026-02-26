@@ -245,7 +245,7 @@ public sealed class GroupService : IGroupService
                 .ToDictionaryAsync(x => x.GroupId, x => x.Count);
 
             var groups = await _unitOfWork.Groups.GetQueryable()
-                .Where(g => userGroupIds.Contains(g.Id))
+                .Where(g => userGroupIds.Contains(g.Id) && !g.IsDeleted)
                 .ToListAsync();
 
             var groupDtos = groups.Select(g => new GroupDto
@@ -275,7 +275,7 @@ public sealed class GroupService : IGroupService
                 .ToDictionaryAsync(x => x.GroupId, x => x.Count);
 
             var allGroups = await _unitOfWork.Groups.GetQueryable()
-                .Where(g => userGroupIds.Contains(g.Id))
+                .Where(g => userGroupIds.Contains(g.Id) && !g.IsDeleted)
                 .ToListAsync();
 
             var groupDtos = allGroups.Select(g => new GroupDto

@@ -36,7 +36,7 @@ public sealed class GroupInviteService : IGroupInviteService
 
         var group = await _unitOfWork.Groups.GetQueryable()
             .Include(g => g.Members)
-            .FirstOrDefaultAsync(g => g.Id == dto.GroupId);
+            .FirstOrDefaultAsync(g => g.Id == dto.GroupId && !g.IsDeleted);
 
         if (group == null)
         {
@@ -50,7 +50,7 @@ public sealed class GroupInviteService : IGroupInviteService
         }
 
         var existingInvite = await _unitOfWork.GroupInvites.GetQueryable()
-            .FirstOrDefaultAsync(i => i.GroupId == dto.GroupId && i.ExpiresAt > DateTime.UtcNow);
+            .FirstOrDefaultAsync(i => i.GroupId == dto.GroupId && i.ExpiresAt > DateTime.UtcNow && !i.IsDeleted);
 
         if (existingInvite != null)
         {
@@ -101,7 +101,7 @@ public sealed class GroupInviteService : IGroupInviteService
         var invite = await _unitOfWork.GroupInvites.GetQueryable()
             .Include(i => i.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(i => i.Id == inviteId);
+            .FirstOrDefaultAsync(i => i.Id == inviteId && !i.IsDeleted);
 
         if (invite == null)
         {
@@ -147,7 +147,7 @@ public sealed class GroupInviteService : IGroupInviteService
         var invite = await _unitOfWork.GroupInvites.GetQueryable()
             .Include(i => i.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(i => i.Id == inviteId);
+            .FirstOrDefaultAsync(i => i.Id == inviteId && !i.IsDeleted);
 
         if (invite == null)
         {
@@ -173,7 +173,7 @@ public sealed class GroupInviteService : IGroupInviteService
     {
         var invite = await _unitOfWork.GroupInvites.GetQueryable()
             .Include(i => i.Group)
-            .Where(i => i.GroupId == groupId && i.ExpiresAt > DateTime.UtcNow)
+            .Where(i => i.GroupId == groupId && i.ExpiresAt > DateTime.UtcNow && !i.IsDeleted)
             .FirstOrDefaultAsync();
 
         if (invite == null)
@@ -198,7 +198,7 @@ public sealed class GroupInviteService : IGroupInviteService
     {
         var invite = await _unitOfWork.GroupInvites.GetQueryable()
             .Include(i => i.Group)
-            .FirstOrDefaultAsync(i => i.Token == token);
+            .FirstOrDefaultAsync(i => i.Token == token && !i.IsDeleted);
 
         if (invite == null)
         {
@@ -227,7 +227,7 @@ public sealed class GroupInviteService : IGroupInviteService
         var invite = await _unitOfWork.GroupInvites.GetQueryable()
             .Include(i => i.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(i => i.Token == token);
+            .FirstOrDefaultAsync(i => i.Token == token && !i.IsDeleted);
 
         if (invite == null)
         {

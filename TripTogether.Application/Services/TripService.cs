@@ -94,7 +94,7 @@ public sealed class TripService : ITripService
 
         var trip = await _unitOfWork.Trips.GetQueryable()
           .Include(t => t.Group)
-          .FirstOrDefaultAsync(t => t.Id == tripId);
+          .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
 
         if (trip == null)
         {
@@ -203,7 +203,7 @@ public sealed class TripService : ITripService
 
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
+            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
 
         if (trip == null)
         {
@@ -240,7 +240,7 @@ public sealed class TripService : ITripService
             .Include(t => t.Polls)
             .Include(t => t.Activities)
             .Include(t => t.Expenses)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
+            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
 
         if (trip == null)
         {
@@ -301,7 +301,7 @@ public sealed class TripService : ITripService
         }
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
-            .Where(t => t.GroupId == groupId);
+            .Where(t => t.GroupId == groupId && !t.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
@@ -362,7 +362,7 @@ public sealed class TripService : ITripService
 
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
+            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
 
         if (trip == null)
         {
@@ -422,7 +422,7 @@ public sealed class TripService : ITripService
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .Where(t => groupIds.Contains(t.GroupId));
+            .Where(t => groupIds.Contains(t.GroupId) && !t.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {

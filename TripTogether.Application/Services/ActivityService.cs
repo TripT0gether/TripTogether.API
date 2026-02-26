@@ -65,7 +65,8 @@ public sealed class ActivityService : IActivityService
             var existingActivity = await _unitOfWork.Activities.GetQueryable()
                 .AnyAsync(a => a.TripId == dto.TripId
                     && a.Date == dto.Date
-                    && a.ScheduleDayIndex == dto.ScheduleDayIndex.Value);
+                    && a.ScheduleDayIndex == dto.ScheduleDayIndex.Value
+                    && !a.IsDeleted);
 
             if (existingActivity)
             {
@@ -74,7 +75,7 @@ public sealed class ActivityService : IActivityService
 
             // Check if we've reached the maximum of 10 activities per day
             var activitiesOnDate = await _unitOfWork.Activities.GetQueryable()
-                .CountAsync(a => a.TripId == dto.TripId && a.Date == dto.Date);
+                .CountAsync(a => a.TripId == dto.TripId && a.Date == dto.Date && !a.IsDeleted);
 
             if (activitiesOnDate >= 10)
             {
@@ -120,7 +121,7 @@ public sealed class ActivityService : IActivityService
 
         var activity = await _unitOfWork.Activities.GetQueryable()
             .Include(a => a.Trip)
-            .FirstOrDefaultAsync(a => a.Id == activityId);
+            .FirstOrDefaultAsync(a => a.Id == activityId && !a.IsDeleted);
 
         if (activity == null)
         {
@@ -154,7 +155,8 @@ public sealed class ActivityService : IActivityService
                     .AnyAsync(a => a.TripId == activity.TripId
                         && a.Id != activityId  // Exclude current activity
                         && a.Date == dateToCheck.Value
-                        && a.ScheduleDayIndex == dto.ScheduleDayIndex.Value);
+                        && a.ScheduleDayIndex == dto.ScheduleDayIndex.Value
+                        && !a.IsDeleted);
 
                 if (existingActivity)
                 {
@@ -169,7 +171,8 @@ public sealed class ActivityService : IActivityService
             var activitiesOnNewDate = await _unitOfWork.Activities.GetQueryable()
                 .CountAsync(a => a.TripId == activity.TripId
                     && a.Id != activityId  // Exclude current activity
-                    && a.Date == dto.Date.Value);
+                    && a.Date == dto.Date.Value
+                    && !a.IsDeleted);
 
             if (activitiesOnNewDate >= 10)
             {
@@ -218,7 +221,7 @@ public sealed class ActivityService : IActivityService
 
         var activity = await _unitOfWork.Activities.GetQueryable()
             .Include(a => a.Trip)
-            .FirstOrDefaultAsync(a => a.Id == activityId);
+            .FirstOrDefaultAsync(a => a.Id == activityId && !a.IsDeleted);
 
         if (activity == null)
         {
@@ -249,7 +252,7 @@ public sealed class ActivityService : IActivityService
 
         var activity = await _unitOfWork.Activities.GetQueryable()
             .Include(a => a.Trip)
-            .FirstOrDefaultAsync(a => a.Id == activityId);
+            .FirstOrDefaultAsync(a => a.Id == activityId && !a.IsDeleted);
 
         if (activity == null)
         {
@@ -293,7 +296,7 @@ public sealed class ActivityService : IActivityService
         }
 
         var activities = await _unitOfWork.Activities.GetQueryable()
-            .Where(a => a.TripId == tripId)
+            .Where(a => a.TripId == tripId && !a.IsDeleted)
             .OrderBy(a => a.Date)
             .ThenBy(a => a.ScheduleDayIndex)
             .ThenBy(a => a.StartTime)
@@ -328,7 +331,7 @@ public sealed class ActivityService : IActivityService
         // Build query
         var activitiesQuery = _unitOfWork.Activities.GetQueryable()
             .Include(a => a.Trip)
-            .Where(a => userTripIds.Contains(a.TripId));
+            .Where(a => userTripIds.Contains(a.TripId) && !a.IsDeleted);
 
         // Apply search filter
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
@@ -413,7 +416,7 @@ public sealed class ActivityService : IActivityService
 
         // Get all used ScheduleDayIndexes for this date
         var usedIndexes = await _unitOfWork.Activities.GetQueryable()
-            .Where(a => a.TripId == tripId && a.Date == date && a.ScheduleDayIndex.HasValue)
+            .Where(a => a.TripId == tripId && a.Date == date && a.ScheduleDayIndex.HasValue && !a.IsDeleted)
             .Select(a => a.ScheduleDayIndex.Value)
             .ToListAsync();
 

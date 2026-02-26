@@ -156,7 +156,7 @@ public sealed class PollService : IPollService
         var trip = await _unitOfWork.Trips.GetQueryable()
         .Include(t => t.Group)
         .ThenInclude(g => g.Members)
-        .FirstOrDefaultAsync(t => t.Id == dto.TripId);
+        .FirstOrDefaultAsync(t => t.Id == dto.TripId && !t.IsDeleted);
 
         if (trip == null)
         {
@@ -181,7 +181,8 @@ public sealed class PollService : IPollService
             var existingActivityPoll = await _unitOfWork.Polls.GetQueryable()
                 .AnyAsync(p => p.ActivityId == dto.ActivityId.Value
                     && p.Type == dto.Type
-                    && (p.Status == PollStatus.Open || p.Status == PollStatus.Closed));
+                    && (p.Status == PollStatus.Open || p.Status == PollStatus.Closed)
+                    && !p.IsDeleted);
 
             if (existingActivityPoll)
             {
@@ -195,7 +196,8 @@ public sealed class PollService : IPollService
                 .AnyAsync(p => p.TripId == dto.TripId
                     && p.ActivityId == null
                     && p.Type == dto.Type
-                    && (p.Status == PollStatus.Open || p.Status == PollStatus.Closed));
+                    && (p.Status == PollStatus.Open || p.Status == PollStatus.Closed)
+                    && !p.IsDeleted);
 
             if (existingTripPoll)
             {
@@ -272,7 +274,7 @@ public sealed class PollService : IPollService
             .ThenInclude(g => g.Members)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-            .FirstOrDefaultAsync(p => p.Id == pollId);
+            .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -337,7 +339,7 @@ public sealed class PollService : IPollService
             .Include(p => p.Trip)
             .ThenInclude(t => t.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(p => p.Id == pollId);
+            .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -375,7 +377,7 @@ public sealed class PollService : IPollService
             .ThenInclude(g => g.Members)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-            .FirstOrDefaultAsync(p => p.Id == pollId);
+            .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -429,7 +431,7 @@ public sealed class PollService : IPollService
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
             .ThenInclude(g => g.Members)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
+            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
 
         if (trip == null)
         {
@@ -446,7 +448,7 @@ public sealed class PollService : IPollService
             .Include(p => p.Trip)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-            .Where(p => p.TripId == tripId);
+            .Where(p => p.TripId == tripId && !p.IsDeleted);
 
         pollsQuery = scope switch
         {
@@ -499,7 +501,7 @@ public sealed class PollService : IPollService
             .ThenInclude(g => g.Members)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-            .FirstOrDefaultAsync(p => p.Id == pollId);
+            .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -558,7 +560,7 @@ public sealed class PollService : IPollService
             .Include(p => p.Activity)
             .Include(p => p.Options)
             .ThenInclude(o => o.Votes)
-            .FirstOrDefaultAsync(p => p.Id == dto.PollId);
+            .FirstOrDefaultAsync(p => p.Id == dto.PollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -652,7 +654,7 @@ public sealed class PollService : IPollService
             if (activity.Date != targetDate)
             {
                 var activitiesOnDate = await _unitOfWork.Activities.GetQueryable()
-                    .CountAsync(a => a.TripId == poll.TripId && a.Date == targetDate);
+                    .CountAsync(a => a.TripId == poll.TripId && a.Date == targetDate && !a.IsDeleted);
 
                 if (activitiesOnDate >= 10)
                 {
@@ -863,7 +865,7 @@ public sealed class PollService : IPollService
        .Include(p => p.Trip)
    .ThenInclude(t => t.Group)
         .ThenInclude(g => g.Members)
-      .FirstOrDefaultAsync(p => p.Id == pollId);
+      .FirstOrDefaultAsync(p => p.Id == pollId && !p.IsDeleted);
 
         if (poll == null)
         {
@@ -930,7 +932,7 @@ public sealed class PollService : IPollService
    .ThenInclude(p => p.Trip)
             .ThenInclude(t => t.Group)
 .ThenInclude(g => g.Members)
-        .FirstOrDefaultAsync(o => o.Id == optionId);
+        .FirstOrDefaultAsync(o => o.Id == optionId && !o.IsDeleted);
 
         if (option == null)
         {

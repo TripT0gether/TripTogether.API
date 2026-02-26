@@ -315,6 +315,7 @@ public sealed class FriendshipService : IFriendshipService
         var usersQuery = _unitOfWork.Users.GetQueryable()
             .Where(u => u.Id != currentUserId &&
                         !existingFriendshipUserIds.Contains(u.Id) &&
+                        !u.IsDeleted &&
                         u.IsEmailVerified &&
                         (u.Username.ToLower().Contains(lowerSearchTerm) ||
                          u.Email.ToLower().Contains(lowerSearchTerm)));
