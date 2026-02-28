@@ -244,7 +244,6 @@ namespace TripTogether.Domain.Migrations
                     start_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     end_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     schedule_day_index = table.Column<int>(type: "integer", nullable: true),
-                    schedule_slot = table.Column<string>(type: "text", nullable: true),
                     location_name = table.Column<string>(type: "text", nullable: true),
                     geo_coordinates = table.Column<NpgsqlPoint>(type: "point", nullable: true),
                     link_url = table.Column<string>(type: "text", nullable: true),
@@ -563,7 +562,6 @@ namespace TripTogether.Domain.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     poll_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    index = table.Column<int>(type: "integer", nullable: true),
                     text_value = table.Column<string>(type: "text", nullable: true),
                     media_url = table.Column<string>(type: "text", nullable: true),
                     metadata = table.Column<string>(type: "jsonb", nullable: true),

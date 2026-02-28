@@ -194,7 +194,6 @@ public class TripTogetherDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.PollId).HasColumnName("poll_id");
-            entity.Property(e => e.Index).HasColumnName("index");
             entity.Property(e => e.TextValue).HasColumnName("text_value");
             entity.Property(e => e.MediaUrl).HasColumnName("media_url");
             entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
@@ -251,7 +250,6 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.ScheduleDayIndex).HasColumnName("schedule_day_index");
-            entity.Property(e => e.ScheduleSlot).HasColumnName("schedule_slot");
             entity.Property(e => e.LocationName).HasColumnName("location_name");
             entity.Property(e => e.GeoCoordinates).HasColumnName("geo_coordinates");
             entity.Property(e => e.LinkUrl).HasColumnName("link_url");

@@ -6,7 +6,6 @@ public class PollOptionDto
 {
     public Guid Id { get; set; }
     public Guid PollId { get; set; }
-    public int? Index { get; set; }
     public string? TextValue { get; set; }
     public string? MediaUrl { get; set; }
     public string? Metadata { get; set; }

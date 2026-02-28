@@ -3,7 +3,6 @@ using TripTogether.Domain.Enums;
 public class PollOption : BaseEntity
 {
     public Guid PollId { get; set; }
-    public int? Index { get; set; }
     public string? TextValue { get; set; }
     public string? MediaUrl { get; set; }
     public string? Metadata { get; set; } // JSON for budget ranges or specific dates

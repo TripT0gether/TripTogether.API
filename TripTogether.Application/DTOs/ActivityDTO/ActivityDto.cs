@@ -13,7 +13,6 @@ public class ActivityDto
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }
     public int? ScheduleDayIndex { get; set; }
-    public TimeSlot? ScheduleSlot { get; set; }
     public string? LocationName { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }

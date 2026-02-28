@@ -82,10 +82,6 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("schedule_day_index");
 
-                    b.Property<string>("ScheduleSlot")
-                        .HasColumnType("text")
-                        .HasColumnName("schedule_slot");
-
                     b.Property<TimeOnly?>("StartTime")
                         .HasColumnType("time without time zone")
                         .HasColumnName("start_time");
@@ -775,10 +771,6 @@ namespace TripTogether.Domain.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
-
-                    b.Property<int?>("Index")
-                        .HasColumnType("integer")
-                        .HasColumnName("index");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");

@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260224151630_InitDB")]
+    [Migration("20260228042059_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -84,10 +84,6 @@ namespace TripTogether.Domain.Migrations
                     b.Property<int?>("ScheduleDayIndex")
                         .HasColumnType("integer")
                         .HasColumnName("schedule_day_index");
-
-                    b.Property<string>("ScheduleSlot")
-                        .HasColumnType("text")
-                        .HasColumnName("schedule_slot");
 
                     b.Property<TimeOnly?>("StartTime")
                         .HasColumnType("time without time zone")
@@ -778,10 +774,6 @@ namespace TripTogether.Domain.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
-
-                    b.Property<int?>("Index")
-                        .HasColumnType("integer")
-                        .HasColumnName("index");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");

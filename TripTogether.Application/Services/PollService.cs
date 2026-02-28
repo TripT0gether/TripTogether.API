@@ -226,7 +226,6 @@ public sealed class PollService : IPollService
             var option = new PollOption
             {
                 PollId = poll.Id,
-                Index = optionDto.Index,
                 TextValue = optionDto.TextValue,
                 MediaUrl = optionDto.MediaUrl,
                 Metadata = optionDto.Metadata,
@@ -408,7 +407,6 @@ public sealed class PollService : IPollService
             {
                 Id = o.Id,
                 PollId = o.PollId,
-                Index = o.Index,
                 TextValue = o.TextValue,
                 MediaUrl = o.MediaUrl,
                 Metadata = o.Metadata,
@@ -675,19 +673,11 @@ public sealed class PollService : IPollService
                 }
             }
 
-            TimeSlotHelper.ValidateTimeLogic(newStartTime, newEndTime, selectedOption.TimeOfDay);
+            TimeSlotHelper.ValidateTimeLogic(newStartTime, newEndTime);
 
             activity.Date = targetDate;
             activity.StartTime = newStartTime;
             activity.EndTime = newEndTime;
-
-            if (selectedOption.TimeOfDay.HasValue)
-            {
-                activity.ScheduleSlot = selectedOption.TimeOfDay;
-            }
-
-            // ScheduleDayIndex should be set manually or remain null
-            // It represents the order of activities within the same day (1-10), not which day of the trip
 
             activity.Status = ActivityStatus.Scheduled;
             await _unitOfWork.Activities.Update(activity);
@@ -754,20 +744,7 @@ public sealed class PollService : IPollService
     {
         if (poll.ActivityId.HasValue && poll.Activity != null)
         {
-            var activity = poll.Activity;
-
-            // Set ScheduleSlot from the selected option
-            if (selectedOption.TimeOfDay.HasValue)
-            {
-                activity.ScheduleSlot = selectedOption.TimeOfDay;
-                _loggerService.LogInformation($"Time poll {poll.Id} finalized successfully. Activity {activity.Id} time slot set to {activity.ScheduleSlot}");
-            }
-            else
-            {
-                throw ErrorHelper.BadRequest("The selected time option does not have a valid TimeOfDay value.");
-            }
-
-            await _unitOfWork.Activities.Update(activity);
+            throw ErrorHelper.BadRequest("Time polls are not supported for activity-level scheduling. Use date polls with time components instead.");
         }
         else
         {
@@ -889,7 +866,6 @@ public sealed class PollService : IPollService
         var option = new PollOption
         {
             PollId = pollId,
-            Index = dto.Index,
             TextValue = dto.TextValue,
             MediaUrl = dto.MediaUrl,
             Metadata = dto.Metadata,
@@ -909,7 +885,6 @@ public sealed class PollService : IPollService
         {
             Id = option.Id,
             PollId = option.PollId,
-            Index = option.Index,
             TextValue = option.TextValue,
             MediaUrl = option.MediaUrl,
             Metadata = option.Metadata,
