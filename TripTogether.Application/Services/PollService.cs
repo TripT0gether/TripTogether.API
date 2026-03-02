@@ -648,17 +648,7 @@ public sealed class PollService : IPollService
         {
             var activity = poll.Activity;
             var targetDate = DateOnly.FromDateTime(selectedOption.DateStart.Value);
-
-            if (activity.Date != targetDate)
-            {
-                var activitiesOnDate = await _unitOfWork.Activities.GetQueryable()
-                    .CountAsync(a => a.TripId == poll.TripId && a.Date == targetDate && !a.IsDeleted);
-
-                if (activitiesOnDate >= 10)
-                {
-                    throw ErrorHelper.BadRequest("Cannot finalize poll: Maximum of 10 activities per day has been reached for the selected date.");
-                }
-            }
+            var oldDate = activity.Date;
 
             // Prepare new values for validation
             TimeOnly? newStartTime = null;
@@ -675,12 +665,63 @@ public sealed class PollService : IPollService
 
             TimeSlotHelper.ValidateTimeLogic(newStartTime, newEndTime);
 
+            // Check for conflicts and validate capacity when changing date or time
+            if (activity.Date != targetDate || activity.StartTime != newStartTime)
+            {
+                var existingActivities = await _unitOfWork.Activities.GetQueryable()
+                    .Where(a => a.TripId == poll.TripId && a.Date == targetDate && !a.IsDeleted && a.Id != activity.Id)
+                    .ToListAsync();
+
+                if (existingActivities.Count >= 10)
+                {
+                    throw ErrorHelper.BadRequest("Cannot finalize poll: Maximum of 10 activities per day has been reached for the selected date.");
+                }
+
+                // Check for time conflicts if new activity has time specified
+                if (newStartTime.HasValue)
+                {
+                    foreach (var existing in existingActivities)
+                    {
+                        if (existing.StartTime.HasValue && existing.EndTime.HasValue && newEndTime.HasValue)
+                        {
+                            if (newStartTime.Value < existing.EndTime.Value && newStartTime.Value >= existing.StartTime.Value)
+                            {
+                                throw ErrorHelper.BadRequest($"Activity time conflicts with existing activity '{existing.Title}' ({existing.StartTime:HH:mm} - {existing.EndTime:HH:mm}).");
+                            }
+                            if (newEndTime.Value > existing.StartTime.Value && newEndTime.Value <= existing.EndTime.Value)
+                            {
+                                throw ErrorHelper.BadRequest($"Activity time conflicts with existing activity '{existing.Title}' ({existing.StartTime:HH:mm} - {existing.EndTime:HH:mm}).");
+                            }
+                            if (newStartTime.Value <= existing.StartTime.Value && newEndTime.Value >= existing.EndTime.Value)
+                            {
+                                throw ErrorHelper.BadRequest($"Activity time conflicts with existing activity '{existing.Title}' ({existing.StartTime:HH:mm} - {existing.EndTime:HH:mm}).");
+                            }
+                        }
+                    }
+                }
+            }
+
             activity.Date = targetDate;
             activity.StartTime = newStartTime;
             activity.EndTime = newEndTime;
-
             activity.Status = ActivityStatus.Scheduled;
+
             await _unitOfWork.Activities.Update(activity);
+
+            // Reorder activities on both dates if date changed
+            if (oldDate != targetDate)
+            {
+                if (oldDate.HasValue)
+                {
+                    await ReorderActivitiesOnDateAsync(poll.TripId, oldDate.Value);
+                }
+                await ReorderActivitiesOnDateAsync(poll.TripId, targetDate);
+            }
+            else
+            {
+                // Reorder same date if time changed
+                await ReorderActivitiesOnDateAsync(poll.TripId, targetDate);
+            }
 
             _loggerService.LogInformation($"Date poll {poll.Id} finalized successfully. Activity {activity.Id} scheduled for {activity.Date}");
         }
@@ -936,5 +977,30 @@ public sealed class PollService : IPollService
         _loggerService.LogInformation($"Poll option {optionId} removed successfully");
 
         return true;
+    }
+
+    private async Task ReorderActivitiesOnDateAsync(Guid tripId, DateOnly date)
+    {
+        var activities = await _unitOfWork.Activities.GetQueryable()
+            .Where(a => a.TripId == tripId && a.Date == date && !a.IsDeleted)
+            .ToListAsync();
+
+        if (!activities.Any())
+        {
+            return;
+        }
+
+        // Sort: activities with time first (by time), then activities without time
+        var sortedActivities = activities
+            .OrderBy(a => a.StartTime.HasValue ? 0 : 1)
+            .ThenBy(a => a.StartTime)
+            .ToList();
+
+        // Reassign ScheduleDayIndex sequentially
+        for (int i = 0; i < sortedActivities.Count; i++)
+        {
+            sortedActivities[i].ScheduleDayIndex = i + 1;
+            await _unitOfWork.Activities.Update(sortedActivities[i]);
+        }
     }
 }
