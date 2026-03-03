@@ -13,15 +13,18 @@ public sealed class ActivityService : IActivityService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILogger<ActivityService> _loggerService;
+    private readonly IAnnouncementService _announcementService;
 
     public ActivityService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
-        ILogger<ActivityService> loggerService)
+        ILogger<ActivityService> loggerService,
+        IAnnouncementService announcementService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
+        _announcementService = announcementService;
     }
 
     public async Task<ActivityDto> CreateActivityAsync(CreateActivityDto dto)
@@ -89,6 +92,13 @@ public sealed class ActivityService : IActivityService
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation("Activity {ActivityId} created successfully", activity.Id);
+
+        await _announcementService.NotifyActivityCreatedAsync(
+            activity.Id,
+            activity.TripId,
+            trip.GroupId,
+            activity.Title,
+            currentUserId);
 
         return MapToDto(activity);
     }

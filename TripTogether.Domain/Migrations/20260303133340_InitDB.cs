@@ -557,6 +557,91 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "announcements",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    message = table.Column<string>(type: "text", nullable: false),
+                    group_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    trip_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    activity_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    poll_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    packing_item_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    friendship_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    group_invite_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    target_user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    from_user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    is_read = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    read_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_announcements", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_announcements_activities_activity_id",
+                        column: x => x.activity_id,
+                        principalTable: "activities",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_announcements_friendships_friendship_id",
+                        column: x => x.friendship_id,
+                        principalTable: "friendships",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_announcements_group_invites_group_invite_id",
+                        column: x => x.group_invite_id,
+                        principalTable: "group_invites",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_announcements_groups_group_id",
+                        column: x => x.group_id,
+                        principalTable: "groups",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_announcements_packing_items_packing_item_id",
+                        column: x => x.packing_item_id,
+                        principalTable: "packing_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_announcements_polls_poll_id",
+                        column: x => x.poll_id,
+                        principalTable: "polls",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_announcements_trips_trip_id",
+                        column: x => x.trip_id,
+                        principalTable: "trips",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_announcements_users_from_user_id",
+                        column: x => x.from_user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_announcements_users_target_user_id",
+                        column: x => x.target_user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "poll_options",
                 columns: table => new
                 {
@@ -622,6 +707,51 @@ namespace TripTogether.Domain.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_activities_trip_id",
                 table: "activities",
+                column: "trip_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_activity_id",
+                table: "announcements",
+                column: "activity_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_friendship_id",
+                table: "announcements",
+                column: "friendship_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_from_user_id",
+                table: "announcements",
+                column: "from_user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_group_id",
+                table: "announcements",
+                column: "group_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_group_invite_id",
+                table: "announcements",
+                column: "group_invite_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_packing_item_id",
+                table: "announcements",
+                column: "packing_item_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_poll_id",
+                table: "announcements",
+                column: "poll_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_target_user_id",
+                table: "announcements",
+                column: "target_user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_announcements_trip_id",
+                table: "announcements",
                 column: "trip_id");
 
             migrationBuilder.CreateIndex(
@@ -757,13 +887,10 @@ namespace TripTogether.Domain.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "announcements");
+
+            migrationBuilder.DropTable(
                 name: "expense_splits");
-
-            migrationBuilder.DropTable(
-                name: "friendships");
-
-            migrationBuilder.DropTable(
-                name: "group_invites");
 
             migrationBuilder.DropTable(
                 name: "group_members");
@@ -785,6 +912,12 @@ namespace TripTogether.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "votes");
+
+            migrationBuilder.DropTable(
+                name: "friendships");
+
+            migrationBuilder.DropTable(
+                name: "group_invites");
 
             migrationBuilder.DropTable(
                 name: "expenses");

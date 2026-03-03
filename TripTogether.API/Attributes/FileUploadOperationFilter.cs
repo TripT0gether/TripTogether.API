@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -20,7 +19,7 @@ public class FileUploadOperationFilter : IOperationFilter
         {
             var paramToRemove = operation.Parameters
                 .FirstOrDefault(p => p.Name == fileParam.Name);
-            
+
             if (paramToRemove != null)
             {
                 operation.Parameters.Remove(paramToRemove);
@@ -38,7 +37,7 @@ public class FileUploadOperationFilter : IOperationFilter
                 Type = "string",
                 Format = "binary"
             };
-            
+
             if (fileParam.IsRequired)
             {
                 required.Add(fileParam.Name);

@@ -32,6 +32,7 @@ public class Trip : BaseEntity
     public virtual ICollection<Settlement> Settlements { get; set; } = new List<Settlement>();
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
     public virtual ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
+    public virtual ICollection<Announcement> Announcements { get; set; } = new List<Announcement>();
 
     // Helper
     [NotMapped]

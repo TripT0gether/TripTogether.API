@@ -15,19 +15,22 @@ public sealed class GroupService : IGroupService
     private readonly IFileService _fileService;
     private readonly IGroupInviteService _groupInviteService;
     private readonly ILogger _loggerService;
+    private readonly IAnnouncementService _announcementService;
 
     public GroupService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
         IFileService fileService,
         IGroupInviteService groupInviteService,
-        ILogger<GroupService> loggerService)
+        ILogger<GroupService> loggerService,
+        IAnnouncementService announcementService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _fileService = fileService;
         _groupInviteService = groupInviteService;
         _loggerService = loggerService;
+        _announcementService = announcementService;
     }
 
     public async Task<GroupDto> CreateGroupAsync(CreateGroupDto dto)
@@ -63,6 +66,8 @@ public sealed class GroupService : IGroupService
         await _groupInviteService.CreateInviteAsync(invite);
 
         _loggerService.LogInformation("Group {GroupId} created successfully by user {CurrentUserId}", group.Id, currentUserId);
+
+        await _announcementService.NotifyGroupCreatedAsync(group.Id, group.Name, currentUserId);
 
         return new GroupDto
         {

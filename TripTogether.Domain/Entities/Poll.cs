@@ -16,4 +16,5 @@ public class Poll : BaseEntity
     public virtual Trip Trip { get; set; } = null!;
     public virtual Activity? Activity { get; set; }
     public virtual ICollection<PollOption> Options { get; set; } = new List<PollOption>();
+    public virtual ICollection<Announcement> Announcements { get; set; } = new List<Announcement>();
 }

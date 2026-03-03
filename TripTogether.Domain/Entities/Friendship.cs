@@ -12,4 +12,5 @@ public class Friendship : BaseEntity
     // Navigation properties
     public virtual User Requester { get; set; } = null!;
     public virtual User Addressee { get; set; } = null!;
+    public virtual ICollection<Announcement> Announcements { get; set; } = new List<Announcement>();
 }

@@ -126,6 +126,7 @@ public static class IocContainer
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IPackingItemService, PackingItemService>();
         services.AddScoped<IPackingAssignmentService, PackingAssignmentService>();
+        services.AddScoped<IAnnouncementService, AnnouncementService>();
         return services;
     }
 
