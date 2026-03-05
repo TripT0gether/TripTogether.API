@@ -454,6 +454,41 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "galleries",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    trip_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    activity_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    image_url = table.Column<string>(type: "text", nullable: false),
+                    caption = table.Column<string>(type: "text", nullable: true),
+                    display_order = table.Column<int>(type: "integer", nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_galleries", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_galleries_activities_activity_id",
+                        column: x => x.activity_id,
+                        principalTable: "activities",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_galleries_trips_trip_id",
+                        column: x => x.trip_id,
+                        principalTable: "trips",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "polls",
                 columns: table => new
                 {
@@ -785,6 +820,16 @@ namespace TripTogether.Domain.Migrations
                 column: "created_by");
 
             migrationBuilder.CreateIndex(
+                name: "IX_galleries_activity_id",
+                table: "galleries",
+                column: "activity_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_galleries_trip_id",
+                table: "galleries",
+                column: "trip_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_group_invites_group_id",
                 table: "group_invites",
                 column: "group_id");
@@ -891,6 +936,9 @@ namespace TripTogether.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "expense_splits");
+
+            migrationBuilder.DropTable(
+                name: "galleries");
 
             migrationBuilder.DropTable(
                 name: "group_members");

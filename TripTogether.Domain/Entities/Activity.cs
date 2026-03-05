@@ -26,4 +26,5 @@ public class Activity : BaseEntity
     // Navigation properties
     public virtual Trip Trip { get; set; } = null!;
     public virtual ICollection<Announcement> Announcements { get; set; } = new List<Announcement>();
+    public virtual ICollection<Gallery> GalleryImages { get; set; } = new List<Gallery>();
 }

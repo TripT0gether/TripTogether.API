@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260303133340_InitDB")]
+    [Migration("20260305155328_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -467,6 +467,71 @@ namespace TripTogether.Domain.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.ToTable("friendships", (string)null);
+                });
+
+            modelBuilder.Entity("Gallery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ActivityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("activity_id");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("text")
+                        .HasColumnName("caption");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("image_url");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<Guid?>("TripId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trip_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("galleries", (string)null);
                 });
 
             modelBuilder.Entity("Group", b =>
@@ -1448,6 +1513,23 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("Requester");
                 });
 
+            modelBuilder.Entity("Gallery", b =>
+                {
+                    b.HasOne("Activity", "Activity")
+                        .WithMany("GalleryImages")
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Trip", "Trip")
+                        .WithMany("Galleries")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("Trip");
+                });
+
             modelBuilder.Entity("GroupInvite", b =>
                 {
                     b.HasOne("Group", "Group")
@@ -1643,6 +1725,8 @@ namespace TripTogether.Domain.Migrations
             modelBuilder.Entity("Activity", b =>
                 {
                     b.Navigation("Announcements");
+
+                    b.Navigation("GalleryImages");
                 });
 
             modelBuilder.Entity("Badge", b =>
@@ -1702,6 +1786,8 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("Announcements");
 
                     b.Navigation("Expenses");
+
+                    b.Navigation("Galleries");
 
                     b.Navigation("PackingItems");
 

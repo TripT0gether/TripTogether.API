@@ -34,6 +34,7 @@ public class TripTogetherDbContext : DbContext
     public DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<OtpStorage> OtpStorages { get; set; }
     public DbSet<Announcement> Announcements { get; set; }
+    public DbSet<Gallery> Galleries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -549,6 +550,36 @@ public class TripTogetherDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        // Gallery
+        modelBuilder.Entity<Gallery>(entity =>
+        {
+            entity.ToTable("galleries");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.ActivityId).HasColumnName("activity_id");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
+            entity.Property(e => e.Caption).HasColumnName("caption");
+            entity.Property(e => e.DisplayOrder).HasColumnName("display_order");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Galleries)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Activity)
+                .WithMany(a => a.GalleryImages)
+                .HasForeignKey(e => e.ActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Loai edit ra khoi query (SOFT DELETE)
         modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Friendship>().HasQueryFilter(e => !e.IsDeleted);
@@ -570,6 +601,7 @@ public class TripTogetherDbContext : DbContext
         modelBuilder.Entity<UserBadge>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<OtpStorage>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Announcement>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Gallery>().HasQueryFilter(e => !e.IsDeleted);
 
         // Enum to string conversion
         modelBuilder.UseStringForEnums();
