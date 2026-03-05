@@ -301,10 +301,6 @@ public sealed class GroupService : IGroupService
         }
     }
 
-    public async Task<GroupDto> JoinGroupByToken(string token)
-    {
-        return await _groupInviteService.JoinGroupByTokenAsync(token);
-    }
 
     private async Task<bool> IsGroupLeaderAsync(Guid userId, Guid groupId)
     {

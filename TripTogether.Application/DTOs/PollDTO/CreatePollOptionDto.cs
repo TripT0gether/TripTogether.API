@@ -12,7 +12,13 @@ public class CreatePollOptionDto
     public string? Metadata { get; set; }
 
     // For Date Voting
-    public DateTime? DateStart { get; set; }
-    public DateTime? DateEnd { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+
+    // For Time Voting
+    public TimeOnly? StartTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
+
+    // Time of Day Category
     public TimeSlot? TimeOfDay { get; set; }
 }

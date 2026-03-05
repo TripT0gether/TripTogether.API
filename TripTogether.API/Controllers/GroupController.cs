@@ -148,25 +148,6 @@ public class GroupController : ControllerBase
     }
 
     /// <summary>
-    /// Join a group using a trip invite token.
-    /// </summary>
-    /// <param name="token">The invite token.</param>
-    /// <returns>Joined group information.</returns>
-    [HttpPost("join")]
-    [SwaggerOperation(
-        Summary = "Join group by token",
-        Description = "Join a group using a trip invite token. The user will be added as a member to the group associated with the trip."
-    )]
-    [ProducesResponseType(typeof(ApiResult<GroupDto>), 200)]
-    [ProducesResponseType(typeof(ApiResult<GroupDto>), 404)]
-    [ProducesResponseType(typeof(ApiResult<GroupDto>), 409)]
-    public async Task<IActionResult> JoinGroupByToken([FromQuery] string token)
-    {
-        var result = await _groupService.JoinGroupByToken(token);
-        return Ok(ApiResult<GroupDto>.Success(result, "200", "Joined group successfully."));
-    }
-
-    /// <summary>
     /// Get pending group invitations for the current user.
     /// </summary>
     /// <param name="pageNumber">Page number (default: 1).</param>

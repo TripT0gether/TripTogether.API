@@ -809,8 +809,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[0].Id,
                     TextValue = "Early July",
-                    DateStart = DateTime.UtcNow.AddDays(30),
-                    DateEnd = DateTime.UtcNow.AddDays(37),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(37)),
                     TimeOfDay = TimeSlot.Morning,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
@@ -820,8 +820,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[0].Id,
                     TextValue = "Late July",
-                    DateStart = DateTime.UtcNow.AddDays(45),
-                    DateEnd = DateTime.UtcNow.AddDays(52),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(45)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(52)),
                     TimeOfDay = TimeSlot.Morning,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
@@ -882,8 +882,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[3].Id,
                     TextValue = "This Weekend",
-                    DateStart = DateTime.UtcNow.AddDays(2),
-                    DateEnd = DateTime.UtcNow.AddDays(4),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(4)),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[2].CreatedBy,
                     IsDeleted = false
@@ -892,8 +892,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[3].Id,
                     TextValue = "Next Weekend",
-                    DateStart = DateTime.UtcNow.AddDays(9),
-                    DateEnd = DateTime.UtcNow.AddDays(11),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(9)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(11)),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[2].CreatedBy,
                     IsDeleted = false

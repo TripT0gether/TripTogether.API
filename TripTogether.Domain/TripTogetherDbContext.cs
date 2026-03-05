@@ -197,8 +197,10 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.TextValue).HasColumnName("text_value");
             entity.Property(e => e.MediaUrl).HasColumnName("media_url");
             entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
-            entity.Property(e => e.DateStart).HasColumnName("date_start");
-            entity.Property(e => e.DateEnd).HasColumnName("date_end");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.StartTime).HasColumnName("start_time");
+            entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.TimeOfDay).HasColumnName("time_of_day");
 
             entity.HasOne(e => e.Poll)

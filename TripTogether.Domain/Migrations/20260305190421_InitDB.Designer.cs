@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260228042059_InitDB")]
+    [Migration("20260305190421_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -761,19 +761,19 @@ namespace TripTogether.Domain.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("DateEnd")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_end");
-
-                    b.Property<DateTime?>("DateStart")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_start");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("end_time");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -789,6 +789,14 @@ namespace TripTogether.Domain.Migrations
                     b.Property<Guid>("PollId")
                         .HasColumnType("uuid")
                         .HasColumnName("poll_id");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start_time");
 
                     b.Property<string>("TextValue")
                         .HasColumnType("text")

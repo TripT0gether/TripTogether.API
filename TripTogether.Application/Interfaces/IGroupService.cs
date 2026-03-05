@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using TripTogether.Application.DTOs.GroupDTO;
-using TripTogether.Application.Utils;
 
 namespace TripTogether.Application.Interfaces;
 
@@ -17,11 +16,10 @@ public interface IGroupService
     Task<GroupDetailDto> GetGroupDetailAsync(Guid groupId);
 
     Task<Pagination<GroupDto>> GetMyGroupsAsync(
-        int pageNumber = 1, 
-        int pageSize = 10, 
-        string? searchTerm = null, 
-        string? sortBy = null, 
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? searchTerm = null,
+        string? sortBy = null,
         bool ascending = true);
 
-    Task<GroupDto> JoinGroupByToken(string token);
 }
