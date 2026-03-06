@@ -13,10 +13,7 @@ public class Activity : BaseEntity
 
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }
-
-    // Step 4 Scheduling
     public int? ScheduleDayIndex { get; set; }
-    public TimeSlot? ScheduleSlot { get; set; }
 
     public string? LocationName { get; set; }
     public NpgsqlPoint? GeoCoordinates { get; set; }

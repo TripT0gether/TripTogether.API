@@ -17,8 +17,6 @@ public class CreateActivityDto
     public DateOnly Date { get; set; }
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }
-    public int? ScheduleDayIndex { get; set; }
-    public TimeSlot? ScheduleSlot { get; set; }
 
     [MaxLength(500, ErrorMessage = "Location name cannot exceed 500 characters")]
     public string? LocationName { get; set; }

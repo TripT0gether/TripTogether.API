@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.GroupDTO;
+using TripTogether.Application.DTOs.GroupInviteDTO;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
 
@@ -12,17 +13,20 @@ public sealed class GroupService : IGroupService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly IFileService _fileService;
+    private readonly IGroupInviteService _groupInviteService;
     private readonly ILogger _loggerService;
 
     public GroupService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
         IFileService fileService,
+        IGroupInviteService groupInviteService,
         ILogger<GroupService> loggerService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _fileService = fileService;
+        _groupInviteService = groupInviteService;
         _loggerService = loggerService;
     }
 
@@ -50,6 +54,13 @@ public sealed class GroupService : IGroupService
 
         await _unitOfWork.GroupMembers.AddAsync(creatorMember);
         await _unitOfWork.SaveChangesAsync();
+
+        var invite = new CreateGroupInviteDto
+        {
+            GroupId = group.Id,
+            ExpiresInHours = 24
+        };
+        await _groupInviteService.CreateInviteAsync(invite);
 
         _loggerService.LogInformation("Group {GroupId} created successfully by user {CurrentUserId}", group.Id, currentUserId);
 
@@ -157,6 +168,8 @@ public sealed class GroupService : IGroupService
             gm => gm.User
         );
 
+        var activeInvite = await _groupInviteService.GetActiveInviteAsync(groupId);
+
         return new GroupDetailDto
         {
             Id = group.Id,
@@ -164,6 +177,9 @@ public sealed class GroupService : IGroupService
             CoverPhotoUrl = group.CoverPhotoUrl,
             CreatedBy = group.CreatedBy,
             CreatedAt = group.CreatedAt,
+            InviteToken = activeInvite?.Token,
+            InviteExpiresAt = activeInvite?.ExpiresAt,
+            IsInviteExpired = activeInvite?.IsExpired,
             Members = members.Select(gm => new GroupMemberDto
             {
                 UserId = gm.UserId,
@@ -229,7 +245,7 @@ public sealed class GroupService : IGroupService
                 .ToDictionaryAsync(x => x.GroupId, x => x.Count);
 
             var groups = await _unitOfWork.Groups.GetQueryable()
-                .Where(g => userGroupIds.Contains(g.Id))
+                .Where(g => userGroupIds.Contains(g.Id) && !g.IsDeleted)
                 .ToListAsync();
 
             var groupDtos = groups.Select(g => new GroupDto
@@ -259,7 +275,7 @@ public sealed class GroupService : IGroupService
                 .ToDictionaryAsync(x => x.GroupId, x => x.Count);
 
             var allGroups = await _unitOfWork.Groups.GetQueryable()
-                .Where(g => userGroupIds.Contains(g.Id))
+                .Where(g => userGroupIds.Contains(g.Id) && !g.IsDeleted)
                 .ToListAsync();
 
             var groupDtos = allGroups.Select(g => new GroupDto
@@ -285,70 +301,6 @@ public sealed class GroupService : IGroupService
         }
     }
 
-    public async Task<GroupDto> JoinGroupByToken(string token)
-    {
-        var currentUserId = _claimsService.GetCurrentUserId;
-
-        _loggerService.LogInformation("User {CurrentUserId} joining group with token", currentUserId);
-
-        var tripInvite = await _unitOfWork.TripInvites.FirstOrDefaultAsync(invite => invite.Token == token);
-        if (tripInvite == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
-        }
-
-        var trip = await _unitOfWork.Trips.GetByIdAsync(tripInvite.TripId);
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip associated with the invite does not exist.");
-        }
-
-        var group = await _unitOfWork.Groups.GetByIdAsync(trip.GroupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist or the token is invalid.");
-        }
-
-        var existingMember = await _unitOfWork.GroupMembers.FirstOrDefaultAsync(gm =>
-            gm.GroupId == group.Id && gm.UserId == currentUserId);
-
-        if (existingMember != null)
-        {
-            if (existingMember.Status == GroupMemberStatus.Active)
-            {
-                throw ErrorHelper.Conflict("You are already a member of the group.");
-            }
-            if (existingMember.Status == GroupMemberStatus.Pending)
-            {
-                throw ErrorHelper.Conflict("You have a pending invitation to the group.");
-            }
-        }
-
-        var newMember = new GroupMember
-        {
-            GroupId = group.Id,
-            UserId = currentUserId,
-            Role = GroupMemberRole.Member,
-            Status = GroupMemberStatus.Active
-        };
-
-        await _unitOfWork.GroupMembers.AddAsync(newMember);
-        await _unitOfWork.SaveChangesAsync();
-
-        _loggerService.LogInformation("User {CurrentUserId} joined group {GroupId} successfully", currentUserId, group.Id);
-
-        return new GroupDto
-        {
-            Id = group.Id,
-            Name = group.Name,
-            CoverPhotoUrl = group.CoverPhotoUrl,
-            CreatedBy = group.CreatedBy,
-            CreatedAt = group.CreatedAt,
-            MemberCount = await _unitOfWork.GroupMembers.GetQueryable()
-                .CountAsync(gm => gm.GroupId == group.Id && gm.Status == GroupMemberStatus.Active)
-        };
-
-    }
 
     private async Task<bool> IsGroupLeaderAsync(Guid userId, Guid groupId)
     {

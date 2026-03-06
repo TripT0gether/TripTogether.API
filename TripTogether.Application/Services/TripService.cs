@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.TripDTO;
-using TripTogether.Application.DTOs.TripInviteDTO;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
 
@@ -12,41 +11,26 @@ public sealed class TripService : ITripService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILogger _loggerService;
-    private readonly ITripInviteService _tripInviteService;
 
     public TripService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
-        ILogger<TripService> loggerService,
-        ITripInviteService tripInviteService)
+        ILogger<TripService> loggerService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
-        _tripInviteService = tripInviteService;
     }
 
     public async Task<TripDto> CreateTripAsync(CreateTripDto dto)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} creating trip: {dto.Title} for group {dto.GroupId}");
+        _loggerService.LogInformation("User {UserId} creating trip: {Title} for group {GroupId}",
+            currentUserId, dto.Title, dto.GroupId);
 
-        var group = await _unitOfWork.Groups.GetByIdAsync(dto.GroupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == dto.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to create a trip.");
-        }
+        var group = await LoadGroupOrThrowAsync(dto.GroupId);
+        await ValidateGroupMembershipAsync(dto.GroupId, currentUserId, "create a trip");
 
         if (dto.PlanningRangeStart.HasValue && dto.PlanningRangeStart <= DateOnly.FromDateTime(DateTime.UtcNow))
         {
@@ -65,21 +49,15 @@ public sealed class TripService : ITripService
             Status = TripStatus.Planning,
             PlanningRangeStart = dto.PlanningRangeStart,
             PlanningRangeEnd = dto.PlanningRangeEnd,
+            Budget = dto.Budget,
             CreatedBy = currentUserId
         };
 
         await _unitOfWork.Trips.AddAsync(trip);
         await _unitOfWork.SaveChangesAsync();
 
-
-
-        var token = await _tripInviteService.CreateInviteAsync(new CreateTripInviteDto
-        {
-            TripId = trip.Id,
-            ExpiresInHours = 24
-        });
-
-        _loggerService.LogInformation($"Trip {trip.Id} created successfully by user {currentUserId}");
+        _loggerService.LogInformation("Trip {TripId} created successfully by user {UserId}",
+            trip.Id, currentUserId);
 
         return new TripDto
         {
@@ -92,8 +70,8 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = token.Token
+            Budget = trip.Budget,
+            CreatedAt = trip.CreatedAt
         };
     }
 
@@ -101,27 +79,63 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} updating trip {tripId}");
+        _loggerService.LogInformation("User {UserId} updating trip {TripId}",
+            currentUserId, tripId);
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-          .Include(t => t.Group)
-          .FirstOrDefaultAsync(t => t.Id == tripId);
+        var trip = await LoadTripWithGroupOrThrowAsync(tripId);
+        await ValidateGroupMembershipAsync(trip.GroupId, currentUserId, "update this trip");
 
-        if (trip == null)
+        // Validate all changes before applying (similar to ActivityService pattern)
+        if (dto.PlanningRangeStart.HasValue)
         {
-            throw ErrorHelper.NotFound("The trip does not exist.");
+            if (dto.PlanningRangeStart <= DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                throw ErrorHelper.BadRequest("Planning range start date must be in the future.");
+            }
         }
 
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-                 .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                     && gm.UserId == currentUserId
-         && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
+        if (dto.PlanningRangeEnd.HasValue)
         {
-            throw ErrorHelper.Forbidden("You must be a member of the group to update this trip.");
+            var effectivePlanningStart = dto.PlanningRangeStart ?? trip.PlanningRangeStart ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            if (dto.PlanningRangeEnd <= effectivePlanningStart)
+            {
+                throw ErrorHelper.BadRequest("Planning range end date must be after start date.");
+            }
         }
 
+        if (dto.StartDate.HasValue)
+        {
+            var startDateOnly = DateOnly.FromDateTime(dto.StartDate.Value);
+            var effectivePlanningStart = dto.PlanningRangeStart ?? trip.PlanningRangeStart;
+            var effectivePlanningEnd = dto.PlanningRangeEnd ?? trip.PlanningRangeEnd;
+
+            if (effectivePlanningStart.HasValue && startDateOnly <= effectivePlanningStart)
+            {
+                throw ErrorHelper.BadRequest("Trip start date must be after planning range start date.");
+            }
+            if (effectivePlanningEnd.HasValue && startDateOnly >= effectivePlanningEnd)
+            {
+                throw ErrorHelper.BadRequest("Trip start date must be before planning range end date.");
+            }
+        }
+
+        if (dto.EndDate.HasValue)
+        {
+            var effectiveStartDate = dto.StartDate ?? trip.StartDate;
+            if (effectiveStartDate.HasValue && dto.EndDate <= effectiveStartDate)
+            {
+                throw ErrorHelper.BadRequest("Trip end date must be after start date.");
+            }
+
+            var endDateOnly = DateOnly.FromDateTime(dto.EndDate.Value);
+            var effectivePlanningEnd = dto.PlanningRangeEnd ?? trip.PlanningRangeEnd;
+            if (effectivePlanningEnd.HasValue && endDateOnly >= effectivePlanningEnd)
+            {
+                throw ErrorHelper.BadRequest("Trip end date must be before planning range end date.");
+            }
+        }
+
+        // Apply updates after all validations pass
         if (!string.IsNullOrWhiteSpace(dto.Title))
         {
             trip.Title = dto.Title;
@@ -129,42 +143,21 @@ public sealed class TripService : ITripService
 
         if (dto.PlanningRangeStart.HasValue)
         {
-            if (dto.PlanningRangeStart <= DateOnly.FromDateTime(DateTime.UtcNow))
-            {
-                throw ErrorHelper.BadRequest("Planning range start date must be in the future.");
-            }
             trip.PlanningRangeStart = dto.PlanningRangeStart;
         }
 
         if (dto.PlanningRangeEnd.HasValue)
         {
-            if (dto.PlanningRangeEnd <= trip.PlanningRangeStart)
-            {
-                throw ErrorHelper.BadRequest("Planning range end date must be after start date.");
-            }
             trip.PlanningRangeEnd = dto.PlanningRangeEnd;
         }
 
         if (dto.StartDate.HasValue)
         {
-            if (dto.PlanningRangeStart.HasValue && DateOnly.FromDateTime(dto.StartDate.Value) <= trip.PlanningRangeStart)
-            {
-                throw ErrorHelper.BadRequest("Trip start date must be in the future.");
-            }
             trip.StartDate = dto.StartDate;
         }
 
         if (dto.EndDate.HasValue)
         {
-
-            if (trip.StartDate.HasValue && dto.EndDate <= trip.StartDate)
-            {
-                throw ErrorHelper.BadRequest("Trip end date must be after start date.");
-            }
-            if (dto.PlanningRangeEnd.HasValue && DateOnly.FromDateTime(dto.EndDate.Value) >= trip.PlanningRangeEnd)
-            {
-                throw ErrorHelper.BadRequest("Trip end date must be before planning range end date.");
-            }
             trip.EndDate = dto.EndDate;
         }
 
@@ -173,10 +166,15 @@ public sealed class TripService : ITripService
             trip.SettingsDetails = dto.Settings;
         }
 
+        if (dto.Budget.HasValue)
+        {
+            trip.Budget = dto.Budget;
+        }
+
         await _unitOfWork.Trips.Update(trip);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Trip {tripId} updated successfully");
+        _loggerService.LogInformation("Trip {TripId} updated successfully", tripId);
 
         return new TripDto
         {
@@ -189,6 +187,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
     }
@@ -197,32 +196,16 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} deleting trip {tripId}");
+        _loggerService.LogInformation("User {UserId} deleting trip {TripId}",
+            currentUserId, tripId);
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Group)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
-
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active
-                && gm.Role == GroupMemberRole.Leader);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("Only group leaders can delete trips.");
-        }
+        var trip = await LoadTripWithGroupOrThrowAsync(tripId);
+        await ValidateGroupLeadershipAsync(trip.GroupId, currentUserId, "delete trips");
 
         await _unitOfWork.Trips.SoftRemove(trip);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Trip {tripId} deleted successfully");
+        _loggerService.LogInformation("Trip {TripId} deleted successfully", tripId);
 
         return true;
     }
@@ -231,32 +214,22 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting trip detail {tripId}");
+        _loggerService.LogInformation("User {UserId} getting trip detail {TripId}",
+            currentUserId, tripId);
 
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .Include(t => t.Invites)
             .Include(t => t.Polls)
             .Include(t => t.Activities)
             .Include(t => t.Expenses)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
+            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
 
         if (trip == null)
         {
             throw ErrorHelper.NotFound("The trip does not exist.");
         }
 
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to view this trip.");
-        }
-
-        var tripInvites = trip.Invites.FirstOrDefault();
+        await ValidateGroupMembershipAsync(trip.GroupId, currentUserId, "view this trip");
 
         return new TripDetailDto
         {
@@ -269,78 +242,28 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             Settings = trip.SettingsDetails,
             CreatedAt = trip.CreatedAt,
-            InviteToken = tripInvites.Token,
             PollCount = trip.Polls.Count,
             ActivityCount = trip.Activities.Count,
             ExpenseCount = trip.Expenses.Count
         };
     }
 
-    public async Task<TripDto> GetTripByTokenAsync(string token)
-    {
-        var invite = await _unitOfWork.TripInvites.GetQueryable()
-            .Include(i => i.Trip)
-            .FirstOrDefaultAsync(i => i.Token == token);
-
-        var trip = invite?.Trip;
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-        var group = await _unitOfWork.Groups.GetByIdAsync(trip.GroupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-
-        if (invite == null)
-        {
-            throw ErrorHelper.NotFound("The invite does not exist.");
-        }
-
-        return new TripDto
-        {
-            Id = trip.Id,
-            GroupId = trip.GroupId,
-            GroupName = group.Name,
-            Title = trip.Title,
-            Status = trip.Status,
-            PlanningRangeStart = trip.PlanningRangeStart,
-            PlanningRangeEnd = trip.PlanningRangeEnd,
-            StartDate = trip.StartDate,
-            EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = invite.Token
-        };
-    }
 
     public async Task<Pagination<TripDto>> GetGroupTripsAsync(Guid groupId, TripQueryDto query)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting trips for group {groupId}");
+        _loggerService.LogInformation("User {UserId} getting trips for group {GroupId}",
+            currentUserId, groupId);
 
-        var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == groupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to view its trips.");
-        }
+        var group = await LoadGroupOrThrowAsync(groupId);
+        await ValidateGroupMembershipAsync(groupId, currentUserId, "view its trips");
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Invites)
-            .Where(t => t.GroupId == groupId);
+            .Where(t => t.GroupId == groupId && !t.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
@@ -386,8 +309,8 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = trip.Invites.FirstOrDefault()?.Token
+            Budget = trip.Budget,
+            CreatedAt = trip.CreatedAt
         }).ToList();
 
         return new Pagination<TripDto>(tripDtos, totalCount, query.PageNumber, query.PageSize);
@@ -397,34 +320,19 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} updating trip {tripId} status to {status}");
+        _loggerService.LogInformation("User {UserId} updating trip {TripId} status to {Status}",
+            currentUserId, tripId, status);
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Group)
-            .FirstOrDefaultAsync(t => t.Id == tripId);
-
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active
-                && gm.Role == GroupMemberRole.Leader);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("Only group leaders can update trip status.");
-        }
+        var trip = await LoadTripWithGroupOrThrowAsync(tripId);
+        await ValidateGroupLeadershipAsync(trip.GroupId, currentUserId, "update trip status");
 
         trip.Status = status;
 
         await _unitOfWork.Trips.Update(trip);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Trip {tripId} status updated to {status} successfully");
+        _loggerService.LogInformation("Trip {TripId} status updated to {Status} successfully",
+            tripId, status);
 
         return new TripDto
         {
@@ -437,6 +345,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
     }
@@ -445,7 +354,7 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting their trips");
+        _loggerService.LogInformation("User {UserId} getting their trips", currentUserId);
 
         var groupIds = await _unitOfWork.GroupMembers.GetQueryable()
             .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active)
@@ -454,14 +363,14 @@ public sealed class TripService : ITripService
 
         if (groupIds.Count == 0)
         {
-            _loggerService.LogInformation($"User {currentUserId} is not a member of any active groups");
+            _loggerService.LogInformation("User {UserId} is not a member of any active groups",
+                currentUserId);
             return new Pagination<TripDto>(new List<TripDto>(), 0, query.PageNumber, query.PageSize);
         }
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .Include(t => t.Invites)
-            .Where(t => groupIds.Contains(t.GroupId));
+            .Where(t => groupIds.Contains(t.GroupId) && !t.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
@@ -507,10 +416,65 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
-            CreatedAt = trip.CreatedAt,
-            InviteToken = trip.Invites.FirstOrDefault()?.Token
+            Budget = trip.Budget,
+            CreatedAt = trip.CreatedAt
         }).ToList();
 
         return new Pagination<TripDto>(tripDtos, totalCount, query.PageNumber, query.PageSize);
     }
+
+    #region Authorization Helpers
+
+    private async Task<Group> LoadGroupOrThrowAsync(Guid groupId)
+    {
+        var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
+        if (group == null)
+        {
+            throw ErrorHelper.NotFound("The group does not exist.");
+        }
+        return group;
+    }
+
+    private async Task<Trip> LoadTripWithGroupOrThrowAsync(Guid tripId)
+    {
+        var trip = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Group)
+            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
+
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+
+        return trip;
+    }
+
+    private async Task ValidateGroupMembershipAsync(Guid groupId, Guid userId, string action)
+    {
+        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .AnyAsync(gm => gm.GroupId == groupId
+                && gm.UserId == userId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (!isMember)
+        {
+            throw ErrorHelper.Forbidden($"You must be a member of the group to {action}.");
+        }
+    }
+
+    private async Task ValidateGroupLeadershipAsync(Guid groupId, Guid userId, string action)
+    {
+        var isLeader = await _unitOfWork.GroupMembers.GetQueryable()
+            .AnyAsync(gm => gm.GroupId == groupId
+                && gm.UserId == userId
+                && gm.Status == GroupMemberStatus.Active
+                && gm.Role == GroupMemberRole.Leader);
+
+        if (!isLeader)
+        {
+            throw ErrorHelper.Forbidden($"Only group leaders can {action}.");
+        }
+    }
+
+    #endregion
 }

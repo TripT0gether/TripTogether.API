@@ -5,12 +5,17 @@ public class PollOption : BaseEntity
     public Guid PollId { get; set; }
     public string? TextValue { get; set; }
     public string? MediaUrl { get; set; }
-    public string? Metadata { get; set; } // JSON for budget ranges or specific dates
+    public decimal? Budget { get; set; }
 
     // Date Voting Details
-    public DateTime? DateStart { get; set; }
-    public DateTime? DateEnd { get; set; }
-    // Time of Day for Date Voting
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+
+    // Time Voting Details
+    public TimeOnly? StartTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
+
+    // Time of Day Category (optional categorization)
     public TimeSlot? TimeOfDay { get; set; }
 
     // Navigation properties

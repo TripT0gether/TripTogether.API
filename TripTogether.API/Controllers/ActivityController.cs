@@ -104,64 +104,44 @@ public class ActivityController : ControllerBase
     }
 
     /// <summary>
-    /// Get all activities for a trip.
+    /// Get all activities for a trip grouped by date.
     /// </summary>
     /// <param name="tripId">Trip ID.</param>
-    /// <returns>List of activities for the trip.</returns>
+    /// <returns>List of activities grouped by date for the trip.</returns>
     [HttpGet("trip/{tripId:guid}")]
     [SwaggerOperation(
-        Summary = "Get activities by trip ID",
-        Description = "Retrieve all activities for a specific trip. Activities are ordered by schedule day and start time."
+        Summary = "Get activities by trip ID grouped by date",
+        Description = "Retrieve all activities for a specific trip grouped by date. Activities are ordered by date and start time."
     )]
-    [ProducesResponseType(typeof(ApiResult<IEnumerable<ActivityDto>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<IEnumerable<ActivityDto>>), 403)]
-    [ProducesResponseType(typeof(ApiResult<IEnumerable<ActivityDto>>), 404)]
+    [ProducesResponseType(typeof(ApiResult<IEnumerable<ActivitiesByDateDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<IEnumerable<ActivitiesByDateDto>>), 403)]
+    [ProducesResponseType(typeof(ApiResult<IEnumerable<ActivitiesByDateDto>>), 404)]
     public async Task<IActionResult> GetActivitiesByTripId([FromRoute] Guid tripId)
     {
         var result = await _activityService.GetActivitiesByTripIdAsync(tripId);
-        return Ok(ApiResult<IEnumerable<ActivityDto>>.Success(result, "200", "Activities retrieved successfully."));
+        return Ok(ApiResult<IEnumerable<ActivitiesByDateDto>>.Success(result, "200", "Activities retrieved successfully."));
     }
 
     /// <summary>
-    /// Get paginated activities for the current user with filtering and search.
+    /// Get paginated activities for the current user with filtering and search, grouped by date.
     /// </summary>
     /// <param name="query">Query parameters for pagination, search, and filtering.</param>
-    /// <returns>Paginated list of activities.</returns>
+    /// <returns>Paginated list of activities grouped by date.</returns>
     [HttpGet("my-activities")]
     [SwaggerOperation(
-        Summary = "Get my activities",
-        Description = @"Retrieve activities from trips where the user is a member. 
+        Summary = "Get my activities grouped by date",
+        Description = @"Retrieve activities from trips where the user is a member, grouped by date. 
                        Supports pagination, search (title, location, notes), 
                        filtering (status, category, date range, trip), 
                        and sorting (date, title, created). 
                        Default sort is by date ascending."
     )]
-    [ProducesResponseType(typeof(ApiResult<Pagination<ActivityDto>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<Pagination<ActivityDto>>), 403)]
+    [ProducesResponseType(typeof(ApiResult<Pagination<ActivitiesByDateDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<Pagination<ActivitiesByDateDto>>), 403)]
     public async Task<IActionResult> GetMyActivities([FromQuery] ActivityQueryDto query)
     {
         var result = await _activityService.GetMyActivitiesAsync(query);
-        return Ok(ApiResult<Pagination<ActivityDto>>.Success(result, "200", "Activities retrieved successfully."));
-    }
-
-    /// <summary>
-    /// Get available schedule day indexes for a specific date.
-    /// </summary>
-    /// <param name="tripId">Trip ID.</param>
-    /// <param name="date">Date to check (format: yyyy-MM-dd).</param>
-    /// <returns>List of available schedule day indexes (1-10).</returns>
-    [HttpGet("available-indexes")]
-    [SwaggerOperation(
-        Summary = "Get available schedule day indexes",
-        Description = "Get a list of available ScheduleDayIndex values (1-10) for a specific trip and date. Maximum 10 activities per day."
-    )]
-    [ProducesResponseType(typeof(ApiResult<List<int>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<List<int>>), 403)]
-    [ProducesResponseType(typeof(ApiResult<List<int>>), 404)]
-    public async Task<IActionResult> GetAvailableScheduleDayIndexes([FromQuery] Guid tripId, [FromQuery] DateOnly date)
-    {
-        var result = await _activityService.GetAvailableScheduleDayIndexesAsync(tripId, date);
-        return Ok(ApiResult<List<int>>.Success(result, "200", $"Found {result.Count} available schedule indexes."));
+        return Ok(ApiResult<Pagination<ActivitiesByDateDto>>.Success(result, "200", "Activities retrieved successfully."));
     }
 
     /// <summary>

@@ -30,7 +30,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         var packingItem = await _unitOfWork.PackingItems.GetQueryable()
             .Include(pi => pi.Trip)
-            .FirstOrDefaultAsync(pi => pi.Id == dto.PackingItemId);
+            .FirstOrDefaultAsync(pi => pi.Id == dto.PackingItemId && !pi.IsDeleted);
 
         if (packingItem == null)
         {
@@ -72,7 +72,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         {
             // For shared items, check total assigned quantity doesn't exceed QuantityNeeded
             var currentlyAssigned = await _unitOfWork.PackingAssignments.GetQueryable()
-                .Where(pa => pa.PackingItemId == dto.PackingItemId)
+                .Where(pa => pa.PackingItemId == dto.PackingItemId && !pa.IsDeleted)
                 .SumAsync(pa => pa.Quantity);
 
             var totalAfterAssignment = currentlyAssigned + dto.Quantity;
@@ -89,7 +89,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         {
             // For personal items, check if user already has an assignment
             var existingAssignment = await _unitOfWork.PackingAssignments.GetQueryable()
-                .AnyAsync(pa => pa.PackingItemId == dto.PackingItemId && pa.UserId == targetUserId);
+                .AnyAsync(pa => pa.PackingItemId == dto.PackingItemId && pa.UserId == targetUserId && !pa.IsDeleted);
 
             if (existingAssignment)
             {
@@ -133,7 +133,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         var assignment = await _unitOfWork.PackingAssignments.GetQueryable()
             .Include(pa => pa.PackingItem)
                 .ThenInclude(pi => pi.Trip)
-            .FirstOrDefaultAsync(pa => pa.Id == assignmentId);
+            .FirstOrDefaultAsync(pa => pa.Id == assignmentId && !pa.IsDeleted);
 
         if (assignment == null)
         {
@@ -172,7 +172,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
             {
                 // For shared items, check total assigned quantity doesn't exceed QuantityNeeded
                 var currentlyAssigned = await _unitOfWork.PackingAssignments.GetQueryable()
-                    .Where(pa => pa.PackingItemId == assignment.PackingItemId && pa.Id != assignmentId)
+                    .Where(pa => pa.PackingItemId == assignment.PackingItemId && pa.Id != assignmentId && !pa.IsDeleted)
                     .SumAsync(pa => pa.Quantity);
 
                 var totalAfterUpdate = currentlyAssigned + dto.Quantity.Value;
@@ -218,7 +218,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         var assignment = await _unitOfWork.PackingAssignments.GetQueryable()
             .Include(pa => pa.PackingItem)
                 .ThenInclude(pi => pi.Trip)
-            .FirstOrDefaultAsync(pa => pa.Id == assignmentId);
+            .FirstOrDefaultAsync(pa => pa.Id == assignmentId && !pa.IsDeleted);
 
         if (assignment == null)
         {
@@ -266,7 +266,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
             .Include(pa => pa.PackingItem)
                 .ThenInclude(pi => pi.Trip)
             .Include(pa => pa.User)
-            .FirstOrDefaultAsync(pa => pa.Id == assignmentId);
+            .FirstOrDefaultAsync(pa => pa.Id == assignmentId && !pa.IsDeleted);
 
         if (assignment == null)
         {
@@ -295,7 +295,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         var packingItem = await _unitOfWork.PackingItems.GetQueryable()
             .Include(pi => pi.Trip)
-            .FirstOrDefaultAsync(pi => pi.Id == packingItemId);
+            .FirstOrDefaultAsync(pi => pi.Id == packingItemId && !pi.IsDeleted);
 
         if (packingItem == null)
         {
@@ -315,7 +315,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         var assignments = await _unitOfWork.PackingAssignments.GetQueryable()
             .Include(pa => pa.PackingItem)
             .Include(pa => pa.User)
-            .Where(pa => pa.PackingItemId == packingItemId)
+            .Where(pa => pa.PackingItemId == packingItemId && !pa.IsDeleted)
             .ToListAsync();
 
         var dtos = new List<PackingAssignmentDto>();
@@ -356,7 +356,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         var assignments = await _unitOfWork.PackingAssignments.GetQueryable()
             .Include(pa => pa.PackingItem)
             .Include(pa => pa.User)
-            .Where(pa => pa.UserId == targetUserId && pa.PackingItem.TripId == tripId)
+            .Where(pa => pa.UserId == targetUserId && pa.PackingItem.TripId == tripId && !pa.IsDeleted)
             .ToListAsync();
 
         var dtos = new List<PackingAssignmentDto>();
@@ -377,7 +377,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         var packingItem = await _unitOfWork.PackingItems.GetQueryable()
             .Include(pi => pi.Trip)
-            .FirstOrDefaultAsync(pi => pi.Id == packingItemId);
+            .FirstOrDefaultAsync(pi => pi.Id == packingItemId && !pi.IsDeleted);
 
         if (packingItem == null)
         {
@@ -396,7 +396,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         var assignments = await _unitOfWork.PackingAssignments.GetQueryable()
             .Include(pa => pa.User)
-            .Where(pa => pa.PackingItemId == packingItemId)
+            .Where(pa => pa.PackingItemId == packingItemId && !pa.IsDeleted)
             .ToListAsync();
 
         var assignmentDtos = new List<PackingAssignmentDto>();

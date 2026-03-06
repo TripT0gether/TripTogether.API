@@ -70,7 +70,7 @@ public sealed class PackingItemService : IPackingItemService
 
         var packingItem = await _unitOfWork.PackingItems.GetQueryable()
             .Include(pi => pi.Trip)
-            .FirstOrDefaultAsync(pi => pi.Id == packingItemId);
+            .FirstOrDefaultAsync(pi => pi.Id == packingItemId && !pi.IsDeleted);
 
         if (packingItem == null)
         {
@@ -109,7 +109,7 @@ public sealed class PackingItemService : IPackingItemService
 
         var packingItem = await _unitOfWork.PackingItems.GetQueryable()
             .Include(pi => pi.Trip)
-            .FirstOrDefaultAsync(pi => pi.Id == packingItemId);
+            .FirstOrDefaultAsync(pi => pi.Id == packingItemId && !pi.IsDeleted);
 
         if (packingItem == null)
         {
@@ -140,7 +140,7 @@ public sealed class PackingItemService : IPackingItemService
 
         var packingItem = await _unitOfWork.PackingItems.GetQueryable()
             .Include(pi => pi.Trip)
-            .FirstOrDefaultAsync(pi => pi.Id == packingItemId);
+            .FirstOrDefaultAsync(pi => pi.Id == packingItemId && !pi.IsDeleted);
 
         if (packingItem == null)
         {
@@ -184,7 +184,7 @@ public sealed class PackingItemService : IPackingItemService
         }
 
         var packingItems = await _unitOfWork.PackingItems.GetQueryable()
-            .Where(pi => pi.TripId == tripId)
+            .Where(pi => pi.TripId == tripId && !pi.IsDeleted)
             .OrderBy(pi => pi.Category)
             .ThenBy(pi => pi.Name)
             .ToListAsync();

@@ -106,6 +106,33 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "group_invites",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    group_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    token = table.Column<string>(type: "text", nullable: false),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_group_invites", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_group_invites_groups_group_id",
+                        column: x => x.group_id,
+                        principalTable: "groups",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "trips",
                 columns: table => new
                 {
@@ -118,6 +145,7 @@ namespace TripTogether.Domain.Migrations
                     start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     end_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     settings = table.Column<string>(type: "jsonb", nullable: true),
+                    budget = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
@@ -141,13 +169,12 @@ namespace TripTogether.Domain.Migrations
                 name: "friendships",
                 columns: table => new
                 {
-                    requester_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     addressee_id = table.Column<Guid>(type: "uuid", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -155,7 +182,7 @@ namespace TripTogether.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_friendships", x => new { x.requester_id, x.addressee_id });
+                    table.PrimaryKey("PK_friendships", x => x.id);
                     table.ForeignKey(
                         name: "FK_friendships_users_addressee_id",
                         column: x => x.addressee_id,
@@ -163,8 +190,8 @@ namespace TripTogether.Domain.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_friendships_users_requester_id",
-                        column: x => x.requester_id,
+                        name: "FK_friendships_users_created_by",
+                        column: x => x.created_by,
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
@@ -217,7 +244,6 @@ namespace TripTogether.Domain.Migrations
                     start_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     end_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     schedule_day_index = table.Column<int>(type: "integer", nullable: true),
-                    schedule_slot = table.Column<string>(type: "text", nullable: true),
                     location_name = table.Column<string>(type: "text", nullable: true),
                     geo_coordinates = table.Column<NpgsqlPoint>(type: "point", nullable: true),
                     link_url = table.Column<string>(type: "text", nullable: true),
@@ -310,34 +336,6 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "polls",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    trip_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    type = table.Column<string>(type: "text", nullable: false),
-                    title = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<string>(type: "text", nullable: false),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_polls", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_polls_trips_trip_id",
-                        column: x => x.trip_id,
-                        principalTable: "trips",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "posts",
                 columns: table => new
                 {
@@ -416,33 +414,6 @@ namespace TripTogether.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "trip_invites",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    trip_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    token = table.Column<string>(type: "text", nullable: false),
-                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_trip_invites", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_trip_invites_trips_trip_id",
-                        column: x => x.trip_id,
-                        principalTable: "trips",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "user_badges",
                 columns: table => new
                 {
@@ -478,6 +449,41 @@ namespace TripTogether.Domain.Migrations
                         name: "FK_user_badges_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "polls",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    trip_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    activity_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    title = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_by = table.Column<Guid>(type: "uuid", nullable: true),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_polls", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_polls_activities_activity_id",
+                        column: x => x.activity_id,
+                        principalTable: "activities",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_polls_trips_trip_id",
+                        column: x => x.trip_id,
+                        principalTable: "trips",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -558,9 +564,11 @@ namespace TripTogether.Domain.Migrations
                     poll_id = table.Column<Guid>(type: "uuid", nullable: false),
                     text_value = table.Column<string>(type: "text", nullable: true),
                     media_url = table.Column<string>(type: "text", nullable: true),
-                    metadata = table.Column<string>(type: "jsonb", nullable: true),
-                    date_start = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    date_end = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    budget = table.Column<decimal>(type: "numeric(18,2)", nullable: true),
+                    start_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    end_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    start_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
+                    end_time = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     time_of_day = table.Column<string>(type: "text", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -644,6 +652,22 @@ namespace TripTogether.Domain.Migrations
                 column: "addressee_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_friendships_created_by",
+                table: "friendships",
+                column: "created_by");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_group_invites_group_id",
+                table: "group_invites",
+                column: "group_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_group_invites_token",
+                table: "group_invites",
+                column: "token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_group_members_user_id",
                 table: "group_members",
                 column: "user_id");
@@ -668,6 +692,11 @@ namespace TripTogether.Domain.Migrations
                 name: "IX_poll_options_poll_id",
                 table: "poll_options",
                 column: "poll_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_polls_activity_id",
+                table: "polls",
+                column: "activity_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_polls_trip_id",
@@ -697,17 +726,6 @@ namespace TripTogether.Domain.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_settlements_trip_id",
                 table: "settlements",
-                column: "trip_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_trip_invites_token",
-                table: "trip_invites",
-                column: "token",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_trip_invites_trip_id",
-                table: "trip_invites",
                 column: "trip_id");
 
             migrationBuilder.CreateIndex(
@@ -741,13 +759,13 @@ namespace TripTogether.Domain.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "activities");
-
-            migrationBuilder.DropTable(
                 name: "expense_splits");
 
             migrationBuilder.DropTable(
                 name: "friendships");
+
+            migrationBuilder.DropTable(
+                name: "group_invites");
 
             migrationBuilder.DropTable(
                 name: "group_members");
@@ -763,9 +781,6 @@ namespace TripTogether.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "settlements");
-
-            migrationBuilder.DropTable(
-                name: "trip_invites");
 
             migrationBuilder.DropTable(
                 name: "user_badges");
@@ -790,6 +805,9 @@ namespace TripTogether.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "polls");
+
+            migrationBuilder.DropTable(
+                name: "activities");
 
             migrationBuilder.DropTable(
                 name: "trips");

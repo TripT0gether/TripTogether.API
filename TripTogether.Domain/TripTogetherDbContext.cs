@@ -19,7 +19,7 @@ public class TripTogetherDbContext : DbContext
     public DbSet<Group> Groups { get; set; }
     public DbSet<GroupMember> GroupMembers { get; set; }
     public DbSet<Trip> Trips { get; set; }
-    public DbSet<TripInvite> TripInvites { get; set; }
+    public DbSet<GroupInvite> GroupInvites { get; set; }
     public DbSet<Poll> Polls { get; set; }
     public DbSet<PollOption> PollOptions { get; set; }
     public DbSet<Vote> Votes { get; set; }
@@ -130,6 +130,7 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.Property(e => e.Settings).HasColumnName("settings").HasColumnType("jsonb");
+            entity.Property(e => e.Budget).HasColumnName("budget").HasPrecision(10, 2);
 
             entity.HasOne(e => e.Group)
                 .WithMany(g => g.Trips)
@@ -137,22 +138,22 @@ public class TripTogetherDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // TripInvite
-        modelBuilder.Entity<TripInvite>(entity =>
+        // GroupInvite
+        modelBuilder.Entity<GroupInvite>(entity =>
         {
-            entity.ToTable("trip_invites");
+            entity.ToTable("group_invites");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
             entity.Property(e => e.Token).HasColumnName("token");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
 
             entity.HasIndex(e => e.Token).IsUnique();
 
-            entity.HasOne(e => e.Trip)
-                .WithMany(t => t.Invites)
-                .HasForeignKey(e => e.TripId)
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Invites)
+                .HasForeignKey(e => e.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -163,6 +164,7 @@ public class TripTogetherDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.ActivityId).HasColumnName("activity_id");
             entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Status).HasColumnName("status");
@@ -178,6 +180,11 @@ public class TripTogetherDbContext : DbContext
                 .WithMany(t => t.Polls)
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Activity)
+                .WithMany()
+                .HasForeignKey(e => e.ActivityId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // PollOption
@@ -189,9 +196,11 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.PollId).HasColumnName("poll_id");
             entity.Property(e => e.TextValue).HasColumnName("text_value");
             entity.Property(e => e.MediaUrl).HasColumnName("media_url");
-            entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
-            entity.Property(e => e.DateStart).HasColumnName("date_start");
-            entity.Property(e => e.DateEnd).HasColumnName("date_end");
+            entity.Property(e => e.Budget).HasColumnName("budget").HasColumnType("decimal(18,2)");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.StartTime).HasColumnName("start_time");
+            entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.TimeOfDay).HasColumnName("time_of_day");
 
             entity.HasOne(e => e.Poll)
@@ -243,7 +252,6 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.ScheduleDayIndex).HasColumnName("schedule_day_index");
-            entity.Property(e => e.ScheduleSlot).HasColumnName("schedule_slot");
             entity.Property(e => e.LocationName).HasColumnName("location_name");
             entity.Property(e => e.GeoCoordinates).HasColumnName("geo_coordinates");
             entity.Property(e => e.LinkUrl).HasColumnName("link_url");
@@ -475,7 +483,7 @@ public class TripTogetherDbContext : DbContext
         modelBuilder.Entity<Group>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<GroupMember>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Trip>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<TripInvite>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<GroupInvite>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Poll>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PollOption>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Vote>().HasQueryFilter(e => !e.IsDeleted);

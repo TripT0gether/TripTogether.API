@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.PollDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Domain.Enums;
 
 namespace TripTogether.API.Controllers;
 
@@ -104,20 +105,21 @@ public sealed class PollController : ControllerBase
     /// Get all polls for a specific trip.
     /// </summary>
     /// <param name="tripId">Trip ID.</param>
+    /// <param name="scope">Filter polls by scope (All, TripOnly, ActivityOnly).</param>
     /// <param name="pageNumber">Page number (default: 1).</param>
     /// <param name="pageSize">Page size (default: 10).</param>
     /// <returns>Paginated list of polls in the trip.</returns>
     [HttpGet("trip/{tripId:guid}")]
     [SwaggerOperation(
         Summary = "Get trip polls",
-        Description = "Get all polls for a specific trip. Only active group members can view the polls."
+        Description = "Get polls for a specific trip. Filter by scope: All (default), TripOnly (trip-level polls), or ActivityOnly (activity-level polls). Only active group members can view the polls."
     )]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 403)]
     [ProducesResponseType(typeof(ApiResult<Pagination<PollDto>>), 404)]
-    public async Task<IActionResult> GetTripPolls([FromRoute] Guid tripId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetTripPolls([FromRoute] Guid tripId, [FromQuery] PollScope scope = PollScope.All, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _pollService.GetTripPollsAsync(tripId, pageNumber, pageSize);
+        var result = await _pollService.GetPollsAsync(tripId, scope, pageNumber, pageSize);
         return Ok(ApiResult<Pagination<PollDto>>.Success(result, "200", "Trip polls retrieved successfully."));
     }
 
@@ -145,19 +147,19 @@ public sealed class PollController : ControllerBase
     /// </summary>
     /// <param name="dto">Finalize date poll data with selected option.</param>
     /// <returns>Updated poll information.</returns>
-    [HttpPatch("finalize-date")]
+    [HttpPatch("finalize")]
     [SwaggerOperation(
-        Summary = "Finalize date poll",
-        Description = "Finalize a date poll by selecting the winning option. This will update the trip's start and end dates. Only group leaders can finalize date polls."
+        Summary = "Finalize poll",
+        Description = "Finalize a poll by selecting the winning option. This will update the relevant trip or activity fields based on poll type. Only group leaders can finalize polls."
     )]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 400)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 403)]
     [ProducesResponseType(typeof(ApiResult<PollDto>), 404)]
-    public async Task<IActionResult> FinalizeDatePoll([FromBody] FinalizeDatePollDto dto)
+    public async Task<IActionResult> FinalizePoll([FromBody] FinalizePollDto dto)
     {
-        var result = await _pollService.FinalizeDatePollAsync(dto);
-        return Ok(ApiResult<PollDto>.Success(result, "200", "Date poll finalized successfully. Trip dates have been updated."));
+        var result = await _pollService.FinalizePollAsync(dto);
+        return Ok(ApiResult<PollDto>.Success(result, "200", "Poll finalized successfully."));
     }
 
     /// <summary>
