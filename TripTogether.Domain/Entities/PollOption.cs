@@ -5,7 +5,7 @@ public class PollOption : BaseEntity
     public Guid PollId { get; set; }
     public string? TextValue { get; set; }
     public string? MediaUrl { get; set; }
-    public string? Metadata { get; set; } // JSON for budget ranges or specific dates
+    public decimal? Budget { get; set; }
 
     // Date Voting Details
     public DateOnly? StartDate { get; set; }

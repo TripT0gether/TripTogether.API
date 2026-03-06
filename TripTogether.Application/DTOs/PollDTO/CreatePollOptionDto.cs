@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.DTOs.PollDTO;
@@ -7,9 +6,7 @@ public class CreatePollOptionDto
 {
     public string? TextValue { get; set; }
     public string? MediaUrl { get; set; }
-
-    [DefaultValue("1000000")]
-    public string? Metadata { get; set; }
+    public decimal? Budget { get; set; }
 
     // For Date Voting
     public DateOnly? StartDate { get; set; }

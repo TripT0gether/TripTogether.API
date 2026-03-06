@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260305190421_InitDB")]
+    [Migration("20260306140317_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -755,6 +755,10 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<decimal?>("Budget")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("budget");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -781,10 +785,6 @@ namespace TripTogether.Domain.Migrations
                     b.Property<string>("MediaUrl")
                         .HasColumnType("text")
                         .HasColumnName("media_url");
-
-                    b.Property<string>("Metadata")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("metadata");
 
                     b.Property<Guid>("PollId")
                         .HasColumnType("uuid")
