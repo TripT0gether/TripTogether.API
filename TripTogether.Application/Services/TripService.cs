@@ -29,23 +29,11 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} creating trip: {dto.Title} for group {dto.GroupId}");
+        _loggerService.LogInformation("User {UserId} creating trip: {Title} for group {GroupId}",
+            currentUserId, dto.Title, dto.GroupId);
 
-        var group = await _unitOfWork.Groups.GetByIdAsync(dto.GroupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == dto.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to create a trip.");
-        }
+        var group = await LoadGroupOrThrowAsync(dto.GroupId);
+        await ValidateGroupMembershipAsync(dto.GroupId, currentUserId, "create a trip");
 
         if (dto.PlanningRangeStart.HasValue && dto.PlanningRangeStart <= DateOnly.FromDateTime(DateTime.UtcNow))
         {
@@ -71,7 +59,8 @@ public sealed class TripService : ITripService
         await _unitOfWork.Trips.AddAsync(trip);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Trip {trip.Id} created successfully by user {currentUserId}");
+        _loggerService.LogInformation("Trip {TripId} created successfully by user {UserId}",
+            trip.Id, currentUserId);
 
         await _announcementService.NotifyTripCreatedAsync(trip.Id, trip.GroupId, trip.Title, currentUserId);
 
@@ -95,26 +84,11 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} updating trip {tripId}");
+        _loggerService.LogInformation("User {UserId} updating trip {TripId}",
+            currentUserId, tripId);
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-          .Include(t => t.Group)
-          .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
-
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-                 .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                     && gm.UserId == currentUserId
-         && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to update this trip.");
-        }
+        var trip = await LoadTripWithGroupOrThrowAsync(tripId);
+        await ValidateGroupMembershipAsync(trip.GroupId, currentUserId, "update this trip");
 
         // Validate all changes before applying (similar to ActivityService pattern)
         if (dto.PlanningRangeStart.HasValue)
@@ -205,7 +179,7 @@ public sealed class TripService : ITripService
         await _unitOfWork.Trips.Update(trip);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Trip {tripId} updated successfully");
+        _loggerService.LogInformation("Trip {TripId} updated successfully", tripId);
 
         return new TripDto
         {
@@ -227,32 +201,16 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} deleting trip {tripId}");
+        _loggerService.LogInformation("User {UserId} deleting trip {TripId}",
+            currentUserId, tripId);
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Group)
-            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
-
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active
-                && gm.Role == GroupMemberRole.Leader);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("Only group leaders can delete trips.");
-        }
+        var trip = await LoadTripWithGroupOrThrowAsync(tripId);
+        await ValidateGroupLeadershipAsync(trip.GroupId, currentUserId, "delete trips");
 
         await _unitOfWork.Trips.SoftRemove(trip);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Trip {tripId} deleted successfully");
+        _loggerService.LogInformation("Trip {TripId} deleted successfully", tripId);
 
         return true;
     }
@@ -261,7 +219,8 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting trip detail {tripId}");
+        _loggerService.LogInformation("User {UserId} getting trip detail {TripId}",
+            currentUserId, tripId);
 
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
@@ -275,15 +234,7 @@ public sealed class TripService : ITripService
             throw ErrorHelper.NotFound("The trip does not exist.");
         }
 
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to view this trip.");
-        }
+        await ValidateGroupMembershipAsync(trip.GroupId, currentUserId, "view this trip");
 
         return new TripDetailDto
         {
@@ -310,23 +261,11 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting trips for group {groupId}");
+        _loggerService.LogInformation("User {UserId} getting trips for group {GroupId}",
+            currentUserId, groupId);
 
-        var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
-        if (group == null)
-        {
-            throw ErrorHelper.NotFound("The group does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == groupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the group to view its trips.");
-        }
+        var group = await LoadGroupOrThrowAsync(groupId);
+        await ValidateGroupMembershipAsync(groupId, currentUserId, "view its trips");
 
         var tripsQuery = _unitOfWork.Trips.GetQueryable()
             .Where(t => t.GroupId == groupId && !t.IsDeleted);
@@ -386,34 +325,19 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} updating trip {tripId} status to {status}");
+        _loggerService.LogInformation("User {UserId} updating trip {TripId} status to {Status}",
+            currentUserId, tripId, status);
 
-        var trip = await _unitOfWork.Trips.GetQueryable()
-            .Include(t => t.Group)
-            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
-
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-
-        var groupMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .FirstOrDefaultAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active
-                && gm.Role == GroupMemberRole.Leader);
-
-        if (groupMember == null)
-        {
-            throw ErrorHelper.Forbidden("Only group leaders can update trip status.");
-        }
+        var trip = await LoadTripWithGroupOrThrowAsync(tripId);
+        await ValidateGroupLeadershipAsync(trip.GroupId, currentUserId, "update trip status");
 
         trip.Status = status;
 
         await _unitOfWork.Trips.Update(trip);
         await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.LogInformation($"Trip {tripId} status updated to {status} successfully");
+        _loggerService.LogInformation("Trip {TripId} status updated to {Status} successfully",
+            tripId, status);
 
         return new TripDto
         {
@@ -435,7 +359,7 @@ public sealed class TripService : ITripService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        _loggerService.LogInformation($"User {currentUserId} getting their trips");
+        _loggerService.LogInformation("User {UserId} getting their trips", currentUserId);
 
         var groupIds = await _unitOfWork.GroupMembers.GetQueryable()
             .Where(gm => gm.UserId == currentUserId && gm.Status == GroupMemberStatus.Active)
@@ -444,7 +368,8 @@ public sealed class TripService : ITripService
 
         if (groupIds.Count == 0)
         {
-            _loggerService.LogInformation($"User {currentUserId} is not a member of any active groups");
+            _loggerService.LogInformation("User {UserId} is not a member of any active groups",
+                currentUserId);
             return new Pagination<TripDto>(new List<TripDto>(), 0, query.PageNumber, query.PageSize);
         }
 
@@ -502,4 +427,59 @@ public sealed class TripService : ITripService
 
         return new Pagination<TripDto>(tripDtos, totalCount, query.PageNumber, query.PageSize);
     }
+
+    #region Authorization Helpers
+
+    private async Task<Group> LoadGroupOrThrowAsync(Guid groupId)
+    {
+        var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
+        if (group == null)
+        {
+            throw ErrorHelper.NotFound("The group does not exist.");
+        }
+        return group;
+    }
+
+    private async Task<Trip> LoadTripWithGroupOrThrowAsync(Guid tripId)
+    {
+        var trip = await _unitOfWork.Trips.GetQueryable()
+            .Include(t => t.Group)
+            .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
+
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+
+        return trip;
+    }
+
+    private async Task ValidateGroupMembershipAsync(Guid groupId, Guid userId, string action)
+    {
+        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .AnyAsync(gm => gm.GroupId == groupId
+                && gm.UserId == userId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (!isMember)
+        {
+            throw ErrorHelper.Forbidden($"You must be a member of the group to {action}.");
+        }
+    }
+
+    private async Task ValidateGroupLeadershipAsync(Guid groupId, Guid userId, string action)
+    {
+        var isLeader = await _unitOfWork.GroupMembers.GetQueryable()
+            .AnyAsync(gm => gm.GroupId == groupId
+                && gm.UserId == userId
+                && gm.Status == GroupMemberStatus.Active
+                && gm.Role == GroupMemberRole.Leader);
+
+        if (!isLeader)
+        {
+            throw ErrorHelper.Forbidden($"Only group leaders can {action}.");
+        }
+    }
+
+    #endregion
 }
