@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TripTogether.Application.DTOs.GalleryDTO;
 using TripTogether.Application.Interfaces;
-using TripTogether.Application.Utils;
 
 namespace TripTogether.API.Controllers;
 
@@ -23,8 +22,10 @@ public class GalleryController : ControllerBase
     /// Create a new gallery image.
     /// </summary>
     /// <param name="dto">Gallery creation data.</param>
+    /// <param name="file">Image file to upload.</param>
     /// <returns>Created gallery image information.</returns>
     [HttpPost]
+    [Consumes("multipart/form-data")]
     [SwaggerOperation(
         Summary = "Create new gallery image",
         Description = "Create a new gallery image for a trip or activity. The creator must be an active member of the group."
@@ -33,9 +34,9 @@ public class GalleryController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<GalleryDto>), 400)]
     [ProducesResponseType(typeof(ApiResult<GalleryDto>), 403)]
     [ProducesResponseType(typeof(ApiResult<GalleryDto>), 404)]
-    public async Task<IActionResult> CreateGallery([FromBody] CreateGalleryDto dto)
+    public async Task<IActionResult> CreateGallery([FromForm] CreateGalleryDto dto, IFormFile file)
     {
-        var result = await _galleryService.CreateGalleryAsync(dto);
+        var result = await _galleryService.CreateGalleryAsync(dto, file);
         return CreatedAtAction(
             nameof(GetGalleryById),
             new { galleryId = result.Id },

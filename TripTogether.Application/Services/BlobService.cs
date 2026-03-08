@@ -15,7 +15,7 @@ public class BlobService : IBlobService
         _loggerService = logger;
 
         // Get key từ docker-compose
-        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
+        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9001";
         var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY");
 
@@ -187,9 +187,11 @@ public class BlobService : IBlobService
                 : await presignTask.WaitAsync(cancellationToken);
 
             // Replace both http and https with the public domain
-            var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "http://localhost:9000";
+            var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "http://localhost:9001";
             url = url.Replace("http://minio:9000", minioHost)
-                     .Replace("http://localhost:9000", minioHost);
+                     .Replace("http://minio:9001", minioHost)
+                     .Replace("http://localhost:9000", minioHost)
+                     .Replace("http://localhost:9001", minioHost);
 
             _loggerService.LogInformation($"Presigned URL: {url}");
             return url;
