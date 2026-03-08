@@ -34,9 +34,9 @@ public class GalleryController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<GalleryDto>), 400)]
     [ProducesResponseType(typeof(ApiResult<GalleryDto>), 403)]
     [ProducesResponseType(typeof(ApiResult<GalleryDto>), 404)]
-    public async Task<IActionResult> CreateGallery([FromBody] CreateGalleryDto dto, IFormFile file)
+    public async Task<IActionResult> CreateGallery([FromForm] CreateGalleryDto dto)
     {
-        var result = await _galleryService.CreateGalleryAsync(dto, file);
+        var result = await _galleryService.CreateGalleryAsync(dto);
         return CreatedAtAction(
             nameof(GetGalleryById),
             new { galleryId = result.Id },

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.GalleryDTO;
@@ -26,13 +25,13 @@ public sealed class GalleryService : IGalleryService
         _logger = logger;
     }
 
-    public async Task<GalleryDto> CreateGalleryAsync(CreateGalleryDto dto, IFormFile file)
+    public async Task<GalleryDto> CreateGalleryAsync(CreateGalleryDto dto)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
         _logger.LogInformation("User {UserId} creating gallery image", currentUserId);
 
-        if (file == null || file.Length == 0)
+        if (dto.file == null || dto.file.Length == 0)
         {
             throw ErrorHelper.BadRequest("No image file provided.");
         }
@@ -74,12 +73,12 @@ public sealed class GalleryService : IGalleryService
         }
 
         // Upload image to storage
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.file.FileName)}";
         var folder = dto.ActivityId.HasValue
             ? $"galleries/{dto.TripId}/activities/{dto.ActivityId}"
             : $"galleries/{dto.TripId}";
 
-        using var stream = file.OpenReadStream();
+        using var stream = dto.file.OpenReadStream();
         await _blobService.UploadFileAsync(fileName, stream, folder);
 
         var imageUrl = await _blobService.GetFileUrlAsync($"{folder}/{fileName}");
