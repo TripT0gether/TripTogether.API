@@ -560,7 +560,6 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.ActivityId).HasColumnName("activity_id");
             entity.Property(e => e.ImageUrl).HasColumnName("image_url");
             entity.Property(e => e.Caption).HasColumnName("caption");
-            entity.Property(e => e.DisplayOrder).HasColumnName("display_order");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");

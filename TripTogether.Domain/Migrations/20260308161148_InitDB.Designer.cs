@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260305155328_InitDB")]
+    [Migration("20260308161148_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -499,10 +499,6 @@ namespace TripTogether.Domain.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("deleted_by");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer")
-                        .HasColumnName("display_order");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()

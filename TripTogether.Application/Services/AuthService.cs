@@ -14,7 +14,11 @@ namespace TripTogether.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IClaimsService _claimsService;
 
-        public AuthService(IUnitOfWork unitOfWork, IEmailService emailService, ILogger<AuthService> loggerService, IClaimsService claimsService)
+        public AuthService(
+            IUnitOfWork unitOfWork, 
+            IEmailService emailService, 
+            ILogger<AuthService> loggerService, 
+            IClaimsService claimsService)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;

@@ -114,7 +114,6 @@ public static class IocContainer
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBlobService, BlobService>();
-        services.AddScoped<IFileService, FileService>();
         services.AddScoped<IFriendshipService, FriendshipService>();
         services.AddScoped<IGroupService, GroupService>();
         services.AddScoped<IGroupMemberService, GroupMemberService>();

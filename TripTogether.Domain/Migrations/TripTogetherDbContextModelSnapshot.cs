@@ -497,10 +497,6 @@ namespace TripTogether.Domain.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("deleted_by");
 
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer")
-                        .HasColumnName("display_order");
-
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("text")

@@ -10,15 +10,18 @@ public sealed class GalleryService : IGalleryService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
+    private readonly IBlobService _blobService;
     private readonly ILogger<GalleryService> _logger;
 
     public GalleryService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
+        IBlobService blobService,
         ILogger<GalleryService> logger)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
+        _blobService = blobService;
         _logger = logger;
     }
 
@@ -27,6 +30,11 @@ public sealed class GalleryService : IGalleryService
         var currentUserId = _claimsService.GetCurrentUserId;
 
         _logger.LogInformation("User {UserId} creating gallery image", currentUserId);
+
+        if (dto.ImageFile == null || dto.ImageFile.Length == 0)
+        {
+            throw ErrorHelper.BadRequest("No image file provided.");
+        }
 
         var trip = await _unitOfWork.Trips.GetByIdAsync(dto.TripId);
         if (trip == null)
@@ -64,13 +72,28 @@ public sealed class GalleryService : IGalleryService
             throw ErrorHelper.Forbidden("You must be a member of the group to add gallery images.");
         }
 
+        // Upload image to storage
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.ImageFile.FileName)}";
+        var folder = dto.ActivityId.HasValue 
+            ? $"galleries/{dto.TripId}/activities/{dto.ActivityId}" 
+            : $"galleries/{dto.TripId}";
+
+        using var stream = dto.ImageFile.OpenReadStream();
+        await _blobService.UploadFileAsync(fileName, stream, folder);
+
+        var imageUrl = await _blobService.GetFileUrlAsync($"{folder}/{fileName}");
+        if (string.IsNullOrEmpty(imageUrl))
+        {
+            _logger.LogError("Failed to generate URL for gallery image");
+            throw ErrorHelper.Internal("Could not generate file URL.");
+        }
+
         var gallery = new Gallery
         {
             TripId = dto.TripId,
             ActivityId = dto.ActivityId,
-            ImageUrl = dto.ImageUrl,
-            Caption = dto.Caption,
-            DisplayOrder = dto.DisplayOrder
+            ImageUrl = imageUrl,
+            Caption = dto.Caption
         };
 
         await _unitOfWork.Galleries.AddAsync(gallery);
@@ -124,19 +147,9 @@ public sealed class GalleryService : IGalleryService
             throw ErrorHelper.Forbidden("You must be a member of the group to update gallery images.");
         }
 
-        if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
-        {
-            gallery.ImageUrl = dto.ImageUrl;
-        }
-
         if (dto.Caption != null)
         {
             gallery.Caption = dto.Caption;
-        }
-
-        if (dto.DisplayOrder.HasValue)
-        {
-            gallery.DisplayOrder = dto.DisplayOrder.Value;
         }
 
         await _unitOfWork.Galleries.Update(gallery);
@@ -187,6 +200,13 @@ public sealed class GalleryService : IGalleryService
         if (!isMember)
         {
             throw ErrorHelper.Forbidden("You must be a member of the group to delete gallery images.");
+        }
+
+        // Delete image from storage
+        if (!string.IsNullOrEmpty(gallery.ImageUrl))
+        {
+            _logger.LogInformation("Deleting image from storage for gallery {GalleryId}", galleryId);
+            await _blobService.DeleteFileAsync(gallery.ImageUrl);
         }
 
         await _unitOfWork.Galleries.SoftRemove(gallery);
@@ -295,8 +315,7 @@ public sealed class GalleryService : IGalleryService
         }
 
         queryable = queryable
-            .OrderBy(g => g.DisplayOrder)
-            .ThenByDescending(g => g.CreatedAt);
+            .OrderByDescending(g => g.CreatedAt);
 
         var galleries = await queryable.ToListAsync();
 
@@ -312,7 +331,6 @@ public sealed class GalleryService : IGalleryService
             ActivityId = gallery.ActivityId,
             ImageUrl = gallery.ImageUrl,
             Caption = gallery.Caption,
-            DisplayOrder = gallery.DisplayOrder,
             CreatedAt = gallery.CreatedAt,
             CreatedBy = gallery.CreatedBy
         };

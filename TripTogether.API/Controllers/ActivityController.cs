@@ -13,12 +13,10 @@ namespace TripTogether.API.Controllers;
 public class ActivityController : ControllerBase
 {
     private readonly IActivityService _activityService;
-    private readonly IFileService _fileService;
 
-    public ActivityController(IActivityService activityService, IFileService fileService)
+    public ActivityController(IActivityService activityService)
     {
         _activityService = activityService;
-        _fileService = fileService;
     }
 
     /// <summary>
@@ -161,7 +159,7 @@ public class ActivityController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<string>), 404)]
     public async Task<IActionResult> UploadActivityImage([FromRoute] Guid activityId, IFormFile file)
     {
-        var imageUrl = await _fileService.UploadActivityImageAsync(activityId, file);
+        var imageUrl = await _activityService.UploadActivityImageAsync(activityId, file);
         return Ok(ApiResult<string>.Success(imageUrl, "200", "Activity image uploaded successfully."));
     }
 }

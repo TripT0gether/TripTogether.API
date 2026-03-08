@@ -462,7 +462,6 @@ namespace TripTogether.Domain.Migrations
                     activity_id = table.Column<Guid>(type: "uuid", nullable: true),
                     image_url = table.Column<string>(type: "text", nullable: false),
                     caption = table.Column<string>(type: "text", nullable: true),
-                    display_order = table.Column<int>(type: "integer", nullable: false),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     created_by = table.Column<Guid>(type: "uuid", nullable: false),
