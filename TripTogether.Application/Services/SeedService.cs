@@ -809,8 +809,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[0].Id,
                     TextValue = "Early July",
-                    DateStart = DateTime.UtcNow.AddDays(30),
-                    DateEnd = DateTime.UtcNow.AddDays(37),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(37)),
                     TimeOfDay = TimeSlot.Morning,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
@@ -820,8 +820,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[0].Id,
                     TextValue = "Late July",
-                    DateStart = DateTime.UtcNow.AddDays(45),
-                    DateEnd = DateTime.UtcNow.AddDays(52),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(45)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(52)),
                     TimeOfDay = TimeSlot.Morning,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
@@ -833,7 +833,6 @@ public class SeedService : ISeedService
                     PollId = polls[1].Id,
                     TextValue = "Bali, Indonesia",
                     MediaUrl = "https://example.com/bali.jpg",
-                    Metadata = "{\"country\":\"Indonesia\",\"avgTemp\":28}",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
                     IsDeleted = false
@@ -843,7 +842,6 @@ public class SeedService : ISeedService
                     PollId = polls[1].Id,
                     TextValue = "Maldives",
                     MediaUrl = "https://example.com/maldives.jpg",
-                    Metadata = "{\"country\":\"Maldives\",\"avgTemp\":30}",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
                     IsDeleted = false
@@ -853,7 +851,6 @@ public class SeedService : ISeedService
                     PollId = polls[1].Id,
                     TextValue = "Phuket, Thailand",
                     MediaUrl = "https://example.com/phuket.jpg",
-                    Metadata = "{\"country\":\"Thailand\",\"avgTemp\":29}",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
                     IsDeleted = false
@@ -862,8 +859,7 @@ public class SeedService : ISeedService
                 new PollOption
                 {
                     PollId = polls[2].Id,
-                    TextValue = "$500-$800 per person",
-                    Metadata = "{\"min\":500,\"max\":800,\"currency\":\"USD\"}",
+                    Budget = 650m,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[1].CreatedBy,
                     IsDeleted = false
@@ -871,8 +867,7 @@ public class SeedService : ISeedService
                 new PollOption
                 {
                     PollId = polls[2].Id,
-                    TextValue = "$800-$1200 per person",
-                    Metadata = "{\"min\":800,\"max\":1200,\"currency\":\"USD\"}",
+                    Budget = 1000m,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[1].CreatedBy,
                     IsDeleted = false
@@ -882,8 +877,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[3].Id,
                     TextValue = "This Weekend",
-                    DateStart = DateTime.UtcNow.AddDays(2),
-                    DateEnd = DateTime.UtcNow.AddDays(4),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(4)),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[2].CreatedBy,
                     IsDeleted = false
@@ -892,8 +887,8 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[3].Id,
                     TextValue = "Next Weekend",
-                    DateStart = DateTime.UtcNow.AddDays(9),
-                    DateEnd = DateTime.UtcNow.AddDays(11),
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(9)),
+                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(11)),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[2].CreatedBy,
                     IsDeleted = false

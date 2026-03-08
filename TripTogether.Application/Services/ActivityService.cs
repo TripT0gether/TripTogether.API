@@ -11,6 +11,9 @@ namespace TripTogether.Application.Services;
 
 public sealed class ActivityService : IActivityService
 {
+    private const int MaxActivitiesPerDay = 10;
+    private const string TimeFormat = "HH:mm";
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly IBlobService _blobService;
@@ -38,21 +41,8 @@ public sealed class ActivityService : IActivityService
         _loggerService.LogInformation("User {UserId} creating activity: {Title} for trip {TripId}",
             currentUserId, dto.Title, dto.TripId);
 
-        var trip = await _unitOfWork.Trips.GetByIdAsync(dto.TripId);
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-
-        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .AnyAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (!isMember)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the trip's group to create activities.");
-        }
+        var trip = await LoadTripOrThrowAsync(dto.TripId);
+        await ValidateTripMembershipAsync(trip.GroupId, currentUserId, "create activities");
 
         TimeSlotHelper.ValidateTimeLogic(dto.StartTime, dto.EndTime);
 
@@ -114,24 +104,8 @@ public sealed class ActivityService : IActivityService
         _loggerService.LogInformation("User {UserId} updating activity {ActivityId}",
             currentUserId, activityId);
 
-        var activity = await _unitOfWork.Activities.GetQueryable()
-            .Include(a => a.Trip)
-            .FirstOrDefaultAsync(a => a.Id == activityId && !a.IsDeleted);
-
-        if (activity == null)
-        {
-            throw ErrorHelper.NotFound("The activity does not exist.");
-        }
-
-        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .AnyAsync(gm => gm.GroupId == activity.Trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (!isMember)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the trip's group to update activities.");
-        }
+        var activity = await LoadActivityWithTripOrThrowAsync(activityId);
+        await ValidateTripMembershipAsync(activity.Trip.GroupId, currentUserId, "update activities");
 
         var startTimeToValidate = dto.StartTime ?? activity.StartTime;
         var endTimeToValidate = dto.EndTime ?? activity.EndTime;
@@ -195,24 +169,8 @@ public sealed class ActivityService : IActivityService
         _loggerService.LogInformation("User {UserId} deleting activity {ActivityId}",
             currentUserId, activityId);
 
-        var activity = await _unitOfWork.Activities.GetQueryable()
-            .Include(a => a.Trip)
-            .FirstOrDefaultAsync(a => a.Id == activityId && !a.IsDeleted);
-
-        if (activity == null)
-        {
-            throw ErrorHelper.NotFound("The activity does not exist.");
-        }
-
-        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .AnyAsync(gm => gm.GroupId == activity.Trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (!isMember)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the trip's group to delete activities.");
-        }
+        var activity = await LoadActivityWithTripOrThrowAsync(activityId);
+        await ValidateTripMembershipAsync(activity.Trip.GroupId, currentUserId, "delete activities");
 
         await _unitOfWork.Activities.SoftRemoveRangeById(new List<Guid> { activityId });
         await _unitOfWork.SaveChangesAsync();
@@ -226,24 +184,8 @@ public sealed class ActivityService : IActivityService
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
-        var activity = await _unitOfWork.Activities.GetQueryable()
-            .Include(a => a.Trip)
-            .FirstOrDefaultAsync(a => a.Id == activityId && !a.IsDeleted);
-
-        if (activity == null)
-        {
-            throw ErrorHelper.NotFound("The activity does not exist.");
-        }
-
-        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .AnyAsync(gm => gm.GroupId == activity.Trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (!isMember)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the trip's group to view activities.");
-        }
+        var activity = await LoadActivityWithTripOrThrowAsync(activityId);
+        await ValidateTripMembershipAsync(activity.Trip.GroupId, currentUserId, "view activities");
 
         return MapToDto(activity);
     }
@@ -255,21 +197,8 @@ public sealed class ActivityService : IActivityService
         _loggerService.LogInformation("User {UserId} retrieving activities for trip {TripId}",
             currentUserId, tripId);
 
-        var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
-        if (trip == null)
-        {
-            throw ErrorHelper.NotFound("The trip does not exist.");
-        }
-
-        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
-            .AnyAsync(gm => gm.GroupId == trip.GroupId
-                && gm.UserId == currentUserId
-                && gm.Status == GroupMemberStatus.Active);
-
-        if (!isMember)
-        {
-            throw ErrorHelper.Forbidden("You must be a member of the trip's group to view activities.");
-        }
+        var trip = await LoadTripOrThrowAsync(tripId);
+        await ValidateTripMembershipAsync(trip.GroupId, currentUserId, "view activities");
 
         var activities = await _unitOfWork.Activities.GetQueryable()
             .Where(a => a.TripId == tripId && !a.IsDeleted)
@@ -448,10 +377,9 @@ public sealed class ActivityService : IActivityService
             .Where(a => excludeActivityId == null || a.Id != excludeActivityId)
             .ToListAsync();
 
-        // Check max 10 activities per day
-        if (existingActivities.Count >= 10)
+        if (existingActivities.Count >= MaxActivitiesPerDay)
         {
-            throw ErrorHelper.BadRequest("Maximum of 10 activities per day has been reached for this date.");
+            throw ErrorHelper.BadRequest($"Maximum of {MaxActivitiesPerDay} activities per day has been reached for this date.");
         }
 
         // If no start time, assign to the end (after all existing activities)
@@ -487,7 +415,7 @@ public sealed class ActivityService : IActivityService
             {
                 if (startTime.Value < existing.EndTime.Value && startTime.Value >= existing.StartTime.Value)
                 {
-                    throw ErrorHelper.BadRequest($"Activity time conflicts with existing activity '{existing.Title}' ({existing.StartTime:HH:mm} - {existing.EndTime:HH:mm}).");
+                    throw ErrorHelper.BadRequest($"Activity time conflicts with existing activity '{existing.Title}' ({existing.StartTime.Value.ToString(TimeFormat)} - {existing.EndTime.Value.ToString(TimeFormat)}).");
                 }
             }
 
@@ -545,4 +473,45 @@ public sealed class ActivityService : IActivityService
             UpdatedAt = activity.UpdatedAt
         };
     }
+
+    #region Authorization Helpers
+
+    private async Task<Trip> LoadTripOrThrowAsync(Guid tripId)
+    {
+        var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
+        if (trip == null)
+        {
+            throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+        return trip;
+    }
+
+    private async Task<Activity> LoadActivityWithTripOrThrowAsync(Guid activityId)
+    {
+        var activity = await _unitOfWork.Activities.GetQueryable()
+            .Include(a => a.Trip)
+            .FirstOrDefaultAsync(a => a.Id == activityId && !a.IsDeleted);
+
+        if (activity == null)
+        {
+            throw ErrorHelper.NotFound("The activity does not exist.");
+        }
+
+        return activity;
+    }
+
+    private async Task ValidateTripMembershipAsync(Guid groupId, Guid userId, string action)
+    {
+        var isMember = await _unitOfWork.GroupMembers.GetQueryable()
+            .AnyAsync(gm => gm.GroupId == groupId
+                && gm.UserId == userId
+                && gm.Status == GroupMemberStatus.Active);
+
+        if (!isMember)
+        {
+            throw ErrorHelper.Forbidden($"You must be a member of the trip's group to {action}.");
+        }
+    }
+
+    #endregion
 }
