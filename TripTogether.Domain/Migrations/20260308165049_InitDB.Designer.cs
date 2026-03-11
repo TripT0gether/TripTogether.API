@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260306140317_InitDB")]
+    [Migration("20260308165049_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -114,6 +114,120 @@ namespace TripTogether.Domain.Migrations
                     b.HasIndex("TripId");
 
                     b.ToTable("activities", (string)null);
+                });
+
+            modelBuilder.Entity("Announcement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ActivityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("activity_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid?>("FriendshipId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("friendship_id");
+
+                    b.Property<Guid?>("FromUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_user_id");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid?>("GroupInviteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_invite_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<Guid?>("PackingItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("packing_item_id");
+
+                    b.Property<Guid?>("PollId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("poll_id");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("read_at");
+
+                    b.Property<Guid?>("TargetUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_user_id");
+
+                    b.Property<Guid?>("TripId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trip_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("FriendshipId");
+
+                    b.HasIndex("FromUserId");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("GroupInviteId");
+
+                    b.HasIndex("PackingItemId");
+
+                    b.HasIndex("PollId");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("announcements", (string)null);
                 });
 
             modelBuilder.Entity("Badge", b =>
@@ -353,6 +467,67 @@ namespace TripTogether.Domain.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.ToTable("friendships", (string)null);
+                });
+
+            modelBuilder.Entity("Gallery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ActivityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("activity_id");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("text")
+                        .HasColumnName("caption");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("image_url");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<Guid?>("TripId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trip_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("galleries", (string)null);
                 });
 
             modelBuilder.Entity("Group", b =>
@@ -1219,6 +1394,72 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("Trip");
                 });
 
+            modelBuilder.Entity("Announcement", b =>
+                {
+                    b.HasOne("Activity", "Activity")
+                        .WithMany("Announcements")
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Friendship", "Friendship")
+                        .WithMany("Announcements")
+                        .HasForeignKey("FriendshipId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("User", "FromUser")
+                        .WithMany("AnnouncementsSent")
+                        .HasForeignKey("FromUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Group", "Group")
+                        .WithMany("Announcements")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("GroupInvite", "GroupInvite")
+                        .WithMany("Announcements")
+                        .HasForeignKey("GroupInviteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PackingItem", "PackingItem")
+                        .WithMany("Announcements")
+                        .HasForeignKey("PackingItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Poll", "Poll")
+                        .WithMany("Announcements")
+                        .HasForeignKey("PollId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("User", "TargetUser")
+                        .WithMany("AnnouncementsReceived")
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Trip", "Trip")
+                        .WithMany("Announcements")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("Friendship");
+
+                    b.Navigation("FromUser");
+
+                    b.Navigation("Group");
+
+                    b.Navigation("GroupInvite");
+
+                    b.Navigation("PackingItem");
+
+                    b.Navigation("Poll");
+
+                    b.Navigation("TargetUser");
+
+                    b.Navigation("Trip");
+                });
+
             modelBuilder.Entity("Expense", b =>
                 {
                     b.HasOne("User", "Payer")
@@ -1274,6 +1515,23 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("Addressee");
 
                     b.Navigation("Requester");
+                });
+
+            modelBuilder.Entity("Gallery", b =>
+                {
+                    b.HasOne("Activity", "Activity")
+                        .WithMany("GalleryImages")
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Trip", "Trip")
+                        .WithMany("Galleries")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("Trip");
                 });
 
             modelBuilder.Entity("GroupInvite", b =>
@@ -1468,6 +1726,13 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Activity", b =>
+                {
+                    b.Navigation("Announcements");
+
+                    b.Navigation("GalleryImages");
+                });
+
             modelBuilder.Entity("Badge", b =>
                 {
                     b.Navigation("UserBadges");
@@ -1478,8 +1743,15 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("Splits");
                 });
 
+            modelBuilder.Entity("Friendship", b =>
+                {
+                    b.Navigation("Announcements");
+                });
+
             modelBuilder.Entity("Group", b =>
                 {
+                    b.Navigation("Announcements");
+
                     b.Navigation("Invites");
 
                     b.Navigation("Members");
@@ -1487,13 +1759,22 @@ namespace TripTogether.Domain.Migrations
                     b.Navigation("Trips");
                 });
 
+            modelBuilder.Entity("GroupInvite", b =>
+                {
+                    b.Navigation("Announcements");
+                });
+
             modelBuilder.Entity("PackingItem", b =>
                 {
+                    b.Navigation("Announcements");
+
                     b.Navigation("Assignments");
                 });
 
             modelBuilder.Entity("Poll", b =>
                 {
+                    b.Navigation("Announcements");
+
                     b.Navigation("Options");
                 });
 
@@ -1506,7 +1787,11 @@ namespace TripTogether.Domain.Migrations
                 {
                     b.Navigation("Activities");
 
+                    b.Navigation("Announcements");
+
                     b.Navigation("Expenses");
+
+                    b.Navigation("Galleries");
 
                     b.Navigation("PackingItems");
 
@@ -1521,6 +1806,10 @@ namespace TripTogether.Domain.Migrations
 
             modelBuilder.Entity("User", b =>
                 {
+                    b.Navigation("AnnouncementsReceived");
+
+                    b.Navigation("AnnouncementsSent");
+
                     b.Navigation("ExpenseSplits");
 
                     b.Navigation("ExpensesPaid");

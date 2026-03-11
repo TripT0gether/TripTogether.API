@@ -9,4 +9,5 @@ public class Group : BaseEntity
     public virtual ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
     public virtual ICollection<Trip> Trips { get; set; } = new List<Trip>();
     public virtual ICollection<GroupInvite> Invites { get; set; } = new List<GroupInvite>();
+    public virtual ICollection<Announcement> Announcements { get; set; } = new List<Announcement>();
 }

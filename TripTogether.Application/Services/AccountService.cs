@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.UserDTO;
 using TripTogether.Application.Interfaces;
@@ -9,12 +10,18 @@ public class AccountService : IAccountService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger _loggerService;
     private readonly IClaimsService _claimsService;
+    private readonly IBlobService _blobService;
 
-    public AccountService(IUnitOfWork unitOfWork, ILogger<AccountService> logger, IClaimsService claimsService)
+    public AccountService(
+        IUnitOfWork unitOfWork, 
+        ILogger<AccountService> logger, 
+        IClaimsService claimsService,
+        IBlobService blobService)
     {
         _unitOfWork = unitOfWork;
         _loggerService = logger;
         _claimsService = claimsService;
+        _blobService = blobService;
     }
 
     /// <summary>
@@ -179,5 +186,47 @@ public class AccountService : IAccountService
 
         _loggerService.LogInformation("Account deleted successfully for user ID: {UserId}", userId);
         return true;
+    }
+
+    public async Task<string> UploadAvatarAsync(IFormFile file)
+    {
+        var currentUserId = _claimsService.GetCurrentUserId;
+
+        _loggerService.LogInformation("User {CurrentUserId} uploading avatar", currentUserId);
+
+        if (file == null || file.Length == 0)
+            throw ErrorHelper.BadRequest("No file provided.");
+
+        var user = await _unitOfWork.Users.GetByIdAsync(currentUserId);
+        if (user == null)
+            throw ErrorHelper.NotFound("User not found.");
+
+        // Delete old avatar if exists
+        if (!string.IsNullOrEmpty(user.AvatarUrl))
+        {
+            _loggerService.LogInformation("Deleting old avatar for user {CurrentUserId}", currentUserId);
+            await _blobService.DeleteFileAsync(user.AvatarUrl);
+        }
+
+        var fileName = $"{currentUserId}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var folder = $"avatars/{currentUserId}";
+
+        using var stream = file.OpenReadStream();
+        await _blobService.UploadFileAsync(fileName, stream, folder);
+
+        var avatarUrl = await _blobService.GetFileUrlAsync($"{folder}/{fileName}");
+        if (string.IsNullOrEmpty(avatarUrl))
+        {
+            _loggerService.LogError("Failed to generate URL for avatar");
+            throw ErrorHelper.Internal("Could not generate file URL.");
+        }
+
+        user.AvatarUrl = avatarUrl;
+        await _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        _loggerService.LogInformation("Avatar uploaded successfully for user {CurrentUserId}", currentUserId);
+
+        return avatarUrl;
     }
 }

@@ -11,15 +11,18 @@ public sealed class TripService : ITripService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILogger _loggerService;
+    private readonly IAnnouncementService _announcementService;
 
     public TripService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
-        ILogger<TripService> loggerService)
+        ILogger<TripService> loggerService,
+        IAnnouncementService announcementService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
+        _announcementService = announcementService;
     }
 
     public async Task<TripDto> CreateTripAsync(CreateTripDto dto)
@@ -58,6 +61,8 @@ public sealed class TripService : ITripService
 
         _loggerService.LogInformation("Trip {TripId} created successfully by user {UserId}",
             trip.Id, currentUserId);
+
+        await _announcementService.NotifyTripCreatedAsync(trip.Id, trip.GroupId, trip.Title, currentUserId);
 
         return new TripDto
         {

@@ -114,7 +114,6 @@ public static class IocContainer
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBlobService, BlobService>();
-        services.AddScoped<IFileService, FileService>();
         services.AddScoped<IFriendshipService, FriendshipService>();
         services.AddScoped<IGroupService, GroupService>();
         services.AddScoped<IGroupMemberService, GroupMemberService>();
@@ -126,6 +125,8 @@ public static class IocContainer
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IPackingItemService, PackingItemService>();
         services.AddScoped<IPackingAssignmentService, PackingAssignmentService>();
+        services.AddScoped<IAnnouncementService, AnnouncementService>();
+        services.AddScoped<IGalleryService, GalleryService>();
         return services;
     }
 

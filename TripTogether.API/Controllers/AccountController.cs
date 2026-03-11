@@ -12,12 +12,10 @@ namespace TripTogether.API.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
-    private readonly IFileService _fileService;
 
-    public AccountController(IAccountService accountService, IFileService fileService)
+    public AccountController(IAccountService accountService)
     {
         _accountService = accountService;
-        _fileService = fileService;
     }
 
     /// <summary>
@@ -111,7 +109,7 @@ public class AccountController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<string>), 500)]
     public async Task<IActionResult> UploadAvatar(IFormFile file)
     {
-        var avatarUrl = await _fileService.UploadAvatarAsync(file);
+        var avatarUrl = await _accountService.UploadAvatarAsync(file);
         return Ok(ApiResult<string>.Success(avatarUrl, "200", "Avatar uploaded successfully."));
     }
 }

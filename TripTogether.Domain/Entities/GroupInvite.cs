@@ -8,4 +8,5 @@ public class GroupInvite : BaseEntity
 
     // Navigation properties
     public virtual Group Group { get; set; } = null!;
+    public virtual ICollection<Announcement> Announcements { get; set; } = new List<Announcement>();
 }

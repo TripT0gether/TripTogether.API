@@ -15,17 +15,20 @@ public sealed class GroupInviteService : IGroupInviteService
     private readonly IClaimsService _claimsService;
     private readonly ILogger _loggerService;
     private readonly string _baseUrl;
+    private readonly IAnnouncementService _announcementService;
 
     public GroupInviteService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
         ILogger<GroupInviteService> loggerService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IAnnouncementService announcementService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
         _baseUrl = configuration["App:BaseUrl"] ?? "https://api.triptogether.com";
+        _announcementService = announcementService;
     }
 
     public async Task<GroupInviteDto> CreateInviteAsync(CreateGroupInviteDto dto)
@@ -78,6 +81,8 @@ public sealed class GroupInviteService : IGroupInviteService
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation("Invite created successfully with token: {TokenPrefix}...", token[..8]);
+
+        await _announcementService.NotifyInviteCreatedAsync(invite.Id, group.Id, group.Name, currentUserId);
 
         return new GroupInviteDto
         {
@@ -275,6 +280,9 @@ public sealed class GroupInviteService : IGroupInviteService
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation("User {UserId} joined group {GroupId} successfully", currentUserId, group.Id);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(currentUserId);
+        await _announcementService.NotifyGroupMemberJoinedAsync(group.Id, group.Name, user?.Username ?? "Unknown", currentUserId);
 
         var memberCount = await _unitOfWork.GroupMembers.GetQueryable()
             .CountAsync(gm => gm.GroupId == group.Id && gm.Status == GroupMemberStatus.Active);

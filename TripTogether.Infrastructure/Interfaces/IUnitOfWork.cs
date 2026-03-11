@@ -23,6 +23,8 @@
     IGenericRepository<Vote> Votes { get; }
     IGenericRepository<OtpStorage> OtpStorages { get; }
     IGenericRepository<Friendship> Friendships { get; }
+    IGenericRepository<Announcement> Announcements { get; }
+    IGenericRepository<Gallery> Galleries { get; }
 
     Task<int> SaveChangesAsync();
 }

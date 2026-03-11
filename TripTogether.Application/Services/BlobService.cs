@@ -15,12 +15,13 @@ public class BlobService : IBlobService
         _loggerService = logger;
 
         // Get key từ docker-compose
-        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
-        var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY");
-        var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY");
+        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9001";
+        var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "minioadmin";
+        var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "minioadmin";
 
         _loggerService.LogInformation("Initializing BlobService...");
         _loggerService.LogInformation($"Connecting to MinIO at: {endpoint}");
+        _loggerService.LogInformation($"Using access key: {accessKey}");
 
         try
         {
@@ -154,10 +155,10 @@ public class BlobService : IBlobService
     public Task<string> GetPreviewUrlAsync(string fileName)
     {
         var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST")
-                        ?? "http://localhost:9000";
+                        ?? "http://localhost:9001/";
 
         _loggerService.LogInformation($"Generating preview URL for: {fileName}");
-        var previewUrl = $"{minioHost}/{_bucketName}/{fileName}";
+        var previewUrl = $"{minioHost.TrimEnd('/')}/{_bucketName}/{fileName}";
 
         _loggerService.LogInformation($"Preview URL: {previewUrl}");
         return Task.FromResult(previewUrl);
@@ -187,9 +188,11 @@ public class BlobService : IBlobService
                 : await presignTask.WaitAsync(cancellationToken);
 
             // Replace both http and https with the public domain
-            var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "http://localhost:9000";
-            url = url.Replace("http://minio:9000", minioHost)
-                     .Replace("http://localhost:9000", minioHost);
+            var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "http://localhost:9001/";
+            url = url.Replace("http://minio:9000", minioHost.TrimEnd('/'))
+                     .Replace("http://minio:9001", minioHost.TrimEnd('/'))
+                     .Replace("http://localhost:9000", minioHost.TrimEnd('/'))
+                     .Replace("http://localhost:9001", minioHost.TrimEnd('/'));
 
             _loggerService.LogInformation($"Presigned URL: {url}");
             return url;

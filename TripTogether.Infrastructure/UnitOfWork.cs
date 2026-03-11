@@ -50,6 +50,9 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Vote> Votes => Repository<Vote>();
     public IGenericRepository<OtpStorage> OtpStorages => Repository<OtpStorage>();
     public IGenericRepository<Friendship> Friendships => Repository<Friendship>();
+    public IGenericRepository<Announcement> Announcements => Repository<Announcement>();
+    public IGenericRepository<Gallery> Galleries => Repository<Gallery>();
+
     public void Dispose()
     {
         _repositories.Clear();

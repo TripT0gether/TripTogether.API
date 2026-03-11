@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -15,33 +14,48 @@ public class FileUploadOperationFilter : IOperationFilter
         if (!fileParameters.Any())
             return;
 
-        // Clear existing parameters that are files
-        foreach (var fileParam in fileParameters)
+        // Collect all form parameters (file and non-file)
+        var allFormParameters = context.ApiDescription.ParameterDescriptions
+            .Where(p => p.Source?.Id == "Form" || p.ModelMetadata?.ModelType == typeof(IFormFile))
+            .ToList();
+
+        // Clear existing parameters that will be part of the request body
+        foreach (var param in allFormParameters)
         {
             var paramToRemove = operation.Parameters
-                .FirstOrDefault(p => p.Name == fileParam.Name);
-            
+                .FirstOrDefault(p => p.Name == param.Name);
+
             if (paramToRemove != null)
             {
                 operation.Parameters.Remove(paramToRemove);
             }
         }
 
-        // Create multipart/form-data request body
+        // Build schema with all form properties
         var properties = new Dictionary<string, OpenApiSchema>();
         var required = new HashSet<string>();
 
-        foreach (var fileParam in fileParameters)
+        foreach (var param in allFormParameters)
         {
-            properties[fileParam.Name] = new OpenApiSchema
+            if (param.ModelMetadata?.ModelType == typeof(IFormFile))
             {
-                Type = "string",
-                Format = "binary"
-            };
-            
-            if (fileParam.IsRequired)
+                properties[param.Name] = new OpenApiSchema
+                {
+                    Type = "string",
+                    Format = "binary"
+                };
+            }
+            else
             {
-                required.Add(fileParam.Name);
+                var schema = context.SchemaGenerator.GenerateSchema(
+                    param.ModelMetadata!.ModelType,
+                    context.SchemaRepository);
+                properties[param.Name] = schema;
+            }
+
+            if (param.IsRequired)
+            {
+                required.Add(param.Name);
             }
         }
 

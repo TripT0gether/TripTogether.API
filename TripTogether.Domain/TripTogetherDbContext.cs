@@ -33,6 +33,8 @@ public class TripTogetherDbContext : DbContext
     public DbSet<Badge> Badges { get; set; }
     public DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<OtpStorage> OtpStorages { get; set; }
+    public DbSet<Announcement> Announcements { get; set; }
+    public DbSet<Gallery> Galleries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -477,6 +479,108 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         });
 
+        // Announcement
+        modelBuilder.Entity<Announcement>(entity =>
+        {
+            entity.ToTable("announcements");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Message).HasColumnName("message");
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.ActivityId).HasColumnName("activity_id");
+            entity.Property(e => e.PollId).HasColumnName("poll_id");
+            entity.Property(e => e.PackingItemId).HasColumnName("packing_item_id");
+            entity.Property(e => e.FriendshipId).HasColumnName("friendship_id");
+            entity.Property(e => e.GroupInviteId).HasColumnName("group_invite_id");
+            entity.Property(e => e.TargetUserId).HasColumnName("target_user_id");
+            entity.Property(e => e.FromUserId).HasColumnName("from_user_id");
+            entity.Property(e => e.IsRead).HasColumnName("is_read").HasDefaultValue(false);
+            entity.Property(e => e.ReadAt).HasColumnName("read_at");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+
+            entity.HasOne(e => e.TargetUser)
+                .WithMany(u => u.AnnouncementsReceived)
+                .HasForeignKey(e => e.TargetUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.FromUser)
+                .WithMany(u => u.AnnouncementsSent)
+                .HasForeignKey(e => e.FromUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Announcements)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Announcements)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Activity)
+                .WithMany(a => a.Announcements)
+                .HasForeignKey(e => e.ActivityId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Poll)
+                .WithMany(p => p.Announcements)
+                .HasForeignKey(e => e.PollId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.PackingItem)
+                .WithMany(pi => pi.Announcements)
+                .HasForeignKey(e => e.PackingItemId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Friendship)
+                .WithMany(f => f.Announcements)
+                .HasForeignKey(e => e.FriendshipId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.GroupInvite)
+                .WithMany(gi => gi.Announcements)
+                .HasForeignKey(e => e.GroupInviteId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Gallery
+        modelBuilder.Entity<Gallery>(entity =>
+        {
+            entity.ToTable("galleries");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TripId).HasColumnName("trip_id");
+            entity.Property(e => e.ActivityId).HasColumnName("activity_id");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
+            entity.Property(e => e.Caption).HasColumnName("caption");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+
+            entity.HasOne(e => e.Trip)
+                .WithMany(t => t.Galleries)
+                .HasForeignKey(e => e.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Activity)
+                .WithMany(a => a.GalleryImages)
+                .HasForeignKey(e => e.ActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Loai edit ra khoi query (SOFT DELETE)
         modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Friendship>().HasQueryFilter(e => !e.IsDeleted);
@@ -497,6 +601,8 @@ public class TripTogetherDbContext : DbContext
         modelBuilder.Entity<Badge>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<UserBadge>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<OtpStorage>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Announcement>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Gallery>().HasQueryFilter(e => !e.IsDeleted);
 
         // Enum to string conversion
         modelBuilder.UseStringForEnums();

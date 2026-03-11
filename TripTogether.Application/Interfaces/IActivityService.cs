@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using TripTogether.Application.DTOs.ActivityDTO;
 
 namespace TripTogether.Application.Interfaces;
@@ -10,4 +11,5 @@ public interface IActivityService
     Task<ActivityDto> GetActivityByIdAsync(Guid activityId);
     Task<IEnumerable<ActivitiesByDateDto>> GetActivitiesByTripIdAsync(Guid tripId);
     Task<Pagination<ActivitiesByDateDto>> GetMyActivitiesAsync(ActivityQueryDto query);
+    Task<string> UploadActivityImageAsync(Guid activityId, IFormFile file);
 }

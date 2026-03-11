@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TripTogether.API.Hubs;
 using TripTogether.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -128,6 +129,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<AnnouncementHub>("/hubs/announcements");
 app.UseSession();
 
 app.Logger.LogInformation("TripTogether API is running on http://0.0.0.0:5000");

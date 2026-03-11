@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Resend;
 
 
@@ -6,24 +7,50 @@ public class EmailService : IEmailService
 {
     private readonly string _fromEmail;
     private readonly IResend _resend;
+    private readonly ILogger<EmailService> _logger;
+    private readonly bool _skipEmailInDevelopment;
 
-    public EmailService(IResend resend, IConfiguration configuration)
+    public EmailService(IResend resend, IConfiguration configuration, ILogger<EmailService> logger)
     {
         _resend = resend;
-        _fromEmail = configuration["RESEND_FROM"] ?? "noreply@triptogether.com";
+        _logger = logger;
+        _fromEmail = configuration["RESEND_FROM"] ?? "onboarding@resend.dev";
+        _skipEmailInDevelopment = configuration.GetValue<bool>("Email:SkipInDevelopment", false);
+
+        _logger.LogInformation("EmailService initialized with FROM address: {FromEmail}, SkipInDevelopment: {Skip}", 
+            _fromEmail, _skipEmailInDevelopment);
     }
 
     private async Task SendEmailAsync(string to, string subject, string htmlContent)
     {
-        var message = new EmailMessage
+        try
         {
-            From = _fromEmail,
-            Subject = subject,
-            HtmlBody = htmlContent
-        };
+            if (_skipEmailInDevelopment)
+            {
+                _logger.LogWarning("EMAIL SKIPPED (Development Mode) - To: {To}, Subject: {Subject}", to, subject);
+                return;
+            }
 
-        message.To.Add(to);
-        await _resend.EmailSendAsync(message);
+            _logger.LogInformation("Attempting to send email to: {To}, Subject: {Subject}", to, subject);
+
+            var message = new EmailMessage
+            {
+                From = _fromEmail,
+                Subject = subject,
+                HtmlBody = htmlContent
+            };
+
+            message.To.Add(to);
+
+            var response = await _resend.EmailSendAsync(message);
+
+            _logger.LogInformation("Email sent successfully to: {To}, Response: {@Response}", to, response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send email to: {To}, Subject: {Subject}, From: {From}", to, subject, _fromEmail);
+            throw new InvalidOperationException($"Failed to send email. Please check Resend configuration and domain verification. Error: {ex.Message}", ex);
+        }
     }
 
     public async Task SendRegistrationSuccessEmailAsync(EmailRequestDto request)

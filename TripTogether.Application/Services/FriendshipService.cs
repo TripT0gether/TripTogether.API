@@ -11,15 +11,18 @@ public sealed class FriendshipService : IFriendshipService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILogger _loggerService;
+    private readonly IAnnouncementService _announcementService;
 
     public FriendshipService(
         IUnitOfWork unitOfWork,
         IClaimsService claimsService,
-        ILogger<FriendshipService> loggerService)
+        ILogger<FriendshipService> loggerService,
+        IAnnouncementService announcementService)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _loggerService = loggerService;
+        _announcementService = announcementService;
     }
 
     public async Task<FriendshipDto> SendFriendRequestAsync(SendFriendRequestDto dto)
@@ -75,6 +78,12 @@ public sealed class FriendshipService : IFriendshipService
 
         _loggerService.LogInformation("Friend request sent successfully from {CurrentUserId} to {AddresseeId}", currentUserId, dto.AddresseeId);
 
+        await _announcementService.NotifyFriendRequestReceivedAsync(
+            friendship.Id,
+            dto.AddresseeId,
+            requester!.Username,
+            currentUserId);
+
         return MapToDto(friendship);
     }
 
@@ -108,6 +117,13 @@ public sealed class FriendshipService : IFriendshipService
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation("Friendship {FriendshipId} accepted successfully", friendshipId);
+
+        var currentUser = await _unitOfWork.Users.GetByIdAsync(currentUserId);
+        await _announcementService.NotifyFriendRequestAcceptedAsync(
+            friendship.Id,
+            friendship.CreatedBy,
+            currentUser?.Username ?? "Unknown",
+            currentUserId);
 
         return MapToDto(friendship);
     }
