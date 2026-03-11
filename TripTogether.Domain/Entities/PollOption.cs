@@ -4,7 +4,6 @@ public class PollOption : BaseEntity
 {
     public Guid PollId { get; set; }
     public string? TextValue { get; set; }
-    public string? MediaUrl { get; set; }
     public decimal? Budget { get; set; }
 
     // Date Voting Details

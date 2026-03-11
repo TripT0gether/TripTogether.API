@@ -954,10 +954,6 @@ namespace TripTogether.Domain.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("MediaUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("media_url");
-
                     b.Property<Guid>("PollId")
                         .HasColumnType("uuid")
                         .HasColumnName("poll_id");

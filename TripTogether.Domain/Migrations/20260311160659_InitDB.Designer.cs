@@ -13,7 +13,7 @@ using PRN232.TripTogether.Repo;
 namespace TripTogether.Domain.Migrations
 {
     [DbContext(typeof(TripTogetherDbContext))]
-    [Migration("20260308165049_InitDB")]
+    [Migration("20260311160659_InitDB")]
     partial class InitDB
     {
         /// <inheritdoc />
@@ -956,10 +956,6 @@ namespace TripTogether.Domain.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("MediaUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("media_url");
 
                     b.Property<Guid>("PollId")
                         .HasColumnType("uuid")

@@ -7,7 +7,6 @@ public class PollOptionDto
     public Guid Id { get; set; }
     public Guid PollId { get; set; }
     public string? TextValue { get; set; }
-    public string? MediaUrl { get; set; }
     public decimal? Budget { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }

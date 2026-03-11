@@ -5,7 +5,6 @@ namespace TripTogether.Application.DTOs.PollDTO;
 public class CreatePollOptionDto
 {
     public string? TextValue { get; set; }
-    public string? MediaUrl { get; set; }
     public decimal? Budget { get; set; }
 
     // For Date Voting

@@ -36,10 +36,6 @@ public sealed class PollService : IPollService
                 {
                     throw ErrorHelper.BadRequest("Date polls cannot have TextValue. Use StartDate and EndDate instead.");
                 }
-                if (!string.IsNullOrWhiteSpace(optionDto.MediaUrl))
-                {
-                    throw ErrorHelper.BadRequest("Date polls cannot have MediaUrl.");
-                }
                 if (optionDto.StartTime.HasValue || optionDto.EndTime.HasValue)
                 {
                     throw ErrorHelper.BadRequest("Date polls cannot have StartTime or EndTime. Use a separate Time poll to set activity times.");
@@ -64,10 +60,6 @@ public sealed class PollService : IPollService
                 {
                     throw ErrorHelper.BadRequest("Time polls cannot have StartDate or EndDate. Use StartTime and EndTime instead.");
                 }
-                if (!string.IsNullOrWhiteSpace(optionDto.MediaUrl))
-                {
-                    throw ErrorHelper.BadRequest("Time polls cannot have MediaUrl.");
-                }
                 if (string.IsNullOrWhiteSpace(optionDto.TextValue) && optionDto.StartTime == null)
                 {
                     throw ErrorHelper.BadRequest("Time poll options must have either TextValue (time description) or StartTime.");
@@ -75,7 +67,7 @@ public sealed class PollService : IPollService
                 break;
 
             case PollType.Destination:
-                // Destination polls: ONLY TextValue (destination name), MediaUrl (optional)
+                // Destination polls: ONLY TextValue (destination name)
                 if (optionDto.StartDate != null || optionDto.EndDate != null)
                 {
                     throw ErrorHelper.BadRequest("Destination polls cannot have StartDate or EndDate.");
@@ -103,10 +95,6 @@ public sealed class PollService : IPollService
                 if (!string.IsNullOrWhiteSpace(optionDto.TextValue))
                 {
                     throw ErrorHelper.BadRequest("Budget polls cannot have TextValue. Use Budget property instead.");
-                }
-                if (!string.IsNullOrWhiteSpace(optionDto.MediaUrl))
-                {
-                    throw ErrorHelper.BadRequest("Budget polls cannot have MediaUrl.");
                 }
                 if (!optionDto.Budget.HasValue)
                 {
@@ -176,7 +164,6 @@ public sealed class PollService : IPollService
             {
                 PollId = poll.Id,
                 TextValue = optionDto.TextValue,
-                MediaUrl = optionDto.MediaUrl,
                 Budget = optionDto.Budget,
                 StartDate = optionDto.StartDate,
                 EndDate = optionDto.EndDate,
@@ -355,7 +342,6 @@ public sealed class PollService : IPollService
                 Id = o.Id,
                 PollId = o.PollId,
                 TextValue = o.TextValue,
-                MediaUrl = o.MediaUrl,
                 Budget = o.Budget,
                 StartDate = o.StartDate,
                 EndDate = o.EndDate,
@@ -887,7 +873,6 @@ public sealed class PollService : IPollService
         {
             PollId = pollId,
             TextValue = dto.TextValue,
-            MediaUrl = dto.MediaUrl,
             Budget = dto.Budget,
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
@@ -908,7 +893,6 @@ public sealed class PollService : IPollService
             Id = option.Id,
             PollId = option.PollId,
             TextValue = option.TextValue,
-            MediaUrl = option.MediaUrl,
             Budget = option.Budget,
             StartDate = option.StartDate,
             EndDate = option.EndDate,

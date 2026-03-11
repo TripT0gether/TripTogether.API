@@ -832,7 +832,6 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[1].Id,
                     TextValue = "Bali, Indonesia",
-                    MediaUrl = "https://example.com/bali.jpg",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
                     IsDeleted = false
@@ -841,7 +840,6 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[1].Id,
                     TextValue = "Maldives",
-                    MediaUrl = "https://example.com/maldives.jpg",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
                     IsDeleted = false
@@ -850,7 +848,6 @@ public class SeedService : ISeedService
                 {
                     PollId = polls[1].Id,
                     TextValue = "Phuket, Thailand",
-                    MediaUrl = "https://example.com/phuket.jpg",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
                     IsDeleted = false

@@ -682,7 +682,6 @@ namespace TripTogether.Domain.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     poll_id = table.Column<Guid>(type: "uuid", nullable: false),
                     text_value = table.Column<string>(type: "text", nullable: true),
-                    media_url = table.Column<string>(type: "text", nullable: true),
                     budget = table.Column<decimal>(type: "numeric(18,2)", nullable: true),
                     start_date = table.Column<DateOnly>(type: "date", nullable: true),
                     end_date = table.Column<DateOnly>(type: "date", nullable: true),
