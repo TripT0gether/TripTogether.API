@@ -1,0 +1,59 @@
+name: Docker Build, Push and Deploy TripTogether
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-push-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: TripTogether.API/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/triptogether-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # 1. Go to the project folder
+            cd ~/apps/triptogether
+
+            # 2. Pull the new image
+            echo "Pulling latest Docker image..."
+            docker compose -f docker-compose.prod.yml pull
+
+            # 3. Restart the API
+            echo "Restarting API container..."
+            docker compose -f docker-compose.prod.yml up -d
+
+            # 4. Clean up (2GB RAM VPS pls be gentle)
+            echo "Cleaning up old images..."
+            docker image prune -af 
+
+            # 5. Check logs to ensure DB connection is okay
+            echo "Checking logs for errors..."
+            docker logs --tail 20 triptogether-api
