@@ -51,11 +51,12 @@ public sealed class VoteService : IVoteService
             throw ErrorHelper.BadRequest("Cannot vote on a closed or finalized poll.");
         }
 
-        // Check if user already voted for this specific option
+        // Check existing vote for this specific option (including soft-deleted)
         var existingVoteForOption = await _unitOfWork.Votes.GetQueryable()
-            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOptionId == dto.PollOptionId && !v.IsDeleted);
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOptionId == dto.PollOptionId);
 
-        if (existingVoteForOption != null)
+        if (existingVoteForOption is { IsDeleted: false })
         {
             throw ErrorHelper.Conflict("You have already voted for this option.");
         }
@@ -71,6 +72,29 @@ public sealed class VoteService : IVoteService
             {
                 throw ErrorHelper.Conflict("You have already voted on this poll. Use change vote to update your vote.");
             }
+        }
+
+        if (existingVoteForOption is { IsDeleted: true })
+        {
+            existingVoteForOption.IsDeleted = false;
+            existingVoteForOption.DeletedAt = null;
+            existingVoteForOption.DeletedBy = null;
+
+            await _unitOfWork.Votes.Update(existingVoteForOption);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation($"Vote {existingVoteForOption.Id} restored successfully by user {currentUserId}");
+
+            var restoredVoteUser = await _unitOfWork.Users.GetByIdAsync(currentUserId);
+
+            return new VoteDto
+            {
+                Id = existingVoteForOption.Id,
+                PollOptionId = existingVoteForOption.PollOptionId,
+                UserId = existingVoteForOption.UserId,
+                Username = restoredVoteUser?.Username ?? "Unknown",
+                CreatedAt = existingVoteForOption.CreatedAt
+            };
         }
 
         var vote = new Vote
@@ -185,19 +209,47 @@ public sealed class VoteService : IVoteService
             throw ErrorHelper.NotFound("You have not voted on this poll yet. Use cast vote instead.");
         }
 
+        if (existingVote.PollOptionId == newOptionId)
+        {
+            throw ErrorHelper.Conflict("You have already voted for this option.");
+        }
+
+        var existingVoteForNewOption = await _unitOfWork.Votes.GetQueryable()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(v => v.UserId == currentUserId && v.PollOptionId == newOptionId);
+
+        if (existingVoteForNewOption is { IsDeleted: false })
+        {
+            throw ErrorHelper.Conflict("You have already voted for this option.");
+        }
+
         // Remove old vote
         await _unitOfWork.Votes.SoftRemove(existingVote);
 
-        // Create new vote
-        var newVote = new Vote
-        {
-            PollOptionId = newOptionId,
-            UserId = currentUserId,
-            CreatedBy = currentUserId,
-            CreatedAt = DateTime.UtcNow
-        };
+        Vote newVote;
 
-        await _unitOfWork.Votes.AddAsync(newVote);
+        if (existingVoteForNewOption is { IsDeleted: true })
+        {
+            existingVoteForNewOption.IsDeleted = false;
+            existingVoteForNewOption.DeletedAt = null;
+            existingVoteForNewOption.DeletedBy = null;
+
+            await _unitOfWork.Votes.Update(existingVoteForNewOption);
+            newVote = existingVoteForNewOption;
+        }
+        else
+        {
+            newVote = new Vote
+            {
+                PollOptionId = newOptionId,
+                UserId = currentUserId,
+                CreatedBy = currentUserId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Votes.AddAsync(newVote);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
         _loggerService.LogInformation($"Vote changed successfully from option {existingVote.PollOptionId} to {newOptionId}");
