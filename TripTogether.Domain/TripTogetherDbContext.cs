@@ -277,6 +277,7 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.Category).HasColumnName("category");
             entity.Property(e => e.IsShared).HasColumnName("is_shared");
+            entity.Property(e => e.IsChecked).HasColumnName("is_checked");
             entity.Property(e => e.QuantityNeeded).HasColumnName("quantity_needed").HasDefaultValue(1);
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
 

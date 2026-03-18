@@ -50,6 +50,7 @@ public sealed class PackingItemService : IPackingItemService
             Name = dto.Name,
             Category = dto.Category,
             IsShared = dto.IsShared,
+            IsChecked = dto.IsChecked,
             QuantityNeeded = dto.QuantityNeeded
         };
 
@@ -90,6 +91,7 @@ public sealed class PackingItemService : IPackingItemService
         if (dto.Name != null) packingItem.Name = dto.Name;
         if (dto.Category != null) packingItem.Category = dto.Category;
         if (dto.IsShared.HasValue) packingItem.IsShared = dto.IsShared.Value;
+        if (dto.IsChecked.HasValue) packingItem.IsChecked = dto.IsChecked.Value;
         if (dto.QuantityNeeded.HasValue) packingItem.QuantityNeeded = dto.QuantityNeeded.Value;
 
         await _unitOfWork.PackingItems.Update(packingItem);
@@ -201,6 +203,7 @@ public sealed class PackingItemService : IPackingItemService
             Name = packingItem.Name,
             Category = packingItem.Category,
             IsShared = packingItem.IsShared,
+            IsChecked = packingItem.IsChecked,
             QuantityNeeded = packingItem.QuantityNeeded,
             CreatedAt = packingItem.CreatedAt,
             UpdatedAt = packingItem.UpdatedAt

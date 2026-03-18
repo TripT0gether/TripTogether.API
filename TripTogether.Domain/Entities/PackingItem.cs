@@ -6,6 +6,7 @@ public class PackingItem : BaseEntity
     public string Name { get; set; } = null!;
     public string? Category { get; set; }
     public bool IsShared { get; set; } // true = Group, false = Personal
+    public bool IsChecked { get; set; }
     public int QuantityNeeded { get; set; } = 1;
 
     // Navigation properties

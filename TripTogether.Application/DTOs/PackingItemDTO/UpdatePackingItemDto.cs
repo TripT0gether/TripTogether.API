@@ -12,6 +12,8 @@ public class UpdatePackingItemDto
 
     public bool? IsShared { get; set; }
 
+    public bool? IsChecked { get; set; }
+
     [Range(1, 1000, ErrorMessage = "Quantity needed must be between 1 and 1000")]
     public int? QuantityNeeded { get; set; }
 }

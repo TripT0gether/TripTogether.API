@@ -16,6 +16,8 @@ public class CreatePackingItemDto
 
     public bool IsShared { get; set; } = false;
 
+    public bool IsChecked { get; set; } = false;
+
     [Range(1, 1000, ErrorMessage = "Quantity needed must be between 1 and 1000")]
     public int QuantityNeeded { get; set; } = 1;
 }

@@ -7,6 +7,7 @@ public class PackingItemDto
     public string Name { get; set; } = null!;
     public string? Category { get; set; }
     public bool IsShared { get; set; }
+    public bool IsChecked { get; set; }
     public int QuantityNeeded { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
