@@ -67,6 +67,11 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
             throw ErrorHelper.BadRequest("The assigned user must be a member of the trip's group.");
         }
 
+        // Check for an existing soft-deleted assignment (including deleted) to restore it
+        var existingAssignment = await _unitOfWork.PackingAssignments.GetQueryable()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(pa => pa.PackingItemId == dto.PackingItemId && pa.UserId == targetUserId);
+
         // Validate quantity based on IsShared and QuantityNeeded
         if (packingItem.IsShared)
         {
@@ -87,11 +92,8 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
         }
         else
         {
-            // For personal items, check if user already has an assignment
-            var existingAssignment = await _unitOfWork.PackingAssignments.GetQueryable()
-                .AnyAsync(pa => pa.PackingItemId == dto.PackingItemId && pa.UserId == targetUserId && !pa.IsDeleted);
-
-            if (existingAssignment)
+            // For personal items, check if user already has an active assignment
+            if (existingAssignment is { IsDeleted: false })
             {
                 throw ErrorHelper.BadRequest(
                     "This is a personal item and the user already has an assignment for it. " +
@@ -102,9 +104,26 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
             if (dto.Quantity != 1)
             {
                 _loggerService.LogWarning(
-                    "Personal item assigned with Quantity={Quantity}. Typically personal items have Quantity=1", 
+                    "Personal item assigned with Quantity={Quantity}. Typically personal items have Quantity=1",
                     dto.Quantity);
             }
+        }
+
+        // If a soft-deleted assignment exists for this user+item, restore it instead of creating a new one
+        if (existingAssignment is { IsDeleted: true })
+        {
+            existingAssignment.IsDeleted = false;
+            existingAssignment.DeletedAt = null;
+            existingAssignment.DeletedBy = null;
+            existingAssignment.Quantity = dto.Quantity;
+            existingAssignment.IsChecked = false;
+
+            await _unitOfWork.PackingAssignments.Update(existingAssignment);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.LogInformation("Packing assignment {AssignmentId} restored successfully", existingAssignment.Id);
+
+            return await MapToDtoAsync(existingAssignment);
         }
 
         var assignment = new PackingAssignment
@@ -257,6 +276,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         return true;
     }
+
 
     public async Task<PackingAssignmentDto> GetAssignmentByIdAsync(Guid assignmentId)
     {
