@@ -140,6 +140,7 @@ namespace TripTogether.Domain.Migrations
                     group_id = table.Column<Guid>(type: "uuid", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
+                    location = table.Column<string>(type: "text", nullable: true),
                     planning_range_start = table.Column<DateOnly>(type: "date", nullable: true),
                     planning_range_end = table.Column<DateOnly>(type: "date", nullable: true),
                     start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),

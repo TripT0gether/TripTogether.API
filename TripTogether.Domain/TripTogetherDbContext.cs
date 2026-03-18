@@ -127,6 +127,7 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.GroupId).HasColumnName("group_id");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.Location).HasColumnName("location");
             entity.Property(e => e.PlanningRangeStart).HasColumnName("planning_range_start");
             entity.Property(e => e.PlanningRangeEnd).HasColumnName("planning_range_end");
             entity.Property(e => e.StartDate).HasColumnName("start_date");

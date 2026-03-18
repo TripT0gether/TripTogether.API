@@ -52,6 +52,7 @@ public sealed class TripService : ITripService
             Status = TripStatus.Planning,
             PlanningRangeStart = dto.PlanningRangeStart,
             PlanningRangeEnd = dto.PlanningRangeEnd,
+            Location = dto.Location,
             Budget = dto.Budget,
             CreatedBy = currentUserId
         };
@@ -75,6 +76,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Location = trip.Location,
             Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
@@ -166,6 +168,11 @@ public sealed class TripService : ITripService
             trip.EndDate = dto.EndDate;
         }
 
+        if (dto.Location != null)
+        {
+            trip.Location = dto.Location;
+        }
+
         if (dto.Settings != null)
         {
             trip.SettingsDetails = dto.Settings;
@@ -192,6 +199,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Location = trip.Location,
             Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
@@ -247,6 +255,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Location = trip.Location,
             Budget = trip.Budget,
             Settings = trip.SettingsDetails,
             CreatedAt = trip.CreatedAt,
@@ -314,6 +323,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Location = trip.Location,
             Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         }).ToList();
@@ -350,6 +360,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Location = trip.Location,
             Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         };
@@ -421,6 +432,7 @@ public sealed class TripService : ITripService
             PlanningRangeEnd = trip.PlanningRangeEnd,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            Location = trip.Location,
             Budget = trip.Budget,
             CreatedAt = trip.CreatedAt
         }).ToList();

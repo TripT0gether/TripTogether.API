@@ -131,13 +131,6 @@ public sealed class PollService : IPollService
                     throw ErrorHelper.BadRequest("Budget polls can only be created for trips, not for individual activities.");
                 }
                 break;
-
-            case PollType.Destination:
-                if (!dto.ActivityId.HasValue)
-                {
-                    throw ErrorHelper.BadRequest("Destination polls can only be created for activities, not for trips. Use a trip-level poll for overall trip destination.");
-                }
-                break;
         }
 
         await ValidateNoDuplicatePollAsync(dto.TripId, dto.ActivityId, dto.Type);
@@ -790,26 +783,31 @@ public sealed class PollService : IPollService
 
     private async Task FinalizeDestinationPoll(Poll poll, PollOption selectedOption)
     {
+        if (string.IsNullOrWhiteSpace(selectedOption.TextValue))
+        {
+            throw ErrorHelper.BadRequest("The selected destination option does not have a valid location name.");
+        }
+
+        var selectedLocation = selectedOption.TextValue.Trim();
+
         if (poll.ActivityId.HasValue && poll.Activity != null)
         {
             var activity = poll.Activity;
 
             // Set LocationName from the selected option
-            if (!string.IsNullOrWhiteSpace(selectedOption.TextValue))
-            {
-                activity.LocationName = selectedOption.TextValue;
-                _loggerService.LogInformation($"Destination poll {poll.Id} finalized successfully. Activity {activity.Id} location set to {activity.LocationName}");
-            }
-            else
-            {
-                throw ErrorHelper.BadRequest("The selected destination option does not have a valid location name.");
-            }
+            activity.LocationName = selectedLocation;
+            _loggerService.LogInformation($"Destination poll {poll.Id} finalized successfully. Activity {activity.Id} location set to {activity.LocationName}");
 
             await _unitOfWork.Activities.Update(activity);
         }
         else
         {
-            throw ErrorHelper.BadRequest("Destination polls can only be finalized for activities, not for trips.");
+            var trip = poll.Trip;
+            trip.Location = selectedLocation;
+
+            await _unitOfWork.Trips.Update(trip);
+
+            _loggerService.LogInformation($"Destination poll {poll.Id} finalized successfully. Trip {trip.Id} location set to {selectedLocation}");
         }
     }
 

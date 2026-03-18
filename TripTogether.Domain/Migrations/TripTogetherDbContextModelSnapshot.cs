@@ -1150,6 +1150,10 @@ namespace TripTogether.Domain.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Location")
+                        .HasColumnType("text")
+                        .HasColumnName("location");
+
                     b.Property<DateOnly?>("PlanningRangeEnd")
                         .HasColumnType("date")
                         .HasColumnName("planning_range_end");

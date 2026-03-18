@@ -7,6 +7,7 @@ public class UpdateTripDto
     public DateOnly? PlanningRangeEnd { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+    public string? Location { get; set; }
     public TripSettings? Settings { get; set; }
     public decimal? Budget { get; set; }
 }

@@ -9,6 +9,7 @@ public class Trip : BaseEntity
     public Guid GroupId { get; set; }
     public string Title { get; set; } = null!;
     public TripStatus Status { get; set; }
+    public string? Location { get; set; }
 
     // Step 1 Planning Context
     public DateOnly? PlanningRangeStart { get; set; }
