@@ -1,4 +1,7 @@
 using TripTogether.Domain.Enums;
+using TripTogether.Application.DTOs.ActivityDTO;
+using TripTogether.Application.DTOs.PollDTO;
+using TripTogether.Application.DTOs.PackingItemDTO;
 
 namespace TripTogether.Application.DTOs.TripDTO;
 
@@ -21,4 +24,7 @@ public class TripDetailDto
     public int PollCount { get; set; }
     public int ActivityCount { get; set; }
     public int ExpenseCount { get; set; }
+    public List<ActivityDto> Activities { get; set; } = new();
+    public List<PollDto> Polls { get; set; } = new();
+    public List<PackingItemDto> PackingItems { get; set; } = new();
 }

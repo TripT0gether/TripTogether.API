@@ -86,6 +86,7 @@ public class TripController : ControllerBase
     /// Get detailed information about a trip.
     /// </summary>
     /// <param name="tripId">Trip ID.</param>
+    /// <param name="pollStatus">Optional poll status filter for returned poll list.</param>
     /// <returns>Detailed trip information including counts for polls, activities, and expenses.</returns>
     [HttpGet("{tripId:guid}")]
     [SwaggerOperation(
@@ -95,9 +96,9 @@ public class TripController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<TripDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<TripDetailDto>), 403)]
     [ProducesResponseType(typeof(ApiResult<TripDetailDto>), 404)]
-    public async Task<IActionResult> GetTripDetail([FromRoute] Guid tripId)
+    public async Task<IActionResult> GetTripDetail([FromRoute] Guid tripId, [FromQuery] PollStatus? pollStatus = null)
     {
-        var result = await _tripService.GetTripDetailAsync(tripId);
+        var result = await _tripService.GetTripDetailAsync(tripId, pollStatus);
         return Ok(ApiResult<TripDetailDto>.Success(result, "200", "Trip details retrieved successfully."));
     }
 

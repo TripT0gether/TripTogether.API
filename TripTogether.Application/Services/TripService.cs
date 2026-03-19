@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TripTogether.Application.DTOs.ActivityDTO;
+using TripTogether.Application.DTOs.PackingItemDTO;
+using TripTogether.Application.DTOs.PollDTO;
 using TripTogether.Application.DTOs.TripDTO;
 using TripTogether.Application.Interfaces;
 using TripTogether.Domain.Enums;
@@ -223,7 +226,7 @@ public sealed class TripService : ITripService
         return true;
     }
 
-    public async Task<TripDetailDto> GetTripDetailAsync(Guid tripId)
+    public async Task<TripDetailDto> GetTripDetailAsync(Guid tripId, PollStatus? pollStatus = null)
     {
         var currentUserId = _claimsService.GetCurrentUserId;
 
@@ -232,8 +235,6 @@ public sealed class TripService : ITripService
 
         var trip = await _unitOfWork.Trips.GetQueryable()
             .Include(t => t.Group)
-            .Include(t => t.Polls)
-            .Include(t => t.Activities)
             .Include(t => t.Expenses)
             .FirstOrDefaultAsync(t => t.Id == tripId && !t.IsDeleted);
 
@@ -243,6 +244,90 @@ public sealed class TripService : ITripService
         }
 
         await ValidateGroupMembershipAsync(trip.GroupId, currentUserId, "view this trip");
+
+        var activities = await _unitOfWork.Activities.GetQueryable()
+            .Where(a => a.TripId == tripId && !a.IsDeleted)
+            .OrderBy(a => a.Date)
+            .ThenBy(a => a.StartTime)
+            .ThenBy(a => a.CreatedAt)
+            .ToListAsync();
+
+        var activityDtos = activities.Select(activity => new ActivityDto
+        {
+            Id = activity.Id,
+            TripId = activity.TripId,
+            Status = activity.Status,
+            Title = activity.Title,
+            Category = activity.Category,
+            Date = activity.Date,
+            StartTime = activity.StartTime,
+            EndTime = activity.EndTime,
+            ScheduleDayIndex = activity.ScheduleDayIndex,
+            LocationName = activity.LocationName,
+            Latitude = activity.GeoCoordinates?.Y,
+            Longitude = activity.GeoCoordinates?.X,
+            LinkUrl = activity.LinkUrl,
+            ImageUrl = activity.ImageUrl,
+            Notes = activity.Notes,
+            CreatedAt = activity.CreatedAt,
+            UpdatedAt = activity.UpdatedAt
+        }).ToList();
+
+        var pollsQuery = _unitOfWork.Polls.GetQueryable()
+            .Include(p => p.Options)
+            .ThenInclude(o => o.Votes)
+            .Where(p => p.TripId == tripId && !p.IsDeleted);
+
+        if (pollStatus.HasValue)
+        {
+            pollsQuery = pollsQuery.Where(p => p.Status == pollStatus.Value);
+        }
+
+        var polls = await pollsQuery
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+
+        var creatorIds = polls.Select(p => p.CreatedBy).Distinct().ToList();
+        var creators = await _unitOfWork.Users.GetQueryable()
+            .Where(u => creatorIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.Username);
+
+        var pollDtos = polls.Select(poll => new PollDto
+        {
+            Id = poll.Id,
+            TripId = poll.TripId,
+            TripTitle = trip.Title,
+            ActivityId = poll.ActivityId,
+            Type = poll.Type,
+            Title = poll.Title,
+            Status = poll.Status,
+            CreatedBy = poll.CreatedBy,
+            CreatorName = creators.TryGetValue(poll.CreatedBy, out var username) ? username : "Unknown",
+            CreatedAt = poll.CreatedAt,
+            OptionCount = poll.Options.Count,
+            TotalVotes = poll.Options.Sum(o => o.Votes.Count)
+        }).ToList();
+
+        var packingItems = await _unitOfWork.PackingItems.GetQueryable()
+            .Where(pi => pi.TripId == tripId
+                && !pi.IsDeleted
+                && (pi.IsShared || pi.CreatedBy == currentUserId))
+            .OrderBy(pi => pi.Category)
+            .ThenBy(pi => pi.Name)
+            .ToListAsync();
+
+        var packingItemDtos = packingItems.Select(pi => new PackingItemDto
+        {
+            Id = pi.Id,
+            TripId = pi.TripId,
+            Name = pi.Name,
+            Category = pi.Category,
+            IsShared = pi.IsShared,
+            IsChecked = pi.IsChecked,
+            QuantityNeeded = pi.QuantityNeeded,
+            CreatedAt = pi.CreatedAt,
+            UpdatedAt = pi.UpdatedAt
+        }).ToList();
 
         return new TripDetailDto
         {
@@ -259,9 +344,12 @@ public sealed class TripService : ITripService
             Budget = trip.Budget,
             Settings = trip.SettingsDetails,
             CreatedAt = trip.CreatedAt,
-            PollCount = trip.Polls.Count,
-            ActivityCount = trip.Activities.Count,
-            ExpenseCount = trip.Expenses.Count
+            PollCount = pollDtos.Count,
+            ActivityCount = activityDtos.Count,
+            ExpenseCount = trip.Expenses.Count,
+            Activities = activityDtos,
+            Polls = pollDtos,
+            PackingItems = packingItemDtos
         };
     }
 
