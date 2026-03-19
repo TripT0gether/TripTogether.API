@@ -13,6 +13,7 @@ public class PollOptionDto
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }
     public TimeSlot? TimeOfDay { get; set; }
+    public bool IsSelectFinalized { get; set; }
     public int VoteCount { get; set; }
     public DateTime CreatedAt { get; set; }
 }
