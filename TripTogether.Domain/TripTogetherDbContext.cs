@@ -204,6 +204,7 @@ public class TripTogetherDbContext : DbContext
             entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.TimeOfDay).HasColumnName("time_of_day");
+            entity.Property(e => e.IsSelectFinalized).HasColumnName("is_select_finalized").HasDefaultValue(false);
 
             entity.HasOne(e => e.Poll)
                 .WithMany(p => p.Options)

@@ -341,6 +341,7 @@ public sealed class PollService : IPollService
                 StartTime = o.StartTime,
                 EndTime = o.EndTime,
                 TimeOfDay = o.TimeOfDay,
+                IsSelectFinalized = o.IsSelectFinalized,
                 VoteCount = o.Votes.Count,
                 CreatedAt = o.CreatedAt
             }).ToList(),
@@ -542,6 +543,10 @@ public sealed class PollService : IPollService
             default:
                 throw ErrorHelper.BadRequest($"Poll type {poll.Type} cannot be finalized.");
         }
+
+        // Mark selected option as finalized
+        selectedOption.IsSelectFinalized = true;
+        await _unitOfWork.PollOptions.Update(selectedOption);
 
         await _unitOfWork.Polls.Update(poll);
         await _unitOfWork.SaveChangesAsync();
@@ -897,6 +902,7 @@ public sealed class PollService : IPollService
             StartTime = option.StartTime,
             EndTime = option.EndTime,
             TimeOfDay = option.TimeOfDay,
+            IsSelectFinalized = option.IsSelectFinalized,
             VoteCount = 0,
             CreatedAt = option.CreatedAt
         };

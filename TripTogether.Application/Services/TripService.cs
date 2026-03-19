@@ -49,7 +49,7 @@ public sealed class TripService : ITripService
         {
             GroupId = dto.GroupId,
             Title = dto.Title,
-            Status = TripStatus.Planning,
+            Status = TripStatus.Setup,
             PlanningRangeStart = dto.PlanningRangeStart,
             PlanningRangeEnd = dto.PlanningRangeEnd,
             Location = dto.Location,

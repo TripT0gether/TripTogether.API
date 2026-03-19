@@ -17,6 +17,8 @@ public class PollOption : BaseEntity
     // Time of Day Category (optional categorization)
     public TimeSlot? TimeOfDay { get; set; }
 
+    public bool IsSelectFinalized { get; set; }
+
     // Navigation properties
     public virtual Poll Poll { get; set; } = null!;
     public virtual ICollection<Vote> Votes { get; set; } = new List<Vote>();
