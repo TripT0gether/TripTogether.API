@@ -50,7 +50,7 @@ public sealed class PackingItemService : IPackingItemService
             Name = dto.Name,
             Category = dto.Category,
             IsShared = dto.IsShared,
-            IsChecked = dto.IsChecked,
+            IsChecked = dto.IsShared ? false : dto.IsChecked,
             QuantityNeeded = dto.QuantityNeeded
         };
 
@@ -93,6 +93,8 @@ public sealed class PackingItemService : IPackingItemService
         if (dto.IsShared.HasValue) packingItem.IsShared = dto.IsShared.Value;
         if (dto.IsChecked.HasValue) packingItem.IsChecked = dto.IsChecked.Value;
         if (dto.QuantityNeeded.HasValue) packingItem.QuantityNeeded = dto.QuantityNeeded.Value;
+
+        await SyncSharedPackingItemCheckedStateAsync(packingItem);
 
         await _unitOfWork.PackingItems.Update(packingItem);
         await _unitOfWork.SaveChangesAsync();
@@ -208,5 +210,22 @@ public sealed class PackingItemService : IPackingItemService
             CreatedAt = packingItem.CreatedAt,
             UpdatedAt = packingItem.UpdatedAt
         };
+    }
+
+    private async Task SyncSharedPackingItemCheckedStateAsync(PackingItem packingItem)
+    {
+        if (!packingItem.IsShared)
+        {
+            return;
+        }
+
+        var assignments = await _unitOfWork.PackingAssignments.GetQueryable()
+            .Where(pa => pa.PackingItemId == packingItem.Id && !pa.IsDeleted)
+            .ToListAsync();
+
+        var totalAssigned = assignments.Sum(pa => pa.Quantity);
+        var allChecked = assignments.Count > 0 && assignments.All(pa => pa.IsChecked);
+
+        packingItem.IsChecked = allChecked && totalAssigned >= packingItem.QuantityNeeded;
     }
 }

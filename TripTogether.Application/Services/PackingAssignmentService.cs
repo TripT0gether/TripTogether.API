@@ -120,6 +120,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
             await _unitOfWork.PackingAssignments.Update(existingAssignment);
             await _unitOfWork.SaveChangesAsync();
+            await SyncSharedPackingItemCheckedStateAsync(existingAssignment.PackingItemId);
 
             _loggerService.LogInformation("Packing assignment {AssignmentId} restored successfully", existingAssignment.Id);
 
@@ -136,6 +137,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         await _unitOfWork.PackingAssignments.AddAsync(assignment);
         await _unitOfWork.SaveChangesAsync();
+        await SyncSharedPackingItemCheckedStateAsync(assignment.PackingItemId);
 
         _loggerService.LogInformation("Packing assignment {AssignmentId} created successfully", assignment.Id);
 
@@ -221,6 +223,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         await _unitOfWork.PackingAssignments.Update(assignment);
         await _unitOfWork.SaveChangesAsync();
+        await SyncSharedPackingItemCheckedStateAsync(assignment.PackingItemId);
 
         _loggerService.LogInformation("Packing assignment {AssignmentId} updated successfully", assignmentId);
 
@@ -271,6 +274,7 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
 
         await _unitOfWork.PackingAssignments.SoftRemoveRangeById(new List<Guid> { assignmentId });
         await _unitOfWork.SaveChangesAsync();
+        await SyncSharedPackingItemCheckedStateAsync(assignment.PackingItemId);
 
         _loggerService.LogInformation("Packing assignment {AssignmentId} deleted successfully", assignmentId);
 
@@ -468,5 +472,33 @@ public sealed class PackingAssignmentService : IPackingAssignmentService
             CreatedAt = assignment.CreatedAt,
             UpdatedAt = assignment.UpdatedAt
         };
+    }
+
+    private async Task SyncSharedPackingItemCheckedStateAsync(Guid packingItemId)
+    {
+        var packingItem = await _unitOfWork.PackingItems.GetQueryable()
+            .FirstOrDefaultAsync(pi => pi.Id == packingItemId && !pi.IsDeleted);
+
+        if (packingItem == null || !packingItem.IsShared)
+        {
+            return;
+        }
+
+        var assignments = await _unitOfWork.PackingAssignments.GetQueryable()
+            .Where(pa => pa.PackingItemId == packingItemId && !pa.IsDeleted)
+            .ToListAsync();
+
+        var totalAssigned = assignments.Sum(pa => pa.Quantity);
+        var allChecked = assignments.Count > 0 && assignments.All(pa => pa.IsChecked);
+        var shouldBeChecked = allChecked && totalAssigned >= packingItem.QuantityNeeded;
+
+        if (packingItem.IsChecked == shouldBeChecked)
+        {
+            return;
+        }
+
+        packingItem.IsChecked = shouldBeChecked;
+        await _unitOfWork.PackingItems.Update(packingItem);
+        await _unitOfWork.SaveChangesAsync();
     }
 }
