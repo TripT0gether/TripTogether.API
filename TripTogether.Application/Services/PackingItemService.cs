@@ -50,7 +50,7 @@ public sealed class PackingItemService : IPackingItemService
             Name = dto.Name,
             Category = dto.Category,
             IsShared = dto.IsShared,
-            IsChecked = dto.IsShared ? false : dto.IsChecked,
+            IsChecked = dto.IsChecked,
             QuantityNeeded = dto.QuantityNeeded
         };
 
