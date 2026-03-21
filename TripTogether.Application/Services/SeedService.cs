@@ -399,6 +399,54 @@ public class SeedService : ISeedService
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = groups[2].CreatedBy,
                     IsDeleted = false
+                },
+                new Trip
+                {
+                    Id = Guid.NewGuid(),
+                    GroupId = groups[0].Id,
+                    Title = "Bali Cultural Escape",
+                    Status = TripStatus.Confirmed,
+                    PlanningRangeStart = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(90)),
+                    PlanningRangeEnd = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(93)),
+                    StartDate = DateTime.UtcNow.AddDays(90),
+                    EndDate = DateTime.UtcNow.AddDays(93),
+                    Location = "Ubud, Bali",
+                    Settings = "{\"isPublic\":false,\"allowGuestInvites\":true}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = groups[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new Trip
+                {
+                    Id = Guid.NewGuid(),
+                    GroupId = groups[1].Id,
+                    Title = "Highland Camping Retreat",
+                    Status = TripStatus.Planning,
+                    PlanningRangeStart = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(110)),
+                    PlanningRangeEnd = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(115)),
+                    StartDate = null,
+                    EndDate = null,
+                    Location = "Sapa, Vietnam",
+                    Settings = "{\"isPublic\":false,\"allowGuestInvites\":false}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = groups[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new Trip
+                {
+                    Id = Guid.NewGuid(),
+                    GroupId = groups[2].Id,
+                    Title = "Heritage & Food Trail",
+                    Status = TripStatus.Confirmed,
+                    PlanningRangeStart = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(20)),
+                    PlanningRangeEnd = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(22)),
+                    StartDate = DateTime.UtcNow.AddDays(20),
+                    EndDate = DateTime.UtcNow.AddDays(22),
+                    Location = "Hoi An, Vietnam",
+                    Settings = "{\"isPublic\":true,\"allowGuestInvites\":true}",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = groups[2].CreatedBy,
+                    IsDeleted = false
                 }
             };
 
@@ -416,14 +464,88 @@ public class SeedService : ISeedService
                 {
                     Id = Guid.NewGuid(),
                     TripId = trips[0].Id,
-                    Title = "Beach Volleyball",
+                    Title = "Breakfast at Nook Bali",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+                    StartTime = new TimeOnly(7, 0),
+                    EndTime = new TimeOnly(9, 0),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Nook, Kerobokan",
+                    LinkUrl = "https://www.nookbali.com",
+                    Notes = "Light breakfast before beach activities",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Title = "Morning movie at Beachwalk XXI",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+                    StartTime = new TimeOnly(9, 30),
+                    EndTime = new TimeOnly(11, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Beachwalk Shopping Center",
+                    LinkUrl = "https://21cineplex.com",
+                    Notes = "Reserve tickets one day earlier",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Title = "Seafood lunch at Jimbaran Bay",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+                    StartTime = new TimeOnly(12, 30),
+                    EndTime = new TimeOnly(14, 0),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Jimbaran Beach",
+                    LinkUrl = "https://www.tripadvisor.com/Attraction_Review-g297697-d558982-Reviews-Jimbaran_Bay-Jimbaran_South_Kuta_Bali.html",
+                    Notes = "Try grilled seafood set",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Title = "Sunset walk at Kuta Beach",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+                    StartTime = new TimeOnly(17, 30),
+                    EndTime = new TimeOnly(19, 0),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Kuta Beach",
+                    LinkUrl = "https://www.indonesia.travel/gb/en/destinations/java/kuta-beach",
+                    Notes = "Bring light jacket for evening breeze",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[0].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[0].Id,
+                    Title = "ATV ride option review",
                     Category = ActivityCategory.Attraction,
                     Status = ActivityStatus.Idea,
-                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
-                    StartTime = new TimeOnly(10, 0),
-                    EndTime = new TimeOnly(12, 0),
-                    LocationName = "Sunny Beach",
-                    Notes = "Bring sunscreen!",
+                    Date = null,
+                    StartTime = null,
+                    EndTime = null,
+                    ScheduleDayIndex = null,
+                    LocationName = "Ubud countryside",
+                    LinkUrl = "https://www.viator.com/Bali-tours/ATV-Tour/d98-g12-c5336",
+                    Notes = "Keep as backup activity for day 2",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[0].CreatedBy,
                     IsDeleted = false
@@ -432,16 +554,378 @@ public class SeedService : ISeedService
                 {
                     Id = Guid.NewGuid(),
                     TripId = trips[1].Id,
-                    Title = "Summit Climb",
-                    Category = ActivityCategory.Attraction,
-                    Status = ActivityStatus.Idea,
-                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(61)),
-                    StartTime = new TimeOnly(6, 0),
-                    EndTime = new TimeOnly(14, 0),
-                    LocationName = "Eagle Peak",
-                    Notes = "Early start required",
+                    Title = "Breakfast at trekking basecamp",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(60)),
+                    StartTime = new TimeOnly(6, 30),
+                    EndTime = new TimeOnly(7, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Eagle Peak Basecamp",
+                    LinkUrl = "https://www.alltrails.com",
+                    Notes = "High-carb meal before climbing",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    Title = "Guided summit climb",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(60)),
+                    StartTime = new TimeOnly(8, 0),
+                    EndTime = new TimeOnly(12, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Eagle Peak Trail",
+                    LinkUrl = "https://www.alltrails.com/explore",
+                    Notes = "Stay with guide group",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    Title = "Campfire dinner",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(60)),
+                    StartTime = new TimeOnly(18, 30),
+                    EndTime = new TimeOnly(20, 0),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Eagle Peak campsite",
+                    LinkUrl = "https://www.rei.com/learn/expert-advice/camp-cooking.html",
+                    Notes = "Prepare shared cooking station",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[1].Id,
+                    Title = "Sunrise photography stop",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(61)),
+                    StartTime = new TimeOnly(5, 30),
+                    EndTime = new TimeOnly(6, 30),
+                    ScheduleDayIndex = 2,
+                    LocationName = "Upper ridge viewpoint",
+                    LinkUrl = "https://www.nationalgeographic.com/photography",
+                    Notes = "Bring tripod and spare batteries",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[1].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    Title = "Pho breakfast at Pho Thin",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+                    StartTime = new TimeOnly(7, 0),
+                    EndTime = new TimeOnly(8, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Pho Thin, Old Quarter",
+                    LinkUrl = "https://www.google.com/maps/place/Pho+Thin",
+                    Notes = "Meet 15 minutes earlier",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    Title = "Watch a local cinema screening",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+                    StartTime = new TimeOnly(9, 30),
+                    EndTime = new TimeOnly(11, 0),
+                    ScheduleDayIndex = 1,
+                    LocationName = "National Cinema Center",
+                    LinkUrl = "https://www.cgv.vn",
+                    Notes = "Choose movie with English subtitles",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    Title = "Hoan Kiem Lake walking tour",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+                    StartTime = new TimeOnly(16, 0),
+                    EndTime = new TimeOnly(18, 0),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Hoan Kiem Lake",
+                    LinkUrl = "https://www.vietnam.travel/places-to-go/northern-vietnam/ha-noi",
+                    Notes = "Bring comfortable shoes",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[2].Id,
+                    Title = "Street food tasting",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(8)),
+                    StartTime = new TimeOnly(18, 30),
+                    EndTime = new TimeOnly(21, 0),
+                    ScheduleDayIndex = 2,
+                    LocationName = "Ta Hien Street",
+                    LinkUrl = "https://www.lonelyplanet.com/vietnam/hanoi/old-quarter",
+                    Notes = "Share dishes to try more options",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[2].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[3].Id,
+                    Title = "Healthy breakfast near Ubud Market",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(90)),
+                    StartTime = new TimeOnly(7, 0),
+                    EndTime = new TimeOnly(8, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Ubud Market area",
+                    LinkUrl = "https://www.indonesia.travel/gb/en/destinations/bali-nusa-tenggara/ubud",
+                    Notes = "Keep first morning light and flexible",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[3].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[3].Id,
+                    Title = "Ubud Palace and market visit",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(90)),
+                    StartTime = new TimeOnly(9, 30),
+                    EndTime = new TimeOnly(11, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Ubud Palace",
+                    LinkUrl = "https://ubud.com",
+                    Notes = "Book guided walking tour",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[3].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[3].Id,
+                    Title = "Tegallalang rice terrace photos",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(91)),
+                    StartTime = new TimeOnly(8, 0),
+                    EndTime = new TimeOnly(10, 30),
+                    ScheduleDayIndex = 2,
+                    LocationName = "Tegallalang Rice Terrace",
+                    LinkUrl = "https://www.indonesia.travel/gb/en/destinations/bali-nusa-tenggara/tegallalang-rice-terrace",
+                    Notes = "Best time for softer sunlight",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[3].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[3].Id,
+                    Title = "Balinese dance performance",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(91)),
+                    StartTime = new TimeOnly(19, 0),
+                    EndTime = new TimeOnly(20, 30),
+                    ScheduleDayIndex = 2,
+                    LocationName = "Saraswati Temple",
+                    LinkUrl = "https://www.balitourismboard.org",
+                    Notes = "Purchase tickets in the afternoon",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[3].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[3].Id,
+                    Title = "Campuhan Ridge sunrise run",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Idea,
+                    Date = null,
+                    StartTime = null,
+                    EndTime = null,
+                    ScheduleDayIndex = null,
+                    LocationName = "Campuhan Ridge Walk",
+                    LinkUrl = "https://www.tripadvisor.com/Attraction_Review-g297701-d4569138-Reviews-Campuhan_Ridge_Walk-Ubud_Gianyar_Regency_Bali.html",
+                    Notes = "Optional if everyone is comfortable with early wake-up",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[3].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[4].Id,
+                    Title = "Breakfast with mountain view",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(110)),
+                    StartTime = new TimeOnly(7, 0),
+                    EndTime = new TimeOnly(8, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Sapa town center",
+                    LinkUrl = "https://www.vietnam.travel/places-to-go/northern-vietnam/sapa",
+                    Notes = "Warm meal before trekking",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[4].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[4].Id,
+                    Title = "Fansipan cable car ride",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(110)),
+                    StartTime = new TimeOnly(9, 0),
+                    EndTime = new TimeOnly(11, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Sun World Fansipan Legend",
+                    LinkUrl = "https://fansipanlegend.sunworld.vn",
+                    Notes = "Bring jacket due to temperature drop",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[4].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[4].Id,
+                    Title = "Dinner at Sapa Night Market",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(110)),
+                    StartTime = new TimeOnly(18, 0),
+                    EndTime = new TimeOnly(20, 0),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Sapa Night Market",
+                    LinkUrl = "https://www.tripadvisor.com/Attraction_Review-g311304-d12912342-Reviews-Sapa_Night_Market-Sapa_Lao_Cai_Province.html",
+                    Notes = "Try grilled local specialties",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[4].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[4].Id,
+                    Title = "Muong Hoa Valley trek extension",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Idea,
+                    Date = null,
+                    StartTime = null,
+                    EndTime = null,
+                    ScheduleDayIndex = null,
+                    LocationName = "Muong Hoa Valley",
+                    LinkUrl = "https://www.lonelyplanet.com/vietnam/northwest-vietnam/sapa/attractions/muong-hoa-valley/a/poi-sig/407862/357725",
+                    Notes = "Optional day-2 extension depending on weather",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[4].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[5].Id,
+                    Title = "Banh mi breakfast stop",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(20)),
+                    StartTime = new TimeOnly(7, 0),
+                    EndTime = new TimeOnly(8, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Hoi An Ancient Town",
+                    LinkUrl = "https://www.vietnam.travel/places-to-go/central-vietnam/hoi-an",
+                    Notes = "Quick breakfast before cycling",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[5].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[5].Id,
+                    Title = "Ancient town heritage walk",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(20)),
+                    StartTime = new TimeOnly(9, 0),
+                    EndTime = new TimeOnly(11, 30),
+                    ScheduleDayIndex = 1,
+                    LocationName = "Japanese Covered Bridge area",
+                    LinkUrl = "https://whc.unesco.org/en/list/948",
+                    Notes = "Use local guide for historical context",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[5].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[5].Id,
+                    Title = "Lantern workshop",
+                    Category = ActivityCategory.Attraction,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(21)),
+                    StartTime = new TimeOnly(14, 0),
+                    EndTime = new TimeOnly(16, 0),
+                    ScheduleDayIndex = 2,
+                    LocationName = "Hoi An Handicraft Workshop",
+                    LinkUrl = "https://www.tripadvisor.com/Attraction_Review-g298082-d11840132-Reviews-Hoi_An_Handicraft_Workshop-Hoi_An_Quang_Nam_Province.html",
+                    Notes = "Reserve class seats in advance",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[5].CreatedBy,
+                    IsDeleted = false
+                },
+                new Activity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trips[5].Id,
+                    Title = "Riverside dinner and lantern release",
+                    Category = ActivityCategory.Food,
+                    Status = ActivityStatus.Scheduled,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(21)),
+                    StartTime = new TimeOnly(18, 30),
+                    EndTime = new TimeOnly(20, 30),
+                    ScheduleDayIndex = 2,
+                    LocationName = "Thu Bon River",
+                    LinkUrl = "https://www.lonelyplanet.com/vietnam/central-vietnam/hoi-an",
+                    Notes = "Book riverside table",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trips[5].CreatedBy,
                     IsDeleted = false
                 }
             };
@@ -451,301 +935,69 @@ public class SeedService : ISeedService
 
             _loggerService.LogInformation("Adding packing items");
 
-            // Add packing items
-            var packingItems = new List<PackingItem>
+            var packingItems = new List<PackingItem>();
+            var packingTemplates = new (string Name, string Category, bool IsShared, int QuantityNeeded)[]
             {
-                // Beach trip items
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[0].Id,
-                    Name = "Sunscreen",
-                    Category = "Personal Care",
-                    IsShared = false,
-                    IsChecked = true,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[0].Id,
-                    Name = "Beach Umbrella",
-                    Category = "Equipment",
-                    IsShared = true,
-                    IsChecked = false,
-                    QuantityNeeded = 2,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[0].Id,
-                    Name = "Swimsuit",
-                    Category = "Clothing",
-                    IsShared = false,
-                    IsChecked = true,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[0].Id,
-                    Name = "Cooler",
-                    Category = "Equipment",
-                    IsShared = true,
-                    IsChecked = true,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
-                    IsDeleted = false
-                },
-                // Mountain trek items
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[1].Id,
-                    Name = "Hiking Boots",
-                    Category = "Footwear",
-                    IsShared = false,
-                    IsChecked = false,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[1].Id,
-                    Name = "Tent",
-                    Category = "Camping Gear",
-                    IsShared = true,
-                    IsChecked = false,
-                    QuantityNeeded = 2,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[1].Id,
-                    Name = "First Aid Kit",
-                    Category = "Safety",
-                    IsShared = true,
-                    IsChecked = true,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[1].Id,
-                    Name = "Water Bottle",
-                    Category = "Hydration",
-                    IsShared = false,
-                    IsChecked = false,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
-                    IsDeleted = false
-                },
-                // City tour items
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[2].Id,
-                    Name = "Camera",
-                    Category = "Electronics",
-                    IsShared = false,
-                    IsChecked = true,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[2].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[2].Id,
-                    Name = "Power Bank",
-                    Category = "Electronics",
-                    IsShared = false,
-                    IsChecked = false,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[2].CreatedBy,
-                    IsDeleted = false
-                },
-                new PackingItem
-                {
-                    Id = Guid.NewGuid(),
-                    TripId = trips[2].Id,
-                    Name = "City Map",
-                    Category = "Navigation",
-                    IsShared = true,
-                    IsChecked = true,
-                    QuantityNeeded = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[2].CreatedBy,
-                    IsDeleted = false
-                }
+                ("Travel Documents", "Documents", false, 1),
+                ("Outfit Set", "Clothing", false, 2),
+                ("Power Bank", "Electronics", false, 1),
+                ("First Aid Kit", "Safety", true, 1),
+                ("Toiletries Kit", "Personal Care", false, 1),
+                ("Water & Snacks", "Food", true, 2)
             };
+
+            foreach (var trip in trips)
+            {
+                foreach (var template in packingTemplates)
+                {
+                    packingItems.Add(new PackingItem
+                    {
+                        Id = Guid.NewGuid(),
+                        TripId = trip.Id,
+                        Name = template.Name,
+                        Category = template.Category,
+                        IsShared = template.IsShared,
+                        IsChecked = false,
+                        QuantityNeeded = template.QuantityNeeded,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = trip.CreatedBy,
+                        IsDeleted = false
+                    });
+                }
+            }
 
             await _unitOfWork.PackingItems.AddRangeAsync(packingItems);
             await _unitOfWork.SaveChangesAsync();
 
             _loggerService.LogInformation("Adding packing assignments");
 
-            // Add packing assignments
-            var packingAssignments = new List<PackingAssignment>
+            var packingAssignments = new List<PackingAssignment>();
+            var assignmentUsers = users.Skip(1).Take(4).ToList();
+            if (!assignmentUsers.Any())
             {
-                // Beach trip assignments
-                new PackingAssignment
+                assignmentUsers = users.ToList();
+            }
+
+            for (int tripIndex = 0; tripIndex < trips.Count; tripIndex++)
+            {
+                var tripItems = packingItems.Where(x => x.TripId == trips[tripIndex].Id).Take(4).ToList();
+
+                for (int itemIndex = 0; itemIndex < tripItems.Count; itemIndex++)
                 {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[0].Id, // Sunscreen
-                    UserId = users[1].Id,
-                    Quantity = 1,
-                    IsChecked = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[1].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[1].Id, // Beach Umbrella
-                    UserId = users[2].Id,
-                    Quantity = 2,
-                    IsChecked = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[2].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[2].Id, // Swimsuit
-                    UserId = users[1].Id,
-                    Quantity = 1,
-                    IsChecked = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[1].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[3].Id, // Cooler
-                    UserId = users[3].Id,
-                    Quantity = 1,
-                    IsChecked = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[3].Id,
-                    IsDeleted = false
-                },
-                // Mountain trek assignments
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[4].Id, // Hiking Boots
-                    UserId = users[2].Id,
-                    Quantity = 1,
-                    IsChecked = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[2].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[5].Id, // Tent
-                    UserId = users[1].Id,
-                    Quantity = 1,
-                    IsChecked = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[1].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[5].Id, // Tent (second one)
-                    UserId = users[3].Id,
-                    Quantity = 1,
-                    IsChecked = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[3].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[6].Id, // First Aid Kit
-                    UserId = users[4].Id,
-                    Quantity = 1,
-                    IsChecked = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[4].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[7].Id, // Water Bottle
-                    UserId = users[2].Id,
-                    Quantity = 1,
-                    IsChecked = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[2].Id,
-                    IsDeleted = false
-                },
-                // City tour assignments
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[8].Id, // Camera
-                    UserId = users[3].Id,
-                    Quantity = 1,
-                    IsChecked = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[3].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[9].Id, // Power Bank
-                    UserId = users[4].Id,
-                    Quantity = 1,
-                    IsChecked = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[4].Id,
-                    IsDeleted = false
-                },
-                new PackingAssignment
-                {
-                    Id = Guid.NewGuid(),
-                    PackingItemId = packingItems[10].Id, // City Map
-                    UserId = users[1].Id,
-                    Quantity = 1,
-                    IsChecked = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[1].Id,
-                    IsDeleted = false
+                    var assignee = assignmentUsers[(tripIndex + itemIndex) % assignmentUsers.Count];
+                    packingAssignments.Add(new PackingAssignment
+                    {
+                        Id = Guid.NewGuid(),
+                        PackingItemId = tripItems[itemIndex].Id,
+                        UserId = assignee.Id,
+                        Quantity = Math.Min(2, tripItems[itemIndex].QuantityNeeded),
+                        IsChecked = itemIndex % 2 == 0,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = assignee.Id,
+                        IsDeleted = false
+                    });
                 }
-            };
+            }
 
             await _unitOfWork.PackingAssignments.AddRangeAsync(packingAssignments);
             await _unitOfWork.SaveChangesAsync();
@@ -760,230 +1012,241 @@ public class SeedService : ISeedService
         }
         else
         {
-            var trips = (await _unitOfWork.Trips.GetAllAsync()).Take(3).ToList();
+            var trips = (await _unitOfWork.Trips.GetAllAsync()).ToList();
             if (trips.Count == 0)
             {
                 throw new Exception("Please seed trips first");
             }
 
-            var polls = new List<Poll>
+            var polls = new List<Poll>();
+            for (int tripIndex = 0; tripIndex < trips.Count; tripIndex++)
             {
-                new Poll
+                var trip = trips[tripIndex];
+                polls.Add(new Poll
                 {
-                    TripId = trips[0].Id,
+                    Id = Guid.NewGuid(),
+                    TripId = trip.Id,
                     Type = PollType.Date,
-                    Title = "Best dates for beach vacation?",
+                    Title = $"Choose date range for {trip.Title}",
                     Status = PollStatus.Open,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                new Poll
+                });
+
+                polls.Add(new Poll
                 {
-                    TripId = trips[0].Id,
+                    Id = Guid.NewGuid(),
+                    TripId = trip.Id,
+                    Type = PollType.Time,
+                    Title = $"Preferred daily schedule for {trip.Title}",
+                    Status = PollStatus.Open,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trip.CreatedBy,
+                    IsDeleted = false
+                });
+
+                polls.Add(new Poll
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = trip.Id,
                     Type = PollType.Destination,
-                    Title = "Which beach destination?",
+                    Title = $"Destination focus for {trip.Title}",
                     Status = PollStatus.Open,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                new Poll
+                });
+
+                polls.Add(new Poll
                 {
-                    TripId = trips[1].Id,
+                    Id = Guid.NewGuid(),
+                    TripId = trip.Id,
                     Type = PollType.Budget,
-                    Title = "Budget per person for mountain trek?",
+                    Title = $"Budget per person for {trip.Title}",
                     Status = PollStatus.Open,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                new Poll
-                {
-                    TripId = trips[2].Id,
-                    Type = PollType.Date,
-                    Title = "Confirm city tour dates?",
-                    Status = PollStatus.Closed,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[2].CreatedBy,
-                    IsDeleted = false
-                }
-            };
+                });
+            }
 
             await _unitOfWork.Polls.AddRangeAsync(polls);
             await _unitOfWork.SaveChangesAsync();
 
             _loggerService.LogInformation("Added polls, now adding poll options");
 
-            // Add poll options
-            var pollOptions = new List<PollOption>
+            var pollOptions = new List<PollOption>();
+            for (int tripIndex = 0; tripIndex < trips.Count; tripIndex++)
             {
-                // Date poll options
-                new PollOption
+                var trip = trips[tripIndex];
+                var tripPolls = polls.Where(x => x.TripId == trip.Id).ToList();
+                var datePoll = tripPolls.First(x => x.Type == PollType.Date);
+                var timePoll = tripPolls.First(x => x.Type == PollType.Time);
+                var destinationPoll = tripPolls.First(x => x.Type == PollType.Destination);
+                var budgetPoll = tripPolls.First(x => x.Type == PollType.Budget);
+
+                var startDate = trip.PlanningRangeStart ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(14));
+                var endDate = trip.PlanningRangeEnd ?? startDate.AddDays(3);
+                var altStartDate = startDate.AddDays(2);
+                var altEndDate = endDate.AddDays(2);
+
+                var mainLocation = string.IsNullOrWhiteSpace(trip.Location) ? "Main destination" : trip.Location;
+                var estimatedBudget = 500m + (tripIndex * 100m);
+
+                pollOptions.Add(new PollOption
                 {
-                    PollId = polls[0].Id,
-                    TextValue = "Early July",
-                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
-                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(37)),
+                    Id = Guid.NewGuid(),
+                    PollId = datePoll.Id,
+                    StartDate = startDate,
+                    EndDate = endDate,
                     TimeOfDay = TimeSlot.Morning,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                new PollOption
+                });
+
+                pollOptions.Add(new PollOption
                 {
-                    PollId = polls[0].Id,
-                    TextValue = "Late July",
-                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(45)),
-                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(52)),
+                    Id = Guid.NewGuid(),
+                    PollId = datePoll.Id,
+                    StartDate = altStartDate,
+                    EndDate = altEndDate,
+                    TimeOfDay = TimeSlot.Afternoon,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = trip.CreatedBy,
+                    IsDeleted = false
+                });
+
+                pollOptions.Add(new PollOption
+                {
+                    Id = Guid.NewGuid(),
+                    PollId = timePoll.Id,
+                    TextValue = "Morning-focused itinerary",
+                    StartTime = new TimeOnly(7, 0),
+                    EndTime = new TimeOnly(19, 0),
                     TimeOfDay = TimeSlot.Morning,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                // Destination poll options
-                new PollOption
+                });
+
+                pollOptions.Add(new PollOption
                 {
-                    PollId = polls[1].Id,
-                    TextValue = "Bali, Indonesia",
+                    Id = Guid.NewGuid(),
+                    PollId = timePoll.Id,
+                    TextValue = "Late-start itinerary",
+                    StartTime = new TimeOnly(9, 0),
+                    EndTime = new TimeOnly(22, 0),
+                    TimeOfDay = TimeSlot.Evening,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                new PollOption
+                });
+
+                pollOptions.Add(new PollOption
                 {
-                    PollId = polls[1].Id,
-                    TextValue = "Maldives",
+                    Id = Guid.NewGuid(),
+                    PollId = destinationPoll.Id,
+                    TextValue = mainLocation,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                new PollOption
+                });
+
+                pollOptions.Add(new PollOption
                 {
-                    PollId = polls[1].Id,
-                    TextValue = "Phuket, Thailand",
+                    Id = Guid.NewGuid(),
+                    PollId = destinationPoll.Id,
+                    TextValue = $"{mainLocation} + nearby area",
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[0].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                // Budget poll options
-                new PollOption
+                });
+
+                pollOptions.Add(new PollOption
                 {
-                    PollId = polls[2].Id,
-                    Budget = 650m,
+                    Id = Guid.NewGuid(),
+                    PollId = budgetPoll.Id,
+                    Budget = estimatedBudget,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                new PollOption
+                });
+
+                pollOptions.Add(new PollOption
                 {
-                    PollId = polls[2].Id,
-                    Budget = 1000m,
+                    Id = Guid.NewGuid(),
+                    PollId = budgetPoll.Id,
+                    Budget = estimatedBudget + 250m,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[1].CreatedBy,
+                    CreatedBy = trip.CreatedBy,
                     IsDeleted = false
-                },
-                // Closed poll options
-                new PollOption
-                {
-                    PollId = polls[3].Id,
-                    TextValue = "This Weekend",
-                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)),
-                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(4)),
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[2].CreatedBy,
-                    IsDeleted = false
-                },
-                new PollOption
-                {
-                    PollId = polls[3].Id,
-                    TextValue = "Next Weekend",
-                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(9)),
-                    EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(11)),
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = trips[2].CreatedBy,
-                    IsDeleted = false
-                }
-            };
+                });
+            }
 
             await _unitOfWork.PollOptions.AddRangeAsync(pollOptions);
             await _unitOfWork.SaveChangesAsync();
 
             _loggerService.LogInformation("Added poll options, now adding votes");
 
-            // Add some votes
-            var votes = new List<Vote>
+            var votes = new List<Vote>();
+            var participants = users.Skip(1).Take(4).ToList();
+            if (!participants.Any())
             {
-                // Votes for date poll
-                new Vote
+                participants = users.ToList();
+            }
+
+            var selectedOptions = new List<PollOption>();
+            foreach (var groupedOptions in pollOptions.GroupBy(x => x.PollId))
+            {
+                var options = groupedOptions.ToList();
+                var selectedOption = options[0];
+                selectedOption.IsSelectFinalized = true;
+                selectedOptions.Add(selectedOption);
+
+                for (int i = 0; i < Math.Min(2, participants.Count); i++)
                 {
-                    PollOptionId = pollOptions[0].Id,
-                    UserId = users[1].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[1].Id,
-                    IsDeleted = false
-                },
-                new Vote
-                {
-                    PollOptionId = pollOptions[0].Id,
-                    UserId = users[2].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[2].Id,
-                    IsDeleted = false
-                },
-                new Vote
-                {
-                    PollOptionId = pollOptions[1].Id,
-                    UserId = users[3].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[3].Id,
-                    IsDeleted = false
-                },
-                // Votes for destination poll
-                new Vote
-                {
-                    PollOptionId = pollOptions[2].Id,
-                    UserId = users[1].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[1].Id,
-                    IsDeleted = false
-                },
-                new Vote
-                {
-                    PollOptionId = pollOptions[3].Id,
-                    UserId = users[2].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[2].Id,
-                    IsDeleted = false
-                },
-                new Vote
-                {
-                    PollOptionId = pollOptions[2].Id,
-                    UserId = users[4].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[4].Id,
-                    IsDeleted = false
-                },
-                // Votes for budget poll
-                new Vote
-                {
-                    PollOptionId = pollOptions[5].Id,
-                    UserId = users[1].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[1].Id,
-                    IsDeleted = false
-                },
-                new Vote
-                {
-                    PollOptionId = pollOptions[6].Id,
-                    UserId = users[3].Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = users[3].Id,
-                    IsDeleted = false
+                    votes.Add(new Vote
+                    {
+                        Id = Guid.NewGuid(),
+                        PollOptionId = selectedOption.Id,
+                        UserId = participants[i].Id,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = participants[i].Id,
+                        IsDeleted = false
+                    });
                 }
-            };
+
+                if (options.Count > 1 && participants.Count > 2)
+                {
+                    votes.Add(new Vote
+                    {
+                        Id = Guid.NewGuid(),
+                        PollOptionId = options[1].Id,
+                        UserId = participants[2].Id,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = participants[2].Id,
+                        IsDeleted = false
+                    });
+                }
+            }
 
             await _unitOfWork.Votes.AddRangeAsync(votes);
+
+            foreach (var selectedOption in selectedOptions)
+            {
+                await _unitOfWork.PollOptions.Update(selectedOption);
+            }
+
+            foreach (var poll in polls)
+            {
+                poll.Status = PollStatus.Finalized;
+                poll.UpdatedAt = DateTime.UtcNow;
+                poll.UpdatedBy = poll.CreatedBy;
+                await _unitOfWork.Polls.Update(poll);
+            }
+
             await _unitOfWork.SaveChangesAsync();
             _loggerService.LogInformation("Finished seed polls");
         }
