@@ -121,6 +121,12 @@ public sealed class PollService : IPollService
         var trip = await LoadTripWithGroupAsync(dto.TripId);
         await ValidateGroupMembershipAsync(trip.GroupId, currentUserId, "create a poll");
 
+        if (trip.Status == TripStatus.Setup)
+        {
+            trip.Status = TripStatus.Planning;
+            await _unitOfWork.Trips.Update(trip);
+        }
+
         await ValidateActivityIfProvidedAsync(dto.TripId, dto.ActivityId);
 
         switch (dto.Type)

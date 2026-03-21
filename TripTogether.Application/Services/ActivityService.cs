@@ -44,6 +44,12 @@ public sealed class ActivityService : IActivityService
         var trip = await LoadTripOrThrowAsync(dto.TripId);
         await ValidateTripMembershipAsync(trip.GroupId, currentUserId, "create activities");
 
+        if (trip.Status == TripStatus.Setup)
+        {
+            trip.Status = TripStatus.Planning;
+            await _unitOfWork.Trips.Update(trip);
+        }
+
         TimeSlotHelper.ValidateTimeLogic(dto.StartTime, dto.EndTime);
 
         // Auto-assign ScheduleDayIndex if date is provided

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TripTogether.Application.DTOs.PackingItemDTO;
 using TripTogether.Application.Interfaces;
+using TripTogether.Domain.Enums;
 
 namespace TripTogether.Application.Services;
 
@@ -32,6 +33,12 @@ public sealed class PackingItemService : IPackingItemService
         if (trip == null)
         {
             throw ErrorHelper.NotFound("The trip does not exist.");
+        }
+
+        if (trip.Status == TripStatus.Setup)
+        {
+            trip.Status = TripStatus.Planning;
+            await _unitOfWork.Trips.Update(trip);
         }
 
         var isMember = await _unitOfWork.GroupMembers.GetQueryable()
