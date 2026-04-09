@@ -87,6 +87,199 @@ public class SeedService : ISeedService
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = Guid.Empty,
                 IsDeleted = false
+            },
+            // New users with more realistic data
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Li4mCarter",
+                Email = "liam.carter92@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Emm4Nguyen",
+                Email = "emma.nguyen08@outlook.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "N0ahWalker",
+                Email = "noah1724@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "OliviaTr4n",
+                Email = "oliviatran31@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Ethan_le",
+                Email = "ethan.le84@outlook.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "MiPham",
+                Email = "mia.pham19@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Jacks0nReed",
+                Email = "jackson.reed55@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Av4Huynh",
+                Email = "ava.huynh27@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Luc4sHoang",
+                Email = "lucas.hoang73@outlook.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "LeDang",
+                Email = "ledang12304@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "L0ganBui",
+                Email = "logan.bui66@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Isabell4Vo",
+                Email = "isabella.vo13@icloud.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "HenrYTruong7",
+                Email = "henry.truong91@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Gr4ceLy",
+                Email = "gracely25@outlook.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "0wenKim",
+                Email = "owen.kim38@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = true,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "ChLoeNgo9",
+                Email = "chloe.ngo57@gmail.com",
+                PasswordHash = new PasswordHasher().HashPassword("1@")!,
+                Gender = false,
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Guid.Empty,
+                IsDeleted = false
             }
             };
 
@@ -1431,7 +1624,7 @@ public class SeedService : ISeedService
             {
                 var participantCount = 4;
                 var amountPerPerson = expense.Amount / participantCount;
-                
+
                 for (int i = 1; i <= 4; i++)
                 {
                     expenseSplits.Add(new ExpenseSplit
